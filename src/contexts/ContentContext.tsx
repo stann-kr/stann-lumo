@@ -1,0 +1,533 @@
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
+import { useLanguage } from "./LanguageContext";
+import type {
+  ContentData,
+  MultiLanguageContent,
+  MusicContent,
+  EventsContent,
+  ContactContent,
+  Biography,
+  ArtistInfoItem,
+  PhilosophyItem,
+  DesignPhilosophy,
+} from "../types/content";
+
+interface ContentContextType {
+  content: ContentData;
+  updateContent: (updates: Partial<ContentData>) => void;
+  musicContent: MusicContent;
+  eventsContent: EventsContent;
+  contactContent: ContactContent;
+  currentEditLanguage: "en" | "ko";
+  setCurrentEditLanguage: (lang: "en" | "ko") => void;
+  allContent: MultiLanguageContent;
+}
+
+const defaultEnContent: ContentData = {
+  artistInfo: [
+    { id: "1", key: "Name", value: "ARTIST NAME" },
+    { id: "2", key: "Genre", value: "Techno / House" },
+    { id: "3", key: "Location", value: "Seoul, South Korea" },
+    { id: "4", key: "Status", value: "Active" },
+  ],
+  biography: {
+    paragraphs: [
+      "Artist biography paragraph 1. This is where you can describe your musical journey, influences, and artistic vision.",
+      "Artist biography paragraph 2. Continue your story here with more details about your career and achievements.",
+    ],
+  },
+  musicalPhilosophy: [
+    {
+      id: "1",
+      quote: "Music is the universal language of mankind.",
+      description:
+        "A deep exploration of sound, rhythm, and emotion through electronic music.",
+    },
+  ],
+  designPhilosophy: {
+    paragraphs: [
+      "Minimalism meets functionality. Every element serves a purpose.",
+    ],
+  },
+  homeSections: [
+    {
+      title: "ABOUT",
+      description: "Artist profile & philosophy",
+      path: "/about",
+      icon: "ri-user-line",
+    },
+    {
+      title: "MUSIC",
+      description: "Tracks, mixes & releases",
+      path: "/music",
+      icon: "ri-music-2-line",
+    },
+    {
+      title: "EVENTS",
+      description: "Performance schedule & info",
+      path: "/events",
+      icon: "ri-calendar-event-line",
+    },
+    {
+      title: "CONTACT",
+      description: "Guestbook & messages",
+      path: "/contact",
+      icon: "ri-mail-line",
+    },
+    {
+      title: "LINK",
+      description: "External connections",
+      path: "/link",
+      icon: "ri-links-line",
+    },
+  ],
+  tracks: [
+    {
+      id: "1",
+      title: "Midnight Drive",
+      type: "Original Mix",
+      duration: "6:42",
+      year: "2024",
+      platform: "SoundCloud",
+      link: "https://soundcloud.com",
+    },
+    {
+      id: "2",
+      title: "Urban Pulse",
+      type: "DJ Set",
+      duration: "58:30",
+      year: "2024",
+      platform: "Mixcloud",
+      link: "https://mixcloud.com",
+    },
+  ],
+  performances: [
+    {
+      id: "1",
+      date: "2024-12-31",
+      venue: "CONTRA Seoul",
+      location: "Seoul, South Korea",
+      time: "23:00",
+      title: "CONTRA Seoul",
+      lineup: "Artist Name, Guest DJ",
+      status: "Confirmed",
+    },
+    {
+      id: "2",
+      date: "2024-11-15",
+      venue: "MODECI",
+      location: "Seoul, South Korea",
+      time: "22:00",
+      title: "MODECI Night",
+      lineup: "Artist Name",
+      status: "Confirmed",
+    },
+  ],
+  eventsInfo: {
+    setDurations: ["1-2 hours", "2-4 hours", "All night"],
+    technicalRequirements: ["CDJ-3000 x2", "DJM-900NXS2", "Monitor speakers"],
+    contactEmail: "booking@artist.com",
+    responseTime: "24-48 hours",
+  },
+  linkPlatforms: [
+    {
+      id: "1",
+      platform: "SoundCloud",
+      url: "https://soundcloud.com/artist",
+      icon: "ri-soundcloud-line",
+      description: "Listen to my tracks and mixes",
+    },
+    {
+      id: "2",
+      platform: "Instagram",
+      url: "https://instagram.com/artist",
+      icon: "ri-instagram-line",
+      description: "Follow my journey",
+    },
+    {
+      id: "3",
+      platform: "Resident Advisor",
+      url: "https://ra.co/dj/artist",
+      icon: "ri-calendar-line",
+      description: "Check my event schedule",
+    },
+  ],
+  terminalInfo: {
+    url: "https://example.com",
+    description: "Side project or additional portfolio",
+  },
+  contactInfo: [
+    {
+      label: "EMAIL",
+      value: "contact@artist.com",
+      icon: "ri-mail-line",
+    },
+    {
+      label: "INSTAGRAM",
+      value: "@artist",
+      icon: "ri-instagram-line",
+    },
+    {
+      label: "BOOKING",
+      value: "booking@artist.com",
+      icon: "ri-briefcase-line",
+    },
+  ],
+  themeColors: {
+    primary: "#00ff00",
+    secondary: "#ffffff",
+    accent: "#00ff00",
+    muted: "#666666",
+    bg: "#000000",
+  },
+};
+
+const defaultKoContent: ContentData = {
+  artistInfo: [
+    { id: "1", key: "이름", value: "아티스트 이름" },
+    { id: "2", key: "장르", value: "테크노 / 하우스" },
+    { id: "3", key: "위치", value: "서울, 대한민국" },
+    { id: "4", key: "상태", value: "활동 중" },
+  ],
+  biography: {
+    paragraphs: [
+      "아티스트 바이오그래피 첫 번째 단락. 여기에 음악적 여정, 영향, 예술적 비전을 설명할 수 있습니다.",
+      "아티스트 바이오그래피 두 번째 단락. 경력과 성과에 대한 자세한 내용을 계속 작성하세요.",
+    ],
+  },
+  musicalPhilosophy: [
+    {
+      id: "1",
+      quote: "음악은 인류의 보편적 언어입니다.",
+      description: "전자 음악을 통한 소리, 리듬, 감정의 깊은 탐구.",
+    },
+  ],
+  designPhilosophy: {
+    paragraphs: ["미니멀리즘과 기능성의 만남. 모든 요소는 목적을 가집니다."],
+  },
+  homeSections: [
+    {
+      title: "ABOUT",
+      description: "아티스트 프로필 & 철학",
+      path: "/about",
+      icon: "ri-user-line",
+    },
+    {
+      title: "MUSIC",
+      description: "트랙, 믹스 & 릴리스",
+      path: "/music",
+      icon: "ri-music-2-line",
+    },
+    {
+      title: "EVENTS",
+      description: "공연 일정 & 정보",
+      path: "/events",
+      icon: "ri-calendar-event-line",
+    },
+    {
+      title: "CONTACT",
+      description: "방명록 & 메시지",
+      path: "/contact",
+      icon: "ri-mail-line",
+    },
+    {
+      title: "LINK",
+      description: "외부 연결",
+      path: "/link",
+      icon: "ri-links-line",
+    },
+  ],
+  tracks: [
+    {
+      id: "1",
+      title: "Midnight Drive",
+      type: "Original Mix",
+      duration: "6:42",
+      year: "2024",
+      platform: "SoundCloud",
+      link: "https://soundcloud.com",
+    },
+    {
+      id: "2",
+      title: "Urban Pulse",
+      type: "DJ Set",
+      duration: "58:30",
+      year: "2024",
+      platform: "Mixcloud",
+      link: "https://mixcloud.com",
+    },
+  ],
+  performances: [
+    {
+      id: "1",
+      date: "2024-12-31",
+      venue: "CONTRA Seoul",
+      location: "서울, 대한민국",
+      time: "23:00",
+      title: "CONTRA Seoul",
+      lineup: "아티스트 이름, 게스트 DJ",
+      status: "Confirmed",
+    },
+    {
+      id: "2",
+      date: "2024-11-15",
+      venue: "MODECI",
+      location: "서울, 대한민국",
+      time: "22:00",
+      title: "MODECI Night",
+      lineup: "아티스트 이름",
+      status: "Confirmed",
+    },
+  ],
+  eventsInfo: {
+    setDurations: ["1-2시간", "2-4시간", "올나잇"],
+    technicalRequirements: ["CDJ-3000 x2", "DJM-900NXS2", "모니터 스피커"],
+    contactEmail: "booking@artist.com",
+    responseTime: "24-48시간",
+  },
+  linkPlatforms: [
+    {
+      id: "1",
+      platform: "SoundCloud",
+      url: "https://soundcloud.com/artist",
+      icon: "ri-soundcloud-line",
+      description: "트랙과 믹스 듣기",
+    },
+    {
+      id: "2",
+      platform: "Instagram",
+      url: "https://instagram.com/artist",
+      icon: "ri-instagram-line",
+      description: "여정 팔로우하기",
+    },
+    {
+      id: "3",
+      platform: "Resident Advisor",
+      url: "https://ra.co/dj/artist",
+      icon: "ri-calendar-line",
+      description: "이벤트 일정 확인",
+    },
+  ],
+  terminalInfo: {
+    url: "https://example.com",
+    description: "사이드 프로젝트 또는 추가 포트폴리오",
+  },
+  contactInfo: [
+    {
+      label: "이메일",
+      value: "contact@artist.com",
+      icon: "ri-mail-line",
+    },
+    {
+      label: "인스타그램",
+      value: "@artist",
+      icon: "ri-instagram-line",
+    },
+    {
+      label: "예약",
+      value: "booking@artist.com",
+      icon: "ri-briefcase-line",
+    },
+  ],
+  themeColors: {
+    primary: "#00ff00",
+    secondary: "#ffffff",
+    accent: "#00ff00",
+    muted: "#666666",
+    bg: "#000000",
+  },
+};
+
+const defaultMultiLanguageContent: MultiLanguageContent = {
+  en: defaultEnContent,
+  ko: defaultKoContent,
+};
+
+const ContentContext = createContext<ContentContextType | undefined>(undefined);
+
+export const ContentProvider = ({ children }: { children: ReactNode }) => {
+  const { language } = useLanguage();
+  const [currentEditLanguage, setCurrentEditLanguage] = useState<"en" | "ko">(
+    "en",
+  );
+
+  const [allContent, setAllContent] = useState<MultiLanguageContent>(() => {
+    try {
+      const stored = localStorage.getItem("stann_content_multilang");
+      if (!stored) return defaultMultiLanguageContent;
+      const parsed = JSON.parse(stored);
+      if (!parsed.en || !parsed.ko) return defaultMultiLanguageContent;
+      const migrateContent = (
+        lang: ContentData,
+        defaults: ContentData,
+      ): ContentData => {
+        const migrated = { ...defaults, ...lang } as ContentData & {
+          bookingInfo?: unknown;
+          artistInfo?: unknown;
+          musicalPhilosophy?: unknown;
+          designPhilosophy?: unknown;
+        };
+
+        if (!migrated.eventsInfo && migrated.bookingInfo) {
+          migrated.eventsInfo =
+            migrated.bookingInfo as ContentData["eventsInfo"];
+        }
+        delete migrated.bookingInfo;
+
+        // biography 마이그레이션: 구버전 paragraph1/paragraph2 → paragraphs 배열
+        const bio = migrated.biography as Biography & {
+          paragraph1?: string;
+          paragraph2?: string;
+        };
+        if (!bio.paragraphs && (bio.paragraph1 || bio.paragraph2)) {
+          migrated.biography = {
+            paragraphs: [bio.paragraph1 ?? "", bio.paragraph2 ?? ""].filter(
+              Boolean,
+            ),
+          };
+        }
+        if (!migrated.biography.paragraphs) {
+          migrated.biography = { paragraphs: defaults.biography.paragraphs };
+        }
+
+        // artistInfo 마이그레이션: 구버전 객체 → 배열
+        const oldArtistInfo = migrated.artistInfo as
+          | {
+              name?: string;
+              genre?: string;
+              location?: string;
+              status?: string;
+            }
+          | undefined;
+        if (oldArtistInfo && !Array.isArray(oldArtistInfo)) {
+          migrated.artistInfo = [
+            { id: "1", key: "Name", value: oldArtistInfo.name ?? "" },
+            { id: "2", key: "Genre", value: oldArtistInfo.genre ?? "" },
+            { id: "3", key: "Location", value: oldArtistInfo.location ?? "" },
+            { id: "4", key: "Status", value: oldArtistInfo.status ?? "" },
+          ];
+        }
+        if (!Array.isArray(migrated.artistInfo)) {
+          migrated.artistInfo = defaults.artistInfo;
+        }
+
+        // musicalPhilosophy 마이그레이션: 구버전 객체 → 배열
+        const oldPhilosophy = migrated.musicalPhilosophy as
+          | { quote?: string; description?: string }
+          | undefined;
+        if (oldPhilosophy && !Array.isArray(oldPhilosophy)) {
+          migrated.musicalPhilosophy = [
+            {
+              id: "1",
+              quote: oldPhilosophy.quote ?? "",
+              description: oldPhilosophy.description ?? "",
+            },
+          ];
+        }
+        if (!Array.isArray(migrated.musicalPhilosophy)) {
+          migrated.musicalPhilosophy = defaults.musicalPhilosophy;
+        }
+
+        // designPhilosophy 마이그레이션: 구버전 문자열 → 객체
+        if (typeof migrated.designPhilosophy === "string") {
+          migrated.designPhilosophy = {
+            paragraphs: [migrated.designPhilosophy],
+          };
+        }
+        if (
+          !migrated.designPhilosophy ||
+          !migrated.designPhilosophy.paragraphs
+        ) {
+          migrated.designPhilosophy = defaults.designPhilosophy;
+        }
+
+        // homeSections 마이그레이션: icon 필드 없는 경우 기본값으로 채우기
+        const defaultIconMap: Record<string, string> = {
+          "/about": "ri-user-line",
+          "/music": "ri-music-2-line",
+          "/events": "ri-calendar-event-line",
+          "/contact": "ri-mail-line",
+          "/link": "ri-links-line",
+        };
+        if (Array.isArray(migrated.homeSections)) {
+          migrated.homeSections = migrated.homeSections.map((section) => ({
+            ...section,
+            icon:
+              section.icon ||
+              defaultIconMap[section.path] ||
+              "ri-arrow-right-line",
+          }));
+        } else {
+          migrated.homeSections = defaults.homeSections;
+        }
+
+        return migrated as ContentData;
+      };
+      return {
+        en: migrateContent(parsed.en, defaultEnContent),
+        ko: migrateContent(parsed.ko, defaultKoContent),
+      };
+    } catch {
+      return defaultMultiLanguageContent;
+    }
+  });
+
+  const content = allContent[language];
+
+  useEffect(() => {
+    localStorage.setItem("stann_content_multilang", JSON.stringify(allContent));
+    const root = document.documentElement;
+    root.style.setProperty("--color-primary", content.themeColors.primary);
+    root.style.setProperty("--color-secondary", content.themeColors.secondary);
+    root.style.setProperty("--color-accent", content.themeColors.accent);
+    root.style.setProperty("--color-muted", content.themeColors.muted);
+    root.style.setProperty("--color-bg", content.themeColors.bg);
+  }, [allContent, content.themeColors]);
+
+  const updateContent = (updates: Partial<ContentData>) => {
+    setAllContent((prev) => ({
+      ...prev,
+      [currentEditLanguage]: { ...prev[currentEditLanguage], ...updates },
+    }));
+  };
+
+  const musicContent: MusicContent = { tracks: content.tracks ?? [] };
+  const eventsContent: EventsContent = {
+    performances: content.performances ?? [],
+    eventsInfo: content.eventsInfo ?? defaultEnContent.eventsInfo,
+  };
+  const contactContent: ContactContent = {
+    contactInfo: content.contactInfo ?? [],
+  };
+
+  return (
+    <ContentContext.Provider
+      value={{
+        content,
+        updateContent,
+        musicContent,
+        eventsContent,
+        contactContent,
+        currentEditLanguage,
+        setCurrentEditLanguage,
+        allContent,
+      }}
+    >
+      {children}
+    </ContentContext.Provider>
+  );
+};
+
+export const useContent = () => {
+  const context = useContext(ContentContext);
+  if (!context) {
+    throw new Error("useContent must be used within ContentProvider");
+  }
+  return context;
+};

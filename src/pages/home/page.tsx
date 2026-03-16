@@ -1,0 +1,129 @@
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useContent } from '../../contexts/ContentContext';
+import PageLayout from '../../components/feature/PageLayout';
+import PageSection from '../../components/base/PageSection';
+import { createBorderFaint, createBorderMid } from '../../utils/colorMix';
+
+export default function HomePage() {
+  const { t } = useTranslation();
+  const { content } = useContent();
+  const borderFaint = createBorderFaint();
+  const borderMid = createBorderMid();
+
+  const artistName = Array.isArray(content.artistInfo)
+    ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
+    : '';
+  const artistGenre = Array.isArray(content.artistInfo)
+    ? (content.artistInfo.find((item) => item.key === 'Genre' || item.key === '장르')?.value ?? '')
+    : '';
+
+  const nameParts = artistName.includes('&')
+    ? artistName.split('&').map((s) => s.trim())
+    : artistName.split(' ').map((s) => s.trim()).filter(Boolean);
+
+  return (
+    <PageLayout
+      currentView="home"
+      title={nameParts[0] ?? artistName}
+      titleExtra={nameParts.slice(1)}
+      subtitle={artistGenre}
+    >
+      <div className="space-y-12">
+        {/* Navigation Grid */}
+        <PageSection title={t('home_nav_title') || 'NAVIGATION'} icon="ri-compass-3-line">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {content.homeSections.map((section, index) => (
+              <Link
+                key={index}
+                to={section.path}
+                className="group p-6 border transition-all duration-300 cursor-pointer"
+                style={borderFaint}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor =
+                    'color-mix(in srgb, var(--color-accent) 50%, transparent)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor =
+                    'color-mix(in srgb, var(--color-secondary) 15%, transparent)';
+                }}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 flex items-center justify-center">
+                        <i
+                          className={`${section.icon} text-xl`}
+                          style={{ color: 'var(--color-accent)' }}
+                        />
+                      </div>
+                      <h2
+                        className="text-base font-semibold tracking-widest"
+                        style={{ color: 'var(--color-primary)' }}
+                      >
+                        {section.title}
+                      </h2>
+                    </div>
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: 'var(--color-secondary)', opacity: 0.55 }}
+                    >
+                      {section.description}
+                    </p>
+                  </div>
+                  <div className="w-5 h-5 flex items-center justify-center ml-3 mt-1">
+                    <i
+                      className="ri-arrow-right-line text-base transition-transform duration-300 group-hover:translate-x-1"
+                      style={{ color: 'var(--color-accent)', opacity: 0.6 }}
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </PageSection>
+
+        {/* Terminal Info */}
+        {content.terminalInfo.url && (
+          <div className="pt-8 border-t" style={borderMid}>
+            <div className="flex items-center justify-between gap-6">
+              <div className="space-y-1">
+                <p
+                  className="text-xs tracking-widest"
+                  style={{ color: 'var(--color-accent)', opacity: 0.7 }}
+                >
+                  {t('home_terminal_side_project')}
+                </p>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: 'var(--color-secondary)', opacity: 0.6 }}
+                >
+                  {content.terminalInfo.description}
+                </p>
+              </div>
+              <a
+                href={content.terminalInfo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2 border text-sm tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--color-accent) 50%, transparent)',
+                  color: 'var(--color-accent)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor =
+                    'color-mix(in srgb, var(--color-accent) 10%, transparent)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+                }}
+              >
+                {t('home_terminal_enter')} →
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    </PageLayout>
+  );
+}
