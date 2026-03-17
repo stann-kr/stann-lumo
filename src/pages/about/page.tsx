@@ -13,7 +13,7 @@ const AboutPage = () => {
   const artistInfoItems = content.artistInfo ?? [];
 
   return (
-    <PageLayout currentView="ABOUT" title={t('about_title')} typingSpeed={60} spacing="lg">
+    <PageLayout title={t('about_title')} typingSpeed={60} spacing="lg">
       {/* Artist Info Cards — 동적 key-value 렌더링 */}
       {artistInfoItems.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

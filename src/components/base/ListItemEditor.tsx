@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { createBorderMid, createBorderAccent } from '../../utils/colorMix';
 
 interface ListItemEditorProps {
@@ -20,6 +21,8 @@ const ListItemEditor = ({
   onAdd,
   onRemove
 }: ListItemEditorProps) => {
+  const { t } = useTranslation();
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -30,7 +33,7 @@ const ListItemEditor = ({
           onClick={onAdd}
           className="text-xs text-[var(--color-accent)] hover:text-[var(--color-secondary)] transition-colors cursor-pointer whitespace-nowrap"
         >
-          + 추가
+          + {t('btn_add')}
         </button>
       </div>
       <div className="space-y-2">
@@ -49,6 +52,7 @@ const ListItemEditor = ({
             <button
               onClick={() => onRemove(index)}
               className="w-6 h-6 flex items-center justify-center text-red-400/60 hover:text-red-400 transition-colors cursor-pointer"
+              aria-label={t('btn_delete')}
             >
               <i className="ri-close-line text-xs"></i>
             </button>

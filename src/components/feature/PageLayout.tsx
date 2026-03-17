@@ -1,9 +1,8 @@
-import { ReactNode, Children, isValidElement, cloneElement, ReactElement } from 'react';
+import { ReactNode, Children, isValidElement, ReactElement } from 'react';
 import TypingText from '../../pages/home/components/TypingText';
 import { createBorderMid } from '../../utils/colorMix';
 
 interface PageLayoutProps {
-  currentView: string;
   title: string;
   titleExtra?: string[];
   subtitle?: string;

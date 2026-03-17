@@ -10,7 +10,7 @@ const MusicPage = () => {
   const borderMid = createBorderMid();
 
   return (
-    <PageLayout currentView="MUSIC" title={t('music_title')} subtitle={t('music_subtitle')} spacing="md">
+    <PageLayout title={t('music_title')} subtitle={t('music_subtitle')} spacing="md">
       {/* Track List */}
       <div className="grid gap-3">
         {musicContent.tracks.map((track) => (

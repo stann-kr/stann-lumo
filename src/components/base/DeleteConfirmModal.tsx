@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 interface DeleteConfirmModalProps {
   show: boolean;
   itemName: string;
@@ -16,25 +18,27 @@ const DeleteConfirmModal = ({
   onConfirm,
   onCancel
 }: DeleteConfirmModalProps) => {
+  const { t } = useTranslation();
+
   if (!show) return null;
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-[var(--color-secondary)] tracking-wider">
-        정말 "{itemName}"을(를) 삭제하시겠습니까?
+        {t('msg_confirm_delete_item', { name: itemName })}
       </p>
       <div className="flex gap-3">
         <button
           onClick={onConfirm}
           className="px-4 py-2 bg-red-900/30 text-red-400 text-sm tracking-wider hover:bg-red-900/50 transition-colors whitespace-nowrap cursor-pointer"
         >
-          삭제 확인
+          {t('msg_confirm_delete_action')}
         </button>
         <button
           onClick={onCancel}
           className="px-4 py-2 bg-[var(--color-secondary)]/10 text-[var(--color-secondary)] text-sm tracking-wider hover:bg-[var(--color-secondary)]/20 transition-colors whitespace-nowrap cursor-pointer"
         >
-          취소
+          {t('btn_cancel')}
         </button>
       </div>
     </div>

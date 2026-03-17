@@ -1,0 +1,30 @@
+# 의존성
+node_modules/
+
+# 빌드 결과물
+out/
+dist/
+.next/
+
+# 환경 변수 (민감 정보 포함)
+.env
+.env.local
+.env.production
+
+# macOS 시스템 파일
+.DS_Store
+
+# TypeScript 자동 생성 파일
+auto-imports.d.ts
+*.tsbuildinfo
+
+# 로그
+*.log
+npm-debug.log*
+
+# 에디터
+.vscode/
+.idea/
+
+# Wrangler (Cloudflare)
+.wrangler/

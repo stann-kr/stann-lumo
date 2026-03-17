@@ -1,0 +1,20 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/arm64
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - NEXT_PUBLIC_TERMINAL_URL=${NEXT_PUBLIC_TERMINAL_URL}
+      - NEXT_PUBLIC_FORM_ENDPOINT=${NEXT_PUBLIC_FORM_ENDPOINT}
+    env_file:
+      - .env

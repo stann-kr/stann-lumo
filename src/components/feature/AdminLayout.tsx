@@ -1,5 +1,6 @@
+'use client';
 import { useState, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
 import { useContent } from '../../contexts/ContentContext';
 import { createColorMixStyle } from '../../utils/colorMix';
 import { COLOR_VARS } from '../../constants/colors';
@@ -21,22 +22,22 @@ const ADMIN_NAV_ITEMS = [
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { currentEditLanguage, setCurrentEditLanguage } = useContent();
 
   const handleNavClick = (path: string) => {
-    navigate(path);
+    router.push(path);
     setMobileMenuOpen(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_authenticated');
-    navigate('/admin');
+    router.push('/admin');
   };
 
   const handleBackToSite = () => {
-    navigate('/');
+    router.push('/');
   };
 
   const borderStyle = createColorMixStyle(COLOR_VARS.SECONDARY, 15);
@@ -54,7 +55,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             ADMIN
           </h1>
           <p className="text-xs text-[var(--color-accent)] mt-2 tracking-widest">CONTENT MANAGEMENT</p>
-          
+
           {/* Edit Language Indicator */}
           <div className="mt-4 flex items-center gap-2">
             <span className="text-xs text-[var(--color-muted)]/60 tracking-wider">EDITING:</span>
@@ -88,7 +89,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <nav className="flex-1 p-6">
           <ul className="space-y-1">
             {ADMIN_NAV_ITEMS.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = pathname === item.path;
               return (
                 <li key={item.path}>
                   <button
@@ -172,7 +173,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         >
           <ul className="py-4">
             {ADMIN_NAV_ITEMS.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = pathname === item.path;
               return (
                 <li key={item.path}>
                   <button

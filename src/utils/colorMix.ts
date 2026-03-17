@@ -1,4 +1,4 @@
-import { BORDER, COLOR_VARS } from '../constants/styles';
+import { BORDER } from '../constants/styles';
 import type { ColorVarKey } from '../constants/colors';
 
 /**

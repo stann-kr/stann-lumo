@@ -1,14 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { AdminFormReturn } from '../types/admin';
 
-export function useAdminForm<T>(
+export function useAdminForm<T extends Record<string, unknown>>(
   initialData: T,
   onSave: (data: T) => void | Promise<void>
-): AdminFormReturn<T> & {
-  isSaving: boolean;
-  setFormData: (data: T) => void;
-  resetForm: () => void;
-} {
+): AdminFormReturn<T> {
   const [formData, setFormData] = useState<T>(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -19,7 +15,7 @@ export function useAdminForm<T>(
   }, [initialData]);
 
   const updateField = useCallback((field: string, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value } as T));
   }, []);
 
   const saveForm = useCallback(async () => {

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import AdminLayout from '../../../components/feature/AdminLayout';
 import { useContent } from '../../../contexts/ContentContext';
 import AdminCard from '../../../components/base/AdminCard';
 import AdminSectionHeader from '../../../components/base/AdminSectionHeader';
@@ -89,8 +88,7 @@ const AdminHomePage = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <AdminSectionHeader
           title="HOME SECTION"
           description={`홈 화면 네비게이션 카드 및 터미널 정보 관리 (${currentEditLanguage.toUpperCase()})`}
@@ -317,8 +315,7 @@ const AdminHomePage = () => {
             ))}
           </div>
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 

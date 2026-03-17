@@ -35,7 +35,6 @@ const EventsPage = () => {
 
   return (
     <PageLayout
-      currentView="EVENTS"
       title={t('events_title')}
       subtitle={t('events_subtitle')}
       spacing="lg"

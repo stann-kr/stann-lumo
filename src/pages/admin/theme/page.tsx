@@ -1,26 +1,27 @@
 import { useState } from 'react';
-import AdminLayout from '../../../components/feature/AdminLayout';
 import { useContent } from '../../../contexts/ContentContext';
 import AdminCard from '../../../components/base/AdminCard';
 import AdminSectionHeader from '../../../components/base/AdminSectionHeader';
+import SuccessMessage from '../../../components/base/SuccessMessage';
+import { useSaveNotification } from '../../../hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '../../../utils/colorMix';
 
 const COLOR_PRESETS = [
   {
     name: 'Warm Amber',
-    colors: { primary: '#e8d5b0', secondary: '#c8b89a', accent: '#8a7560', muted: '#a89070', bg: '#0a0a0a' }
+    colors: { primary: '#e8d5b0', secondary: '#c8b89a', accent: '#8a7560', muted: '#a89070', bg: '#0a0a0a', bgSidebar: '#050505' }
   },
   {
     name: 'Cool Slate',
-    colors: { primary: '#d4e4f7', secondary: '#a8c5e0', accent: '#6b8caf', muted: '#8fa9c4', bg: '#0f1419' }
+    colors: { primary: '#d4e4f7', secondary: '#a8c5e0', accent: '#6b8caf', muted: '#8fa9c4', bg: '#0f1419', bgSidebar: '#090d11' }
   },
   {
     name: 'Forest Green',
-    colors: { primary: '#d4e8d4', secondary: '#a8c9a8', accent: '#6b8f6b', muted: '#8faa8f', bg: '#0a120a' }
+    colors: { primary: '#d4e8d4', secondary: '#a8c9a8', accent: '#6b8f6b', muted: '#8faa8f', bg: '#0a120a', bgSidebar: '#060d06' }
   },
   {
     name: 'Sunset Rose',
-    colors: { primary: '#f5d5d8', secondary: '#d9a8ad', accent: '#a86b73', muted: '#c48f95', bg: '#120a0b' }
+    colors: { primary: '#f5d5d8', secondary: '#d9a8ad', accent: '#a86b73', muted: '#c48f95', bg: '#120a0b', bgSidebar: '#0c0608' }
   }
 ];
 
@@ -34,7 +35,7 @@ const AdminThemePage = () => {
   const { content, updateContent, allContent, setCurrentEditLanguage, currentEditLanguage } = useContent();
   // 테마 색상은 언어와 무관하게 공유 — en 기준으로 읽음
   const [colors, setColors] = useState(allContent.en.themeColors);
-  const [saved, setSaved] = useState(false);
+  const { isVisible: showSuccess, showNotification } = useSaveNotification();
 
   const updateColorField = (key: keyof typeof colors, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }));
@@ -52,8 +53,7 @@ const AdminThemePage = () => {
     setCurrentEditLanguage('ko');
     updateContent({ themeColors: colors });
     setCurrentEditLanguage(prevLang);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    showNotification();
   };
 
   const resetColors = () => {
@@ -84,8 +84,7 @@ const AdminThemePage = () => {
   );
 
   return (
-    <AdminLayout>
-      <div className="max-w-6xl">
+    <div className="max-w-6xl">
         {/* Header */}
         <AdminSectionHeader
           title="THEME COLORS"
@@ -102,6 +101,8 @@ const AdminThemePage = () => {
             </button>
           }
         />
+
+        <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column: Color Editors */}
@@ -140,7 +141,8 @@ const AdminThemePage = () => {
                 {renderColorRow('secondary', 'SECONDARY')}
                 {renderColorRow('accent', 'ACCENT')}
                 {renderColorRow('muted', 'MUTED')}
-                {renderColorRow('bg', 'BACKGROUND')}
+                {renderColorRow('bg', 'CONTENT BACKGROUND')}
+                {renderColorRow('bgSidebar', 'SIDEBAR BACKGROUND')}
               </AdminCard>
             </div>
           </div>
@@ -151,7 +153,16 @@ const AdminThemePage = () => {
               <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">LIVE PREVIEW</h2>
               <AdminCard>
                 {/* 프리뷰 영역: 선택된 colors 값으로 직접 렌더링 */}
-                <div className="space-y-6" style={{ backgroundColor: colors.bg, padding: '2rem' }}>
+                <div className="flex overflow-hidden" style={{ minHeight: '320px' }}>
+                  {/* Sidebar preview */}
+                  <div className="w-32 shrink-0 flex flex-col p-4 gap-2" style={{ backgroundColor: colors.bgSidebar }}>
+                    <p className="text-xs tracking-widest mb-2" style={{ color: colors.primary }}>SIDEBAR</p>
+                    {['HOME', 'ABOUT', 'MUSIC', 'EVENTS'].map((item) => (
+                      <div key={item} className="px-2 py-1.5 text-xs tracking-widest" style={{ color: colors.secondary, opacity: 0.5 }}>{item}</div>
+                    ))}
+                  </div>
+                  {/* Content preview */}
+                  <div className="flex-1 space-y-4" style={{ backgroundColor: colors.bg, padding: '1.5rem' }}>
                   <div>
                     <h3 className="text-2xl font-bold tracking-wider mb-2" style={{ color: colors.primary }}>
                       PRIMARY TEXT
@@ -212,6 +223,7 @@ const AdminThemePage = () => {
                       <i className="ri-arrow-right-line"></i>
                     </span>
                   </div>
+                  </div>
                 </div>
               </AdminCard>
             </div>
@@ -226,7 +238,8 @@ const AdminThemePage = () => {
                     { key: 'secondary' as const, label: 'SECONDARY', desc: 'Body text, descriptions' },
                     { key: 'accent' as const, label: 'ACCENT', desc: 'Icons, highlights, links' },
                     { key: 'muted' as const, label: 'MUTED', desc: 'Subtle text, metadata' },
-                    { key: 'bg' as const, label: 'BACKGROUND', desc: 'Page background color' },
+                    { key: 'bg' as const, label: 'CONTENT BG', desc: 'Main content area background' },
+                    { key: 'bgSidebar' as const, label: 'SIDEBAR BG', desc: 'Sidebar & mobile header background' },
                   ].map(({ key, label, desc }) => (
                     <div key={key} className="flex items-center gap-3">
                       <div
@@ -244,8 +257,7 @@ const AdminThemePage = () => {
             </div>
           </div>
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 

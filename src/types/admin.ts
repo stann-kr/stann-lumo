@@ -44,24 +44,33 @@ export interface DeleteConfirmState {
 }
 
 /**
- * 리스트 에디터 반환 타입
+ * 리스트 에디터 반환 타입 (useListEditor hook 반환값과 일치)
  */
 export interface ListEditorReturn<T> {
   items: T[];
-  handleAdd: ArrayItemAddHandler<T>;
-  handleUpdate: ArrayItemChangeHandler<T>;
-  handleDelete: ArrayItemDeleteHandler;
-  handleReorder: ArrayItemReorderHandler;
+  addItem: ArrayItemAddHandler<T>;
+  updateItem: (index: number, updatedItem: T) => void;
+  deleteItem: ArrayItemDeleteHandler;
+  reorderItem: ArrayItemReorderHandler;
+  setItems: (items: T[]) => void;
+  editingIndex: number | null;
+  startEditing: (index: number) => void;
+  stopEditing: () => void;
+  replaceItems: (newItems: T[]) => void;
 }
 
 /**
- * 어드민 폼 반환 타입
+ * 어드민 폼 반환 타입 (useAdminForm hook 반환값과 일치)
  */
-export interface AdminFormReturn<T> {
+export interface AdminFormReturn<T extends Record<string, unknown>> {
   formData: T;
   isSaved: boolean;
-  handleFieldChange: FieldChangeHandler;
-  handleSave: SaveHandler;
+  isSaving: boolean;
+  showSuccess: boolean;
+  updateField: (field: string, value: unknown) => void;
+  saveForm: () => Promise<void>;
+  setFormData: (data: T) => void;
+  resetForm: () => void;
 }
 
 /**
@@ -71,15 +80,17 @@ export interface DeleteConfirmReturn {
   confirmState: DeleteConfirmState;
   openConfirm: (index: number) => void;
   closeConfirm: () => void;
-  confirmDelete: () => void;
+  confirmDelete: (deleteCallback?: (index: number) => void) => void;
 }
 
 /**
- * 저장 알림 반환 타입
+ * 저장 알림 반환 타입 (useSaveNotification hook 반환값과 일치)
  */
 export interface SaveNotificationReturn {
   showSuccess: boolean;
+  isVisible: boolean;
   triggerSave: () => void;
+  showNotification: () => void;
 }
 
 /**

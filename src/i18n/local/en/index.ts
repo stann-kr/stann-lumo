@@ -174,6 +174,8 @@ export default {
   // Messages
   msg_saved: 'Changes saved successfully',
   msg_confirm_delete: 'Are you sure you want to delete this item?',
+  msg_confirm_delete_item: 'Are you sure you want to delete "{{name}}"?',
+  msg_confirm_delete_action: 'Confirm Delete',
   msg_no_items: 'No items yet',
   
   // Footer

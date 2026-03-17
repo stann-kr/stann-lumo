@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+'use client';
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { useContent } from '../../contexts/ContentContext';
 import PageLayout from '../../components/feature/PageLayout';
@@ -14,20 +15,14 @@ export default function HomePage() {
   const artistName = Array.isArray(content.artistInfo)
     ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
     : '';
-  const artistGenre = Array.isArray(content.artistInfo)
-    ? (content.artistInfo.find((item) => item.key === 'Genre' || item.key === '장르')?.value ?? '')
-    : '';
-
   const nameParts = artistName.includes('&')
     ? artistName.split('&').map((s) => s.trim())
     : artistName.split(' ').map((s) => s.trim()).filter(Boolean);
 
   return (
     <PageLayout
-      currentView="home"
       title={nameParts[0] ?? artistName}
       titleExtra={nameParts.slice(1)}
-      subtitle={artistGenre}
     >
       <div className="space-y-12">
         {/* Navigation Grid */}
@@ -36,7 +31,7 @@ export default function HomePage() {
             {content.homeSections.map((section, index) => (
               <Link
                 key={index}
-                to={section.path}
+                href={section.path}
                 className="group p-6 border transition-all duration-300 cursor-pointer"
                 style={borderFaint}
                 onMouseEnter={(e) => {

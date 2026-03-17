@@ -12,6 +12,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === 'undefined') return 'en'; // SSR 가드
     const saved = localStorage.getItem('app_language');
     return (saved === 'ko' || saved === 'en') ? saved : 'en';
   });

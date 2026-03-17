@@ -12,7 +12,6 @@ const LinkPage = () => {
 
   return (
     <PageLayout
-      currentView="LINK"
       title={t('link_title')}
       subtitle={t('link_subtitle')}
       spacing="lg"

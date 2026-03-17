@@ -27,7 +27,7 @@ const ContactPage = () => {
       body.append('callsign', formData.callsign);
       body.append('email', formData.email);
       body.append('message', formData.message);
-      const res = await fetch('https://readdy.ai/api/form/d6rrsfk4k19g20dvrpsg', {
+      const res = await fetch(process.env.NEXT_PUBLIC_FORM_ENDPOINT ?? '', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
@@ -48,7 +48,6 @@ const ContactPage = () => {
 
   return (
     <PageLayout
-      currentView="CONTACT"
       title={t('contact_title')}
       subtitle={t('contact_subtitle')}
       spacing="lg"

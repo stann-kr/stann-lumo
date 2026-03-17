@@ -1,5 +1,5 @@
-import type { RAEvent, RAApiResponse, RAApiConfig, RAApiError } from '../types/ra-api';
-import type { Performance } from '../types/content';
+import type { RAEventXML, RAApiResponse, RAApiError } from '../types/ra-api';
+import type { Performance, RAApiConfig } from '../types/content';
 
 /**
  * XML 문자열을 파싱하여 RAApiResponse 객체로 변환
@@ -15,7 +15,7 @@ export function parseRAApiXML(xmlString: string): RAApiResponse {
   }
 
   const eventNodes = xmlDoc.querySelectorAll('event');
-  const events: RAEvent[] = [];
+  const events: RAEventXML[] = [];
 
   eventNodes.forEach((eventNode) => {
     const getTextContent = (tagName: string): string => {
@@ -94,15 +94,17 @@ export function cleanRALineup(lineup: string): string {
 /**
  * RA Event를 Performance 타입으로 변환
  */
-export function convertRAEventToPerformance(raEvent: RAEvent): Performance {
+export function convertRAEventToPerformance(raEvent: RAEventXML): Performance {
   return {
     id: `ra-${raEvent.id}`,
     date: formatRADate(raEvent.eventdate),
     venue: raEvent.venue || 'TBA',
+    title: raEvent.title || raEvent.venue || 'TBA',
     location: raEvent.areaname || raEvent.countryname || '',
     lineup: cleanRALineup(raEvent.lineup),
     raEventLink: raEvent.eventlink || undefined,
     raEventId: raEvent.id,
+    status: 'Confirmed',
   };
 }
 
@@ -110,19 +112,19 @@ export function convertRAEventToPerformance(raEvent: RAEvent): Performance {
  * RA API 호출
  */
 export async function fetchRAEvents(config: RAApiConfig): Promise<RAApiResponse> {
-  const { userid, apiKey, djid, option = '1' } = config;
+  const { userId, apiKey, djId, option = '1' } = config;
 
-  if (!userid || !apiKey || !djid) {
+  if (!userId || !apiKey || !djId) {
     throw new Error('RA API 설정이 완료되지 않았습니다. USERID, API KEY, DJID를 모두 입력해주세요.');
   }
 
   // RA API 엔드포인트
   const apiUrl = 'https://www.residentadvisor.net/api/events.asmx/GetEvents';
-  
+
   // 쿼리 파라미터 구성
   const params = new URLSearchParams({
-    AccessKey: `${userid}|${apiKey}`,
-    DJID: djid,
+    AccessKey: `${userId}|${apiKey}`,
+    DJID: djId,
     Option: option,
   });
 
@@ -152,7 +154,7 @@ export async function fetchRAEvents(config: RAApiConfig): Promise<RAApiResponse>
 /**
  * RA 이벤트 목록을 Performance 배열로 변환
  */
-export function convertRAEventsToPerformances(raEvents: RAEvent[]): Performance[] {
+export function convertRAEventsToPerformances(raEvents: RAEventXML[]): Performance[] {
   return raEvents.map(convertRAEventToPerformance);
 }
 

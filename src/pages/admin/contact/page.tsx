@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import AdminLayout from '../../../components/feature/AdminLayout';
 import { useContent } from '../../../contexts/ContentContext';
 import AdminCard from '../../../components/base/AdminCard';
 import AdminSectionHeader from '../../../components/base/AdminSectionHeader';
 import FormInput from '../../../components/base/FormInput';
+import ListItemEditor from '../../../components/base/ListItemEditor';
 import SuccessMessage from '../../../components/base/SuccessMessage';
 import { useSaveNotification } from '../../../hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '../../../utils/colorMix';
-import type { ContactItem } from '../../../types/content';
+import type { ContactItem, EventsInfo } from '../../../types/content';
 
 const AVAILABLE_ICONS = [
   { value: 'ri-mail-line', label: 'Email' },
@@ -34,12 +34,14 @@ const AdminContactPage = () => {
   const { allContent, updateContent, currentEditLanguage } = useContent();
   const content = allContent[currentEditLanguage];
   const [contactInfo, setContactInfo] = useState<ContactItem[]>(content.contactInfo);
+  const [eventsInfo, setEventsInfo] = useState<EventsInfo>(content.eventsInfo);
   const [isSaving, setIsSaving] = useState(false);
   const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
 
   useEffect(() => {
     setContactInfo(allContent[currentEditLanguage].contactInfo);
+    setEventsInfo(allContent[currentEditLanguage].eventsInfo);
   }, [currentEditLanguage, allContent]);
 
   const updateContactItemField = (index: number, field: keyof ContactItem, value: string) => {
@@ -62,16 +64,35 @@ const AdminContactPage = () => {
     setContactInfo(updated);
   };
 
+  const updateEventsInfoField = (field: keyof Pick<EventsInfo, 'contactEmail' | 'responseTime'>, value: string) => {
+    setEventsInfo(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateListItem = (field: keyof Pick<EventsInfo, 'setDurations' | 'technicalRequirements'>, index: number, value: string) => {
+    setEventsInfo(prev => {
+      const updated = [...prev[field]];
+      updated[index] = value;
+      return { ...prev, [field]: updated };
+    });
+  };
+
+  const addListItem = (field: keyof Pick<EventsInfo, 'setDurations' | 'technicalRequirements'>) => {
+    setEventsInfo(prev => ({ ...prev, [field]: [...prev[field], ''] }));
+  };
+
+  const removeListItem = (field: keyof Pick<EventsInfo, 'setDurations' | 'technicalRequirements'>, index: number) => {
+    setEventsInfo(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
+  };
+
   const saveChanges = async () => {
     setIsSaving(true);
-    updateContent({ contactInfo });
+    updateContent({ contactInfo, eventsInfo });
     showNotification();
     setIsSaving(false);
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <AdminSectionHeader
           title="CONTACT SECTION"
           description={`연락처 정보 편집 (${currentEditLanguage.toUpperCase()})`}
@@ -199,8 +220,46 @@ const AdminContactPage = () => {
             </div>
           </AdminCard>
         </div>
-      </div>
-    </AdminLayout>
+
+        {/* Booking Info */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            BOOKING INFO
+          </h2>
+          <AdminCard className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ListItemEditor
+                label="SET DURATIONS"
+                items={eventsInfo.setDurations}
+                onUpdate={(index, value) => updateListItem('setDurations', index, value)}
+                onAdd={() => addListItem('setDurations')}
+                onRemove={(index) => removeListItem('setDurations', index)}
+              />
+              <ListItemEditor
+                label="TECHNICAL REQUIREMENTS"
+                items={eventsInfo.technicalRequirements}
+                onUpdate={(index, value) => updateListItem('technicalRequirements', index, value)}
+                onAdd={() => addListItem('technicalRequirements')}
+                onRemove={(index) => removeListItem('technicalRequirements', index)}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t" style={createBorderFaint()}>
+              <FormInput
+                label="CONTACT EMAIL"
+                value={eventsInfo.contactEmail}
+                onChange={(value) => updateEventsInfoField('contactEmail', value)}
+                placeholder="booking@example.com"
+              />
+              <FormInput
+                label="RESPONSE TIME"
+                value={eventsInfo.responseTime}
+                onChange={(value) => updateEventsInfoField('responseTime', value)}
+                placeholder="Within 48 hours"
+              />
+            </div>
+          </AdminCard>
+        </div>
+    </div>
   );
 };
 

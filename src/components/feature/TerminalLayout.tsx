@@ -1,16 +1,19 @@
+'use client';
 import { useState, ReactNode } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useContent } from '../../contexts/ContentContext';
 import { createColorMixStyle } from '../../utils/colorMix';
 import { COLOR_VARS } from '../../constants/colors';
 import { TRANSITION } from '../../constants/styles';
+import { SITE_NAME, SITE_VERSION, TERMINAL_URL } from '../../constants/site';
 import CursorGlow from '../../pages/home/components/CursorGlow';
 import LiveClock from '../../pages/home/components/LiveClock';
 
 interface TerminalLayoutProps {
   children: ReactNode;
-  currentView: string;
 }
 
 const NAV_ITEMS = [
@@ -20,18 +23,25 @@ const NAV_ITEMS = [
   { label: 'nav_events', path: '/events' },
   { label: 'nav_contact', path: '/contact' },
   { label: 'nav_link', path: '/link' },
-  { label: 'TERMINAL', path: 'https://terminal.stann.kr', external: true, raw: true },
+  { label: 'TERMINAL', path: TERMINAL_URL, external: true, raw: true },
 ];
 
 const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { t } = useTranslation();
   const { language, toggleLanguage } = useLanguage();
+  const { content } = useContent();
+
+  const artistName = (() => {
+    if (!Array.isArray(content.artistInfo)) return SITE_NAME;
+    const item = content.artistInfo.find((i) => i.key === 'Name' || i.key === '이름');
+    return item?.value || SITE_NAME;
+  })();
 
   const handleNavClick = (path: string) => {
-    navigate(path);
+    router.push(path);
     setMobileMenuOpen(false);
   };
 
@@ -44,22 +54,23 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
       {/* Desktop Sidebar */}
       <aside
-        className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:border-r lg:bg-[var(--color-bg)]"
+        className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:border-r lg:bg-[var(--color-bg-sidebar)]"
         style={borderStyle}
       >
         {/* Logo/Brand */}
         <div className="p-8 border-b" style={borderStyle}>
           <h1 className="text-2xl font-bold text-[var(--color-primary)] tracking-wider">
-            STANN<br />LUMO
+            {artistName.split(' ').map((word, i) => (
+              <span key={i} className="block">{word}</span>
+            ))}
           </h1>
-          <p className="text-xs text-[var(--color-accent)] mt-2 tracking-widest">TECHNO / SEOUL</p>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-6">
           <ul className="space-y-1">
             {NAV_ITEMS.map((item) => {
-              const isActive = !item.external && location.pathname === item.path;
+              const isActive = !item.external && pathname === item.path;
               return (
                 <li key={item.path}>
                   {item.external ? (
@@ -70,7 +81,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
                       className="w-full text-left px-4 py-3 cursor-pointer whitespace-nowrap relative group flex items-center justify-between text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5"
                       style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
                     >
-                      <span className="text-sm tracking-widest">{item.raw ? item.label : t(item.label)}</span>
+                      <span className="text-sm tracking-widest uppercase">{item.raw ? item.label : t(item.label)}</span>
                       <i className="ri-external-link-line text-xs opacity-50 group-hover:opacity-100" style={{ transition: `opacity ${TRANSITION.DURATION.DEFAULT}` }}></i>
                     </a>
                   ) : (
@@ -86,7 +97,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
                       {isActive && (
                         <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--color-secondary)]"></span>
                       )}
-                      <span className="text-sm tracking-widest">{t(item.label)}</span>
+                      <span className="text-sm tracking-widest uppercase">{t(item.label)}</span>
                     </button>
                   )}
                 </li>
@@ -107,7 +118,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
           </div>
           {/* 버전 + 언어 전환 */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-[var(--color-secondary)]/25">v1.0.0</p>
+            <p className="text-xs text-[var(--color-secondary)]/25">{SITE_VERSION}</p>
             <div className="flex items-center gap-1 rounded px-2 py-1" style={borderStyle}>
               <button
                 onClick={toggleLanguage}
@@ -135,12 +146,12 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
       {/* Mobile Header */}
       <header
-        className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b"
+        className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg-sidebar)]/95 backdrop-blur-sm border-b"
         style={borderStyle}
       >
         <div className="flex items-center justify-between px-6 h-16">
           <h1 className="text-xl font-bold text-[var(--color-primary)] tracking-wider">
-            STANN LUMO
+            {artistName}
           </h1>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -155,14 +166,14 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
         {/* Mobile Menu */}
         <nav
-          className={`absolute top-full left-0 right-0 bg-[var(--color-bg)] border-b ${
+          className={`absolute top-full left-0 right-0 bg-[var(--color-bg-sidebar)] border-b ${
             mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
           }`}
           style={{ ...borderStyle, transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
         >
           <ul className="py-4">
             {NAV_ITEMS.map((item) => {
-              const isActive = !item.external && location.pathname === item.path;
+              const isActive = !item.external && pathname === item.path;
               return (
                 <li key={item.path}>
                   {item.external ? (
@@ -173,7 +184,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
                       className="w-full text-left px-6 py-4 cursor-pointer flex items-center justify-between text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5"
                       style={{ transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
                     >
-                      <span className="text-sm tracking-widest">{item.raw ? item.label : t(item.label)}</span>
+                      <span className="text-sm tracking-widest uppercase">{item.raw ? item.label : t(item.label)}</span>
                       <i className="ri-external-link-line text-xs opacity-50"></i>
                     </a>
                   ) : (
@@ -189,7 +200,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
                         transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}`
                       }}
                     >
-                      <span className="text-sm tracking-widest">{t(item.label)}</span>
+                      <span className="text-sm tracking-widest uppercase">{t(item.label)}</span>
                     </button>
                   )}
                 </li>

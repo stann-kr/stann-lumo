@@ -116,6 +116,7 @@ export interface ThemeColors {
   accent: string;
   muted: string;
   bg: string;
+  bgSidebar: string;
 }
 
 /**

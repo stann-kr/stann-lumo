@@ -27,7 +27,7 @@ export function useSaveNotification(duration: number = 3000): SaveNotificationRe
   isVisible: boolean;
 } {
   const [showSuccess, setShowSuccess] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /**
    * 알림 표시 트리거

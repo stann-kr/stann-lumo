@@ -13,9 +13,6 @@ import type {
   EventsContent,
   ContactContent,
   Biography,
-  ArtistInfoItem,
-  PhilosophyItem,
-  DesignPhilosophy,
 } from "../types/content";
 
 interface ContentContextType {
@@ -185,6 +182,7 @@ const defaultEnContent: ContentData = {
     accent: "#00ff00",
     muted: "#666666",
     bg: "#000000",
+    bgSidebar: "#000000",
   },
 };
 
@@ -267,20 +265,20 @@ const defaultKoContent: ContentData = {
     {
       id: "1",
       date: "2024-12-31",
-      venue: "CONTRA Seoul",
+      venue: "FAUST Seoul",
       location: "서울, 대한민국",
       time: "23:00",
-      title: "CONTRA Seoul",
+      title: "FAUST Seoul",
       lineup: "아티스트 이름, 게스트 DJ",
       status: "Confirmed",
     },
     {
       id: "2",
       date: "2024-11-15",
-      venue: "MODECI",
+      venue: "FAUST",
       location: "서울, 대한민국",
       time: "22:00",
-      title: "MODECI Night",
+      title: "FAUST Night",
       lineup: "아티스트 이름",
       status: "Confirmed",
     },
@@ -341,6 +339,7 @@ const defaultKoContent: ContentData = {
     accent: "#00ff00",
     muted: "#666666",
     bg: "#000000",
+    bgSidebar: "#000000",
   },
 };
 
@@ -358,6 +357,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const [allContent, setAllContent] = useState<MultiLanguageContent>(() => {
+    if (typeof window === "undefined") return defaultMultiLanguageContent; // SSR 가드
     try {
       const stored = localStorage.getItem("stann_content_multilang");
       if (!stored) return defaultMultiLanguageContent;
@@ -447,6 +447,11 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
           migrated.designPhilosophy = defaults.designPhilosophy;
         }
 
+        // themeColors 마이그레이션: bgSidebar 필드 없는 경우 bg 값으로 채우기
+        if (migrated.themeColors && !migrated.themeColors.bgSidebar) {
+          migrated.themeColors = { ...migrated.themeColors, bgSidebar: migrated.themeColors.bg };
+        }
+
         // homeSections 마이그레이션: icon 필드 없는 경우 기본값으로 채우기
         const defaultIconMap: Record<string, string> = {
           "/about": "ri-user-line",
@@ -488,6 +493,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     root.style.setProperty("--color-accent", content.themeColors.accent);
     root.style.setProperty("--color-muted", content.themeColors.muted);
     root.style.setProperty("--color-bg", content.themeColors.bg);
+    root.style.setProperty("--color-bg-sidebar", content.themeColors.bgSidebar ?? content.themeColors.bg);
   }, [allContent, content.themeColors]);
 
   const updateContent = (updates: Partial<ContentData>) => {
@@ -524,6 +530,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useContent = () => {
   const context = useContext(ContentContext);
   if (!context) {

@@ -1,4 +1,3 @@
-import AdminLayout from '../../../components/feature/AdminLayout';
 import { useContent } from '../../../contexts/ContentContext';
 import AdminCard from '../../../components/base/AdminCard';
 import AdminSectionHeader from '../../../components/base/AdminSectionHeader';
@@ -71,8 +70,7 @@ const AdminMusicPage = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <AdminSectionHeader
           title="MUSIC SECTION"
           description={`트랙, 릴리즈, 오디오 작업 관리 (${currentEditLanguage.toUpperCase()})`}
@@ -188,8 +186,7 @@ const AdminMusicPage = () => {
             </AdminCard>
           ))}
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 

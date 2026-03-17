@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import AdminLayout from '../../../components/feature/AdminLayout';
 import { useContent } from '../../../contexts/ContentContext';
 import AdminCard from '../../../components/base/AdminCard';
 import AdminSectionHeader from '../../../components/base/AdminSectionHeader';
@@ -62,8 +61,7 @@ const AdminLinkPage = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <AdminSectionHeader
           title="LINK SECTION"
           description={`소셜 미디어 및 플랫폼 링크 관리 (${currentEditLanguage.toUpperCase()})`}
@@ -181,8 +179,7 @@ const AdminLinkPage = () => {
             onCancel={() => setShowDeleteModal(null)}
           />
         )}
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-import AdminLayout from '../../../components/feature/AdminLayout';
 import { useContent } from '../../../contexts/ContentContext';
 import AdminCard from '../../../components/base/AdminCard';
 import AdminSectionHeader from '../../../components/base/AdminSectionHeader';
@@ -101,8 +100,7 @@ const AdminAboutPage = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-8">
+    <div className="space-y-8">
         <AdminSectionHeader
           title="ABOUT SECTION"
           description={`아티스트 정보, 약력, 철학 편집 (${currentEditLanguage.toUpperCase()})`}
@@ -305,8 +303,7 @@ const AdminAboutPage = () => {
             ))}
           </div>
         </div>
-      </div>
-    </AdminLayout>
+    </div>
   );
 };
 
