@@ -93,9 +93,9 @@ const AdminEventsPage = () => {
       const merged = removeDuplicateEvents([...manualPerformances, ...raPerformances]);
       const sorted = sortEventsByDate(merged, true);
       setPerformances(sorted);
-      setFetchSuccess(`${raPerformances.length}개의 이벤트를 가져왔습니다.`);
+      setFetchSuccess(`${t('events_sync_success')} (${raPerformances.length})`);
     } catch (error) {
-      setFetchError(error instanceof Error ? error.message : 'RA API 호출 중 오류가 발생했습니다.');
+      setFetchError(error instanceof Error ? error.message : t('events_sync_error'));
     } finally {
       setIsFetching(false);
     }
@@ -128,7 +128,7 @@ const AdminEventsPage = () => {
     <div className="space-y-8">
       <AdminSectionHeader
         title="EVENTS SECTION"
-        description={`공연 일정 및 이벤트 관리 (${currentEditLanguage.toUpperCase()})`}
+        description={`${t('admin_events_subtitle')} (${currentEditLanguage.toUpperCase()})`}
         onSave={saveChanges}
         isSaving={isSaving}
         action={

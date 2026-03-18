@@ -2,6 +2,20 @@
 
 ---
 
+## [Unreleased] — 2026-03-18 (기타 개선: i18n + 세션 만료 처리)
+
+### events/page.tsx i18n 전환
+- `개의 이벤트를 가져왔습니다` → `t('events_sync_success') + 카운트`
+- `RA API 호출 중 오류가 발생했습니다` → `t('events_sync_error')`
+- `공연 일정 및 이벤트 관리` → `t('admin_events_subtitle')`
+
+### 어드민 세션 만료 처리
+- `ProtectedRoute.tsx`: 5분 주기 세션 재검증 (`setInterval`)
+  - 초기 마운트: 세션 유효성 확인 (기존 동작 유지)
+  - 이후 5분마다: `/api/auth/session` 재검증 → 만료/실패 시 `/admin` 리다이렉트
+
+---
+
 ## [Unreleased] — 2026-03-18 (Phase 4-e + 어드민 페이지 D1 API 연동)
 
 ### Phase 4-e: 데이터 마이그레이션 라우트

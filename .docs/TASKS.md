@@ -110,8 +110,8 @@
 
 ---
 
-## 🔲 기타 개선 (낮은 우선순위)
+## ✅ 기타 개선
 
-- [ ] `admin/events/page.tsx` 한국어 하드코딩 잔존 확인 → i18n 전환
-- [ ] 어드민 세션 만료 처리 — 자동 로그아웃 및 `/admin` 리다이렉트
+- [x] `admin/events/page.tsx` 한국어 하드코딩 → i18n 전환 (`events_sync_success`, `events_sync_error`, `admin_events_subtitle`)
+- [x] 어드민 세션 만료 처리 — `ProtectedRoute` 5분 주기 재검증 + 만료 시 `/admin` 자동 리다이렉트
 - [x] `src/types/content.ts` 불필요 타입 정리
