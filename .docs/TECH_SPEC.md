@@ -4,7 +4,7 @@
 
 ---
 
-## 현재 아키텍처 (Phase 4-a 완료 시점)
+## 현재 아키텍처 (Phase 4-a + 동적 섹션/pageMeta 완료 시점)
 
 ### 런타임 및 배포
 
@@ -69,6 +69,7 @@ src/
   constants/site.ts
 migrations/
   0001_initial_schema.sql   # D1 전체 스키마
+  0002_dynamic_content.sql  # 동적 섹션·pageMeta 테이블
 wrangler.json               # CF Workers 바인딩 설정
 open-next.config.ts         # OpenNext Cloudflare 어댑터 설정
 ```
@@ -116,10 +117,8 @@ ra_api_config    -- Resident Advisor API 설정 (단일 행, id=1)
 ### 콘텐츠 테이블 (다국어: `lang` 컬럼 `en`|`ko`)
 
 ```sql
+-- 0001_initial_schema.sql
 artist_info                    -- 아티스트 정보 key-value
-biography_paragraphs           -- 바이오그래피 단락
-musical_philosophy             -- 음악 철학
-design_philosophy_paragraphs   -- 디자인 철학 단락
 home_sections                  -- 홈 섹션 카드
 tracks                         -- 음악 트랙
 performances                   -- 공연 일정 (lang 없음 — 공통)
@@ -128,6 +127,12 @@ events_set_durations           -- 세트 시간 목록
 events_tech_requirements       -- 기술 요구사항 목록
 link_platforms                 -- 외부 링크
 contact_info                   -- 연락처
+
+-- 0002_dynamic_content.sql (동적 섹션·pageMeta)
+about_sections                 -- 동적 섹션 헤더 (id, lang, title, type, order)
+about_section_paragraphs       -- 섹션 단락 항목
+about_section_philosophy_items -- 섹션 철학 항목
+page_meta                      -- 페이지 메타 key-value (page, lang, key, value)
 ```
 
 ### 인증 테이블
@@ -160,8 +165,8 @@ media_files      -- R2 오브젝트 메타데이터 (id, r2_key, filename, mime_
 |---|---|---|---|
 | `GET` | `/api/content/[lang]` | 전체 공개 콘텐츠 조회 | ✗ |
 | `GET/PUT` | `/api/admin/artist-info` | 아티스트 정보 | ✓ |
-| `GET/PUT` | `/api/admin/biography` | 바이오그래피 | ✓ |
-| `GET/PUT` | `/api/admin/philosophy` | 음악·디자인 철학 | ✓ |
+| `GET/PUT` | `/api/admin/about-sections` | 동적 섹션 | ✓ |
+| `GET/PUT` | `/api/admin/page-meta` | 페이지 메타 | ✓ |
 | `GET/PUT` | `/api/admin/home-sections` | 홈 섹션 카드 | ✓ |
 | `GET/PUT` | `/api/admin/tracks` | 음악 트랙 | ✓ |
 | `GET/PUT` | `/api/admin/performances` | 공연 일정 | ✓ |

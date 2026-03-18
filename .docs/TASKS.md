@@ -21,49 +21,57 @@
   - [x] `src/app/api/auth/login/route.ts`: `POST` 로그인 → 세션 쿠키 발급
   - [x] `src/app/api/auth/logout/route.ts`: `POST` 세션 삭제
   - [x] `src/app/api/auth/session/route.ts`: `GET` 세션 유효성 확인
+- [x] **동적 섹션 시스템 구현** (`aboutSections: DynamicSection[]`)
+  — `src/types/content.ts`, `src/contexts/ContentContext.tsx`,
+    `src/app/(public)/about/page.tsx`, `src/app/admin/(dashboard)/about/page.tsx`
+- [x] **pageMeta 시스템 구현** (5개 공개 페이지 타이틀/섹션 타이틀 어드민 편집 가능)
+  — `src/types/content.ts`, `src/contexts/ContentContext.tsx`,
+    5개 공개 페이지, 5개 어드민 페이지 PAGE SETTINGS 카드
+- [x] **`migrations/0002_dynamic_content.sql` 추가**
+  — `about_sections`, `about_section_paragraphs`, `about_section_philosophy_items`, `page_meta`
+- [x] **`src/types/content.ts` 불필요 타입 제거** (`Biography`, `DesignPhilosophy` 삭제)
 
 ---
 
-## 🔲 Phase 4-b: D1 콘텐츠 API 구현
+## ✅ Phase 4-b: D1 콘텐츠 API 구현
 
 ### 1. 공개 콘텐츠 API
 
-- [ ] `src/app/api/content/[lang]/route.ts` — `GET`: 전체 공개 콘텐츠 조회 (`en` | `ko`)
-  - D1 → `ContentData` 타입으로 조합하여 반환
-  - DB 없는 개발 환경: 기본값 반환 폴백
+- [x] `src/app/api/content/[lang]/route.ts` — `GET`: 전체 공개 콘텐츠 조회 (`en` | `ko`)
+  - D1 → `ContentData` 타입으로 조합하여 반환 (db.batch 16쿼리)
+  - DB 없는 개발 환경: 503 반환 → ContentContext 기본값 폴백
 
 ### 2. 어드민 콘텐츠 CRUD API
 
-모든 라우트에 `requireAdminSession()` 미들웨어 적용.
-
-- [ ] `src/app/api/admin/artist-info/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/biography/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/philosophy/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/home-sections/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/tracks/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/performances/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/events-info/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/link-platforms/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/contact-info/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/theme/route.ts` — `GET` / `PUT`
-- [ ] `src/app/api/admin/site-config/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/artist-info/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/about-sections/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/page-meta/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/home-sections/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/tracks/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/performances/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/events-info/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/link-platforms/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/contact-info/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/theme/route.ts` — `GET` / `PUT`
+- [x] `src/app/api/admin/site-config/route.ts` — `GET` / `PUT`
 
 ---
 
-## 🔲 Phase 4-c: 프론트엔드 서비스 계층
+## ✅ Phase 4-c: 프론트엔드 서비스 계층
 
-- [ ] `src/services/apiClient.ts` — fetch 래퍼 (`ApiResponse<T>`, 에러 처리)
-- [ ] `src/services/contentService.ts` — 공개 콘텐츠 API 호출
-- [ ] `src/services/adminService.ts` — 어드민 CRUD API 호출
-- [ ] `src/services/authService.ts` — 로그인/로그아웃/세션 API 호출 (기존 직접 fetch 대체)
+- [x] `src/services/apiClient.ts` — fetch 래퍼 (`ApiResponse<T>`, 에러 처리)
+- [x] `src/services/contentService.ts` — 공개 콘텐츠 API 호출
+- [x] `src/services/adminService.ts` — 어드민 CRUD API 호출
+- [x] `src/services/authService.ts` — 로그인/로그아웃/세션 API 호출
 
 ---
 
-## 🔲 Phase 4-d: ContentContext API 전환
+## ✅ Phase 4-d: ContentContext API 전환
 
-- [ ] `src/contexts/ContentContext.tsx`: localStorage 직접 접근 → `contentService` API 호출로 교체
-- [ ] `migrateContent()` / `loadFromStorage()` 제거 (D1 전환 후 불필요)
-- [ ] 페이지 로드 시 공개 API에서 콘텐츠 fetch → Context 주입
+- [x] `src/contexts/ContentContext.tsx`: localStorage 직접 접근 제거 → `contentService.fetchContent()` 호출
+- [x] `migrateContent()` / `loadFromStorage()` 제거
+- [x] 페이지 로드 시 공개 API(en+ko 병렬)에서 콘텐츠 fetch → Context 주입
+- **비고**: `updateContent()`는 인메모리 업데이트 유지. 어드민 저장 영구화는 각 어드민 페이지에서 `adminService` 직접 호출로 처리 예정
 
 ---
 
@@ -95,4 +103,4 @@
 
 - [ ] `admin/events/page.tsx` 한국어 하드코딩 잔존 확인 → i18n 전환
 - [ ] 어드민 세션 만료 처리 — 자동 로그아웃 및 `/admin` 리다이렉트
-- [ ] `src/types/content.ts` 불필요 타입 정리
+- [x] `src/types/content.ts` 불필요 타입 정리

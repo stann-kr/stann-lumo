@@ -6,13 +6,13 @@ import {
   useEffect,
 } from "react";
 import { useLanguage } from "./LanguageContext";
+import { fetchContent } from "@/services/contentService";
 import type {
   ContentData,
   MultiLanguageContent,
   MusicContent,
   EventsContent,
   ContactContent,
-  Biography,
 } from "../types/content";
 
 interface ContentContextType {
@@ -33,24 +33,62 @@ const defaultEnContent: ContentData = {
     { id: "3", key: "Location", value: "Seoul, South Korea" },
     { id: "4", key: "Status", value: "Active" },
   ],
-  biography: {
-    paragraphs: [
-      "Artist biography paragraph 1. This is where you can describe your musical journey, influences, and artistic vision.",
-      "Artist biography paragraph 2. Continue your story here with more details about your career and achievements.",
-    ],
-  },
-  musicalPhilosophy: [
+  aboutSections: [
     {
-      id: "1",
-      quote: "Music is the universal language of mankind.",
-      description:
-        "A deep exploration of sound, rhythm, and emotion through electronic music.",
+      id: "bio",
+      title: "BIOGRAPHY",
+      type: "paragraphs",
+      order: 0,
+      paragraphs: [
+        "Artist biography paragraph 1. This is where you can describe your musical journey, influences, and artistic vision.",
+        "Artist biography paragraph 2. Continue your story here with more details about your career and achievements.",
+      ],
+    },
+    {
+      id: "musical-phil",
+      title: "MUSICAL PHILOSOPHY",
+      type: "philosophy-items",
+      order: 1,
+      items: [
+        {
+          id: "1",
+          quote: "Music is the universal language of mankind.",
+          description:
+            "A deep exploration of sound, rhythm, and emotion through electronic music.",
+        },
+      ],
+    },
+    {
+      id: "design-phil",
+      title: "DESIGN PHILOSOPHY",
+      type: "paragraphs",
+      order: 2,
+      paragraphs: [
+        "Minimalism meets functionality. Every element serves a purpose.",
+      ],
     },
   ],
-  designPhilosophy: {
-    paragraphs: [
-      "Minimalism meets functionality. Every element serves a purpose.",
-    ],
+  pageMeta: {
+    home: { navTitle: "NAVIGATION" },
+    music: { title: "MUSIC", subtitle: "TRACKS & MIXES" },
+    events: {
+      title: "EVENTS",
+      subtitle: "PERFORMANCE SCHEDULE & INFORMATION",
+      upcomingTitle: "UPCOMING EVENTS",
+      pastTitle: "PAST EVENTS",
+    },
+    contact: {
+      title: "CONTACT",
+      subtitle: "GUESTBOOK & DIRECT CONTACT",
+      guestbookTitle: "GUESTBOOK",
+      directTitle: "DIRECT CONTACT",
+      bookingTitle: "BOOKING INFO",
+    },
+    link: {
+      title: "CONNECT",
+      subtitle: "SOCIAL MEDIA & PLATFORMS",
+      terminalTitle: "TERMINAL.STANN.KR",
+    },
   },
   homeSections: [
     {
@@ -193,21 +231,59 @@ const defaultKoContent: ContentData = {
     { id: "3", key: "위치", value: "서울, 대한민국" },
     { id: "4", key: "상태", value: "활동 중" },
   ],
-  biography: {
-    paragraphs: [
-      "아티스트 바이오그래피 첫 번째 단락. 여기에 음악적 여정, 영향, 예술적 비전을 설명할 수 있습니다.",
-      "아티스트 바이오그래피 두 번째 단락. 경력과 성과에 대한 자세한 내용을 계속 작성하세요.",
-    ],
-  },
-  musicalPhilosophy: [
+  aboutSections: [
     {
-      id: "1",
-      quote: "음악은 인류의 보편적 언어입니다.",
-      description: "전자 음악을 통한 소리, 리듬, 감정의 깊은 탐구.",
+      id: "bio",
+      title: "바이오그래피",
+      type: "paragraphs",
+      order: 0,
+      paragraphs: [
+        "아티스트 바이오그래피 첫 번째 단락. 여기에 음악적 여정, 영향, 예술적 비전을 설명할 수 있습니다.",
+        "아티스트 바이오그래피 두 번째 단락. 경력과 성과에 대한 자세한 내용을 계속 작성하세요.",
+      ],
+    },
+    {
+      id: "musical-phil",
+      title: "음악 철학",
+      type: "philosophy-items",
+      order: 1,
+      items: [
+        {
+          id: "1",
+          quote: "음악은 인류의 보편적 언어입니다.",
+          description: "전자 음악을 통한 소리, 리듬, 감정의 깊은 탐구.",
+        },
+      ],
+    },
+    {
+      id: "design-phil",
+      title: "디자인 철학",
+      type: "paragraphs",
+      order: 2,
+      paragraphs: ["미니멀리즘과 기능성의 만남. 모든 요소는 목적을 가집니다."],
     },
   ],
-  designPhilosophy: {
-    paragraphs: ["미니멀리즘과 기능성의 만남. 모든 요소는 목적을 가집니다."],
+  pageMeta: {
+    home: { navTitle: "네비게이션" },
+    music: { title: "음악", subtitle: "트랙 & 믹스" },
+    events: {
+      title: "이벤트",
+      subtitle: "공연 일정 & 정보",
+      upcomingTitle: "다가오는 이벤트",
+      pastTitle: "지난 이벤트",
+    },
+    contact: {
+      title: "연락처",
+      subtitle: "방명록 & 직접 연락",
+      guestbookTitle: "방명록",
+      directTitle: "직접 연락",
+      bookingTitle: "예약 정보",
+    },
+    link: {
+      title: "연결",
+      subtitle: "소셜 미디어 & 플랫폼",
+      terminalTitle: "TERMINAL.STANN.KR",
+    },
   },
   homeSections: [
     {
@@ -348,104 +424,6 @@ const defaultMultiLanguageContent: MultiLanguageContent = {
   ko: defaultKoContent,
 };
 
-function migrateContent(lang: ContentData, defaults: ContentData): ContentData {
-  const migrated = { ...defaults, ...lang } as ContentData & {
-    bookingInfo?: unknown;
-    artistInfo?: unknown;
-    musicalPhilosophy?: unknown;
-    designPhilosophy?: unknown;
-  };
-
-  if (!migrated.eventsInfo && migrated.bookingInfo) {
-    migrated.eventsInfo = migrated.bookingInfo as ContentData["eventsInfo"];
-  }
-  delete migrated.bookingInfo;
-
-  const bio = migrated.biography as Biography & {
-    paragraph1?: string;
-    paragraph2?: string;
-  };
-  if (!bio.paragraphs && (bio.paragraph1 || bio.paragraph2)) {
-    migrated.biography = {
-      paragraphs: [bio.paragraph1 ?? "", bio.paragraph2 ?? ""].filter(Boolean),
-    };
-  }
-  if (!migrated.biography.paragraphs) {
-    migrated.biography = { paragraphs: defaults.biography.paragraphs };
-  }
-
-  const oldArtistInfo = migrated.artistInfo as
-    | { name?: string; genre?: string; location?: string; status?: string }
-    | undefined;
-  if (oldArtistInfo && !Array.isArray(oldArtistInfo)) {
-    migrated.artistInfo = [
-      { id: "1", key: "Name", value: oldArtistInfo.name ?? "" },
-      { id: "2", key: "Genre", value: oldArtistInfo.genre ?? "" },
-      { id: "3", key: "Location", value: oldArtistInfo.location ?? "" },
-      { id: "4", key: "Status", value: oldArtistInfo.status ?? "" },
-    ];
-  }
-  if (!Array.isArray(migrated.artistInfo)) {
-    migrated.artistInfo = defaults.artistInfo;
-  }
-
-  const oldPhilosophy = migrated.musicalPhilosophy as
-    | { quote?: string; description?: string }
-    | undefined;
-  if (oldPhilosophy && !Array.isArray(oldPhilosophy)) {
-    migrated.musicalPhilosophy = [
-      { id: "1", quote: oldPhilosophy.quote ?? "", description: oldPhilosophy.description ?? "" },
-    ];
-  }
-  if (!Array.isArray(migrated.musicalPhilosophy)) {
-    migrated.musicalPhilosophy = defaults.musicalPhilosophy;
-  }
-
-  if (typeof migrated.designPhilosophy === "string") {
-    migrated.designPhilosophy = { paragraphs: [migrated.designPhilosophy] };
-  }
-  if (!migrated.designPhilosophy || !migrated.designPhilosophy.paragraphs) {
-    migrated.designPhilosophy = defaults.designPhilosophy;
-  }
-
-  if (migrated.themeColors && !migrated.themeColors.bgSidebar) {
-    migrated.themeColors = { ...migrated.themeColors, bgSidebar: migrated.themeColors.bg };
-  }
-
-  const defaultIconMap: Record<string, string> = {
-    "/about": "ri-user-line",
-    "/music": "ri-music-2-line",
-    "/events": "ri-calendar-event-line",
-    "/contact": "ri-mail-line",
-    "/link": "ri-links-line",
-  };
-  if (Array.isArray(migrated.homeSections)) {
-    migrated.homeSections = migrated.homeSections.map((section) => ({
-      ...section,
-      icon: section.icon || defaultIconMap[section.path] || "ri-arrow-right-line",
-    }));
-  } else {
-    migrated.homeSections = defaults.homeSections;
-  }
-
-  return migrated as ContentData;
-}
-
-function loadFromStorage(): MultiLanguageContent {
-  try {
-    const stored = localStorage.getItem("stann_content_multilang");
-    if (!stored) return defaultMultiLanguageContent;
-    const parsed = JSON.parse(stored);
-    if (!parsed.en || !parsed.ko) return defaultMultiLanguageContent;
-    return {
-      en: migrateContent(parsed.en, defaultEnContent),
-      ko: migrateContent(parsed.ko, defaultKoContent),
-    };
-  } catch {
-    return defaultMultiLanguageContent;
-  }
-}
-
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
 export const ContentProvider = ({ children }: { children: ReactNode }) => {
@@ -454,27 +432,44 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     "en",
   );
 
-  // 서버와 클라이언트 첫 렌더 모두 기본값으로 시작 — hydration 불일치 방지
-  const [allContent, setAllContent] = useState<MultiLanguageContent>(defaultMultiLanguageContent);
+  // 서버/클라이언트 첫 렌더 모두 기본값으로 시작 — hydration 불일치 방지
+  const [allContent, setAllContent] = useState<MultiLanguageContent>(
+    defaultMultiLanguageContent,
+  );
 
   useEffect(() => {
-    // hydration 완료 후 localStorage에서 저장된 콘텐츠 복원
-    setAllContent(loadFromStorage());
+    // hydration 완료 후 D1 API에서 양 언어 콘텐츠 로드
+    // API 미사용 환경(dev, DB 없음) → 기본값 유지
+    Promise.all([fetchContent("en"), fetchContent("ko")]).then(
+      ([enData, koData]) => {
+        setAllContent({
+          en: enData ?? defaultEnContent,
+          ko: koData ?? defaultKoContent,
+        });
+      },
+    );
   }, []);
 
   const content = allContent[language];
 
   useEffect(() => {
-    localStorage.setItem("stann_content_multilang", JSON.stringify(allContent));
+    // CSS 변수 적용
     const root = document.documentElement;
     root.style.setProperty("--color-primary", content.themeColors.primary);
     root.style.setProperty("--color-secondary", content.themeColors.secondary);
     root.style.setProperty("--color-accent", content.themeColors.accent);
     root.style.setProperty("--color-muted", content.themeColors.muted);
     root.style.setProperty("--color-bg", content.themeColors.bg);
-    root.style.setProperty("--color-bg-sidebar", content.themeColors.bgSidebar ?? content.themeColors.bg);
-  }, [allContent, content.themeColors]);
+    root.style.setProperty(
+      "--color-bg-sidebar",
+      content.themeColors.bgSidebar ?? content.themeColors.bg,
+    );
+  }, [content.themeColors]);
 
+  /**
+   * 인메모리 콘텐츠 업데이트 — 어드민 페이지 편집 시 즉시 UI 반영용.
+   * 영구 저장은 각 어드민 페이지에서 adminService를 통해 D1에 직접 반영.
+   */
   const updateContent = (updates: Partial<ContentData>) => {
     setAllContent((prev) => ({
       ...prev,

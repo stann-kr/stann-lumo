@@ -2,6 +2,77 @@
 
 ---
 
+## [Unreleased] — 2026-03-18 (Phase 4-b/c/d: D1 콘텐츠 API + 서비스 계층 + ContentContext 전환)
+
+### D1 콘텐츠 API 구현 (Phase 4-b)
+
+#### 공개 API
+- `src/app/api/content/[lang]/route.ts` — `GET`: D1 16테이블 batch 조회 → `ContentData` 반환
+  - DB 미사용 환경: 503 반환 (ContentContext 기본값 폴백)
+
+#### 어드민 CRUD API (모두 `requireAdminSession()` 적용)
+- `src/app/api/admin/artist-info/route.ts` — `GET` / `PUT`
+- `src/app/api/admin/about-sections/route.ts` — `GET` / `PUT` (3테이블 batch)
+- `src/app/api/admin/page-meta/route.ts` — `GET` / `PUT`
+- `src/app/api/admin/home-sections/route.ts` — `GET` / `PUT`
+- `src/app/api/admin/tracks/route.ts` — `GET` / `PUT`
+- `src/app/api/admin/performances/route.ts` — `GET` / `PUT` (lang 무관)
+- `src/app/api/admin/events-info/route.ts` — `GET` / `PUT` (3테이블 batch)
+- `src/app/api/admin/link-platforms/route.ts` — `GET` / `PUT`
+- `src/app/api/admin/contact-info/route.ts` — `GET` / `PUT`
+- `src/app/api/admin/theme/route.ts` — `GET` / `PUT` (단일행 UPDATE)
+- `src/app/api/admin/site-config/route.ts` — `GET` / `PUT` (단일행 UPDATE)
+
+### 서비스 계층 구현 (Phase 4-c)
+- `src/services/apiClient.ts` — fetch 래퍼 (`apiGet` / `apiPut` / `apiPost`)
+- `src/services/contentService.ts` — `fetchContent(lang)`
+- `src/services/adminService.ts` — 어드민 API 전체 CRUD 함수
+- `src/services/authService.ts` — `login` / `logout` / `checkSession`
+
+### ContentContext API 전환 (Phase 4-d)
+- `src/contexts/ContentContext.tsx`: localStorage 제거 → `contentService.fetchContent()` 호출
+  - 마운트 시 en/ko 병렬 fetch → 성공 시 D1 데이터 적용, 실패 시 기본값 유지
+  - `migrateContent()` / `loadFromStorage()` 제거
+  - `updateContent()` 인메모리 업데이트 유지 (어드민 즉시 UI 반영용)
+
+---
+
+## [Unreleased] — 2026-03-18 (동적 섹션 시스템 + 페이지 메타 커스텀)
+
+### 동적 섹션 시스템 및 페이지 메타 커스텀 구현
+
+#### 타입 변경 (`src/types/content.ts`)
+- `Biography`, `DesignPhilosophy` 인터페이스 제거
+- `DynamicSectionType`, `DynamicSection` 타입 추가 — About 섹션 동적 관리
+- `HomePageMeta`, `MusicPageMeta`, `EventsPageMeta`, `ContactPageMeta`, `LinkPageMeta`, `PageMeta` 타입 추가
+- `ContentData`: `biography`/`musicalPhilosophy`/`designPhilosophy` 제거 → `aboutSections: DynamicSection[]`, `pageMeta: PageMeta` 추가
+
+#### 콘텍스트 변경 (`src/contexts/ContentContext.tsx`)
+- EN/KO 기본값: `aboutSections` 3개 (bio/musical-phil/design-phil) + `pageMeta` 전체 추가
+- `migrateContent`: 구형 biography/musicalPhilosophy/designPhilosophy → `aboutSections` 자동 변환
+- `pageMeta` 누락 키 deep merge 처리
+
+#### 공개 페이지
+- `about/page.tsx`: `order` 기준 정렬 후 `DynamicSection` 동적 렌더링 (paragraphs / philosophy-items)
+- `page.tsx`: `pageMeta.home.navTitle` 적용 (i18n fallback 유지)
+- `music/page.tsx`: `pageMeta.music.title/subtitle` 적용
+- `events/page.tsx`: `pageMeta.events.title/subtitle/upcomingTitle/pastTitle` 적용
+- `contact/page.tsx`: `pageMeta.contact.title/subtitle/guestbookTitle/directTitle/bookingTitle` 적용
+- `link/page.tsx`: `pageMeta.link.title/subtitle/terminalTitle` 적용
+
+#### 어드민 페이지
+- `admin/about/page.tsx`: 완전 재작성 — ADD SECTION 드롭다운, 섹션 타입/타이틀 변경, ↑↓ 순서 변경, DELETE (최소 1개 유지)
+- `admin/home/page.tsx`: PAGE SETTINGS 카드 (navTitle)
+- `admin/music/page.tsx`: PAGE SETTINGS 카드 (title, subtitle)
+- `admin/events/page.tsx`: PAGE SETTINGS 카드 (title, subtitle, upcomingTitle, pastTitle)
+- `admin/contact/page.tsx`: PAGE SETTINGS 카드 (title, subtitle, guestbookTitle, directTitle, bookingTitle)
+- `admin/link/page.tsx`: PAGE SETTINGS 카드 (title, subtitle, terminalTitle)
+
+#### D1 마이그레이션
+- `migrations/0002_dynamic_content.sql`: `about_sections`, `about_section_paragraphs`, `about_section_philosophy_items`, `page_meta` 테이블 신규
+
+---
+
 ## [Unreleased] — 2026-03-18
 
 ### Hydration 오류 수정
