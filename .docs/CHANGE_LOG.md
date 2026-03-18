@@ -2,6 +2,26 @@
 
 ---
 
+## [Unreleased] — 2026-03-18 (Phase 4-e + 어드민 페이지 D1 API 연동)
+
+### Phase 4-e: 데이터 마이그레이션 라우트
+- `src/app/api/admin/migrate/route.ts` — `POST /api/admin/migrate`
+  - `MultiLanguageContent` JSON 수신 → 전체 테이블 초기화 + D1 재삽입
+  - batch 90개 청크 분할 실행 (D1 100개 제한 대응)
+
+### 어드민 페이지 D1 API 연동
+- 6개 어드민 페이지 `saveChanges` / `handleSave`: `adminService` 호출 + `Promise.allSettled` 패턴
+  - home: `updateHomeSections` + `updatePageMeta` + `updateTerminalInfo`
+  - about: `updateArtistInfo` + `updateAboutSections` (useAdminForm `handleSave` 교체)
+  - music: `updateTracks` + `updatePageMeta`
+  - events: `updatePerformances` + `updatePageMeta`
+  - contact: `updateContactInfo` + `updateEventsInfo` + `updatePageMeta`
+  - link: `updateLinkPlatforms` + `updatePageMeta` + `updateTerminalInfo`
+- `adminService.ts`: `updateTerminalInfo()` 추가 (site-config 조회 후 terminal 필드만 갱신)
+- `useAdminForm` / `AdminFormReturn`: 제네릭 제약 `Record<string, unknown>` → `object` 완화
+
+---
+
 ## [Unreleased] — 2026-03-18 (Phase 4-b/c/d: D1 콘텐츠 API + 서비스 계층 + ContentContext 전환)
 
 ### D1 콘텐츠 API 구현 (Phase 4-b)

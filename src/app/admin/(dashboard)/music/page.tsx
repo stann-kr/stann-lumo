@@ -9,8 +9,13 @@ import { useListEditor } from '@/hooks/useListEditor';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useItemReorder } from '@/hooks/useItemReorder';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createBorderFaint } from '@/utils/colorMix';
+import {
+  updateTracks as apiUpdateTracks,
+  updatePageMeta as apiUpdatePageMeta,
+} from '@/services/adminService';
+import type { PageMeta } from '@/types/content';
 
 interface Track {
   id: string;
@@ -45,6 +50,15 @@ const AdminMusicPage = () => {
   const { moveUp, moveDown } = useItemReorder(tracks, setTracks);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
   const [isSaving, setIsSaving] = useState(false);
+  const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
+
+  useEffect(() => {
+    setPageMeta(allContent[currentEditLanguage].pageMeta);
+  }, [currentEditLanguage, allContent]);
+
+  const updatePageMetaField = (field: keyof PageMeta['music'], value: string) => {
+    setPageMeta(prev => ({ ...prev, music: { ...prev.music, [field]: value } }));
+  };
 
   const addNewTrack = () => {
     const newTrack: Track = {
@@ -63,9 +77,13 @@ const AdminMusicPage = () => {
     updateTrack(index, { ...tracks[index], [field]: value });
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     setIsSaving(true);
-    updateContent({ tracks });
+    await Promise.allSettled([
+      apiUpdateTracks(currentEditLanguage, tracks),
+      apiUpdatePageMeta(currentEditLanguage, pageMeta),
+    ]);
+    updateContent({ tracks, pageMeta });
     showNotification();
     setIsSaving(false);
   };
@@ -89,6 +107,29 @@ const AdminMusicPage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* PAGE SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            PAGE SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormInput
+                label="PAGE TITLE"
+                value={pageMeta.music.title}
+                onChange={(value) => updatePageMetaField('title', value)}
+                placeholder="MUSIC"
+              />
+              <FormInput
+                label="PAGE SUBTITLE"
+                value={pageMeta.music.subtitle}
+                onChange={(value) => updatePageMetaField('subtitle', value)}
+                placeholder="TRACKS & MIXES"
+              />
+            </div>
+          </AdminCard>
+        </div>
 
         <div className="space-y-4">
           {tracks.map((track, index) => (

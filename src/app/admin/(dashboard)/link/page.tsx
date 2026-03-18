@@ -9,12 +9,19 @@ import SuccessMessage from '@/components/base/SuccessMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint } from '@/utils/colorMix';
+import {
+  updateLinkPlatforms as apiUpdateLinkPlatforms,
+  updatePageMeta as apiUpdatePageMeta,
+  updateTerminalInfo as apiUpdateTerminalInfo,
+} from '@/services/adminService';
+import type { PageMeta } from '@/types/content';
 
 const AdminLinkPage = () => {
   const { allContent, updateContent, currentEditLanguage } = useContent();
   const content = allContent[currentEditLanguage];
   const [linkPlatforms, setLinkPlatforms] = useState(content.linkPlatforms);
   const [terminalInfo, setTerminalInfo] = useState(content.terminalInfo);
+  const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
@@ -22,6 +29,7 @@ const AdminLinkPage = () => {
   useEffect(() => {
     setLinkPlatforms(allContent[currentEditLanguage].linkPlatforms);
     setTerminalInfo(allContent[currentEditLanguage].terminalInfo);
+    setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
 
   const addNewPlatform = () => {
@@ -54,9 +62,18 @@ const AdminLinkPage = () => {
     setLinkPlatforms(newPlatforms);
   };
 
+  const updatePageMetaField = (field: keyof PageMeta['link'], value: string) => {
+    setPageMeta(prev => ({ ...prev, link: { ...prev.link, [field]: value } }));
+  };
+
   const saveChanges = async () => {
     setIsSaving(true);
-    updateContent({ linkPlatforms, terminalInfo });
+    await Promise.allSettled([
+      apiUpdateLinkPlatforms(currentEditLanguage, linkPlatforms),
+      apiUpdatePageMeta(currentEditLanguage, pageMeta),
+      apiUpdateTerminalInfo(terminalInfo),
+    ]);
+    updateContent({ linkPlatforms, terminalInfo, pageMeta });
     showNotification();
     setIsSaving(false);
   };
@@ -80,6 +97,35 @@ const AdminLinkPage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* PAGE SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            PAGE SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormInput
+                label="PAGE TITLE"
+                value={pageMeta.link.title}
+                onChange={(value) => updatePageMetaField('title', value)}
+                placeholder="CONNECT"
+              />
+              <FormInput
+                label="PAGE SUBTITLE"
+                value={pageMeta.link.subtitle}
+                onChange={(value) => updatePageMetaField('subtitle', value)}
+                placeholder="SOCIAL MEDIA & PLATFORMS"
+              />
+              <FormInput
+                label="TERMINAL CARD TITLE"
+                value={pageMeta.link.terminalTitle}
+                onChange={(value) => updatePageMetaField('terminalTitle', value)}
+                placeholder="TERMINAL.STANN.KR"
+              />
+            </div>
+          </AdminCard>
+        </div>
 
         {/* Terminal Section */}
         <div>

@@ -8,7 +8,12 @@ import ListItemEditor from '@/components/base/ListItemEditor';
 import SuccessMessage from '@/components/base/SuccessMessage';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
-import type { ContactItem, EventsInfo } from '@/types/content';
+import {
+  updateContactInfo as apiUpdateContactInfo,
+  updateEventsInfo as apiUpdateEventsInfo,
+  updatePageMeta as apiUpdatePageMeta,
+} from '@/services/adminService';
+import type { ContactItem, EventsInfo, PageMeta } from '@/types/content';
 
 const AVAILABLE_ICONS = [
   { value: 'ri-mail-line', label: 'Email' },
@@ -36,6 +41,7 @@ const AdminContactPage = () => {
   const content = allContent[currentEditLanguage];
   const [contactInfo, setContactInfo] = useState<ContactItem[]>(content.contactInfo);
   const [eventsInfo, setEventsInfo] = useState<EventsInfo>(content.eventsInfo);
+  const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [isSaving, setIsSaving] = useState(false);
   const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
@@ -43,6 +49,7 @@ const AdminContactPage = () => {
   useEffect(() => {
     setContactInfo(allContent[currentEditLanguage].contactInfo);
     setEventsInfo(allContent[currentEditLanguage].eventsInfo);
+    setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
 
   const updateContactItemField = (index: number, field: keyof ContactItem, value: string) => {
@@ -85,9 +92,18 @@ const AdminContactPage = () => {
     setEventsInfo(prev => ({ ...prev, [field]: prev[field].filter((_, i) => i !== index) }));
   };
 
+  const updatePageMetaField = (field: keyof PageMeta['contact'], value: string) => {
+    setPageMeta(prev => ({ ...prev, contact: { ...prev.contact, [field]: value } }));
+  };
+
   const saveChanges = async () => {
     setIsSaving(true);
-    updateContent({ contactInfo, eventsInfo });
+    await Promise.allSettled([
+      apiUpdateContactInfo(currentEditLanguage, contactInfo),
+      apiUpdateEventsInfo(currentEditLanguage, eventsInfo),
+      apiUpdatePageMeta(currentEditLanguage, pageMeta),
+    ]);
+    updateContent({ contactInfo, eventsInfo, pageMeta });
     showNotification();
     setIsSaving(false);
   };
@@ -102,6 +118,47 @@ const AdminContactPage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* PAGE SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            PAGE SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormInput
+                label="PAGE TITLE"
+                value={pageMeta.contact.title}
+                onChange={(value) => updatePageMetaField('title', value)}
+                placeholder="CONTACT"
+              />
+              <FormInput
+                label="PAGE SUBTITLE"
+                value={pageMeta.contact.subtitle}
+                onChange={(value) => updatePageMetaField('subtitle', value)}
+                placeholder="GUESTBOOK & DIRECT CONTACT"
+              />
+              <FormInput
+                label="GUESTBOOK SECTION TITLE"
+                value={pageMeta.contact.guestbookTitle}
+                onChange={(value) => updatePageMetaField('guestbookTitle', value)}
+                placeholder="GUESTBOOK"
+              />
+              <FormInput
+                label="DIRECT CONTACT SECTION TITLE"
+                value={pageMeta.contact.directTitle}
+                onChange={(value) => updatePageMetaField('directTitle', value)}
+                placeholder="DIRECT CONTACT"
+              />
+              <FormInput
+                label="BOOKING SECTION TITLE"
+                value={pageMeta.contact.bookingTitle}
+                onChange={(value) => updatePageMetaField('bookingTitle', value)}
+                placeholder="BOOKING INFO"
+              />
+            </div>
+          </AdminCard>
+        </div>
 
         {/* Contact Information */}
         <div>

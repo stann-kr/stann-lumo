@@ -118,3 +118,25 @@ export function fetchSiteConfig() {
 export function updateSiteConfig(siteConfig: SiteConfigData) {
   return apiPut<void>('/api/admin/site-config', { siteConfig });
 }
+
+// ---------- 터미널 정보 (site_config 부분 업데이트) ----------
+
+/**
+ * 터미널 URL·설명만 업데이트 — 나머지 site_config 필드는 유지
+ * DB 미사용 환경에서는 조용히 실패 (인메모리 업데이트는 호출부에서 별도 처리)
+ */
+export async function updateTerminalInfo(
+  terminalInfo: import('@/types/content').TerminalInfo,
+): ReturnType<typeof apiPut> {
+  const current = await fetchSiteConfig();
+  if (!current.success || !current.data) {
+    return { success: false, error: { code: 'DB_UNAVAILABLE', message: 'Cannot fetch site config' } };
+  }
+  return apiPut<void>('/api/admin/site-config', {
+    siteConfig: {
+      ...current.data,
+      terminalUrl:         terminalInfo.url,
+      terminalDescription: terminalInfo.description,
+    },
+  });
+}

@@ -10,7 +10,7 @@ import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { RAApiConfig, Performance } from '@/types/content';
+import type { RAApiConfig, Performance, PageMeta } from '@/types/content';
 import {
   fetchRAEvents,
   convertRAEventsToPerformances,
@@ -18,6 +18,10 @@ import {
   sortEventsByDate,
 } from '@/utils/raApi';
 import { createBorderFaint } from '@/utils/colorMix';
+import {
+  updatePerformances as apiUpdatePerformances,
+  updatePageMeta as apiUpdatePageMeta,
+} from '@/services/adminService';
 
 const AdminEventsPage = () => {
   const { t } = useTranslation();
@@ -35,6 +39,7 @@ const AdminEventsPage = () => {
   const [raApiConfig, setRaApiConfig] = useState<RAApiConfig>(
     content.raApiConfig || { userId: '', apiKey: '', djId: '', option: '1' }
   );
+  const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState('');
   const [fetchSuccess, setFetchSuccess] = useState('');
@@ -55,11 +60,20 @@ const AdminEventsPage = () => {
     setRaApiConfig(
       allContent[currentEditLanguage].raApiConfig || { userId: '', apiKey: '', djId: '', option: '1' }
     );
+    setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent, setPerformances]);
+
+  const updatePageMetaField = (field: keyof PageMeta['events'], value: string) => {
+    setPageMeta(prev => ({ ...prev, events: { ...prev.events, [field]: value } }));
+  };
 
   const saveChanges = async () => {
     setIsSaving(true);
-    updateContent({ performances, raApiConfig });
+    await Promise.allSettled([
+      apiUpdatePerformances(performances),
+      apiUpdatePageMeta(currentEditLanguage, pageMeta),
+    ]);
+    updateContent({ performances, raApiConfig, pageMeta });
     showNotification();
     setIsSaving(false);
   };
@@ -129,6 +143,41 @@ const AdminEventsPage = () => {
       />
 
       <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+      {/* PAGE SETTINGS */}
+      <div>
+        <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+          PAGE SETTINGS
+        </h2>
+        <AdminCard>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              label="PAGE TITLE"
+              value={pageMeta.events.title}
+              onChange={(value) => updatePageMetaField('title', value)}
+              placeholder="EVENTS"
+            />
+            <FormInput
+              label="PAGE SUBTITLE"
+              value={pageMeta.events.subtitle}
+              onChange={(value) => updatePageMetaField('subtitle', value)}
+              placeholder="PERFORMANCE SCHEDULE & INFORMATION"
+            />
+            <FormInput
+              label="UPCOMING SECTION TITLE"
+              value={pageMeta.events.upcomingTitle}
+              onChange={(value) => updatePageMetaField('upcomingTitle', value)}
+              placeholder="UPCOMING EVENTS"
+            />
+            <FormInput
+              label="PAST SECTION TITLE"
+              value={pageMeta.events.pastTitle}
+              onChange={(value) => updatePageMetaField('pastTitle', value)}
+              placeholder="PAST EVENTS"
+            />
+          </div>
+        </AdminCard>
+      </div>
 
       {/* RA API Settings */}
       <div>

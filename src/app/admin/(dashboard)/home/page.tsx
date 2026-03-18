@@ -9,7 +9,12 @@ import SuccessMessage from '@/components/base/SuccessMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
-import type { HomeSection, TerminalInfo } from '@/types/content';
+import {
+  updateHomeSections as apiUpdateHomeSections,
+  updatePageMeta as apiUpdatePageMeta,
+  updateTerminalInfo as apiUpdateTerminalInfo,
+} from '@/services/adminService';
+import type { HomeSection, TerminalInfo, PageMeta } from '@/types/content';
 
 const AVAILABLE_ICONS = [
   { value: 'ri-user-line', label: 'User' },
@@ -40,6 +45,7 @@ const AdminHomePage = () => {
 
   const [homeSections, setHomeSections] = useState<HomeSection[]>(content.homeSections);
   const [terminalInfo, setTerminalInfo] = useState<TerminalInfo>(content.terminalInfo);
+  const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null);
   const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
@@ -48,6 +54,7 @@ const AdminHomePage = () => {
   useEffect(() => {
     setHomeSections(allContent[currentEditLanguage].homeSections);
     setTerminalInfo(allContent[currentEditLanguage].terminalInfo);
+    setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
 
   const updateSectionField = (index: number, field: keyof HomeSection, value: string) => {
@@ -81,9 +88,18 @@ const AdminHomePage = () => {
     setHomeSections(updated);
   };
 
+  const updatePageMetaField = (field: keyof PageMeta['home'], value: string) => {
+    setPageMeta(prev => ({ ...prev, home: { ...prev.home, [field]: value } }));
+  };
+
   const saveChanges = async () => {
     setIsSaving(true);
-    updateContent({ homeSections, terminalInfo });
+    await Promise.allSettled([
+      apiUpdateHomeSections(currentEditLanguage, homeSections),
+      apiUpdatePageMeta(currentEditLanguage, pageMeta),
+      apiUpdateTerminalInfo(terminalInfo),
+    ]);
+    updateContent({ homeSections, terminalInfo, pageMeta });
     showNotification();
     setIsSaving(false);
   };
@@ -107,6 +123,23 @@ const AdminHomePage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* PAGE SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            PAGE SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="space-y-4">
+              <FormInput
+                label="NAVIGATION TITLE"
+                value={pageMeta.home.navTitle}
+                onChange={(value) => updatePageMetaField('navTitle', value)}
+                placeholder="NAVIGATION"
+              />
+            </div>
+          </AdminCard>
+        </div>
 
         {/* Terminal Info */}
         <div>

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { AdminFormReturn } from '../types/admin';
 
-export function useAdminForm<T extends Record<string, unknown>>(
+export function useAdminForm<T extends object>(
   initialData: T,
   onSave: (data: T) => void | Promise<void>
 ): AdminFormReturn<T> {
@@ -15,7 +15,7 @@ export function useAdminForm<T extends Record<string, unknown>>(
   }, [initialData]);
 
   const updateField = useCallback((field: string, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value } as T));
+    setFormData(prev => ({ ...prev, [field]: value }) as T);
   }, []);
 
   const saveForm = useCallback(async () => {

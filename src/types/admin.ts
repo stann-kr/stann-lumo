@@ -62,7 +62,7 @@ export interface ListEditorReturn<T> {
 /**
  * 어드민 폼 반환 타입 (useAdminForm hook 반환값과 일치)
  */
-export interface AdminFormReturn<T extends Record<string, unknown>> {
+export interface AdminFormReturn<T extends object> {
   formData: T;
   isSaved: boolean;
   isSaving: boolean;

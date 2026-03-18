@@ -26,7 +26,7 @@ export default function HomePage() {
     >
       <div className="space-y-12">
         {/* Navigation Grid */}
-        <PageSection title={t('home_nav_title') || 'NAVIGATION'} icon="ri-compass-3-line">
+        <PageSection title={content.pageMeta?.home?.navTitle || t('home_nav_title') || 'NAVIGATION'} icon="ri-compass-3-line">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {content.homeSections.map((section, index) => (
               <Link

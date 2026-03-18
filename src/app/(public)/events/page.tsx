@@ -7,7 +7,7 @@ import { createBorderFaint, createBorderMid } from "@/utils/colorMix";
 
 const EventsPage = () => {
   const { t } = useTranslation();
-  const { eventsContent } = useContent();
+  const { eventsContent, content } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
 
@@ -36,14 +36,14 @@ const EventsPage = () => {
 
   return (
     <PageLayout
-      title={t("events_title")}
-      subtitle={t("events_subtitle")}
+      title={content.pageMeta?.events?.title || t("events_title")}
+      subtitle={content.pageMeta?.events?.subtitle || t("events_subtitle")}
       spacing="lg"
     >
       {/* Upcoming Events */}
       <div className="space-y-6">
         <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
-          {t("events_upcoming")}
+          {content.pageMeta?.events?.upcomingTitle || t("events_upcoming")}
         </h2>
 
         {upcomingEvents.length === 0 ? (
@@ -99,7 +99,7 @@ const EventsPage = () => {
       {/* Past Events */}
       <div className="space-y-6 pt-8 border-t" style={borderFaint}>
         <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
-          {t("events_past")}
+          {content.pageMeta?.events?.pastTitle || t("events_past")}
         </h2>
 
         {pastEvents.length === 0 ? (

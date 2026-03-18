@@ -6,12 +6,16 @@ import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 
 const MusicPage = () => {
   const { t } = useTranslation();
-  const { musicContent } = useContent();
+  const { musicContent, content } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
 
   return (
-    <PageLayout title={t('music_title')} subtitle={t('music_subtitle')} spacing="md">
+    <PageLayout
+      title={content.pageMeta?.music?.title || t('music_title')}
+      subtitle={content.pageMeta?.music?.subtitle || t('music_subtitle')}
+      spacing="md"
+    >
       {/* Track List */}
       <div className="grid gap-3">
         {musicContent.tracks.map((track) => (

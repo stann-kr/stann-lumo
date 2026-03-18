@@ -12,6 +12,7 @@ const AboutPage = () => {
   const borderMid = createBorderMid();
 
   const artistInfoItems = content.artistInfo ?? [];
+  const sortedSections = [...(content.aboutSections ?? [])].sort((a, b) => a.order - b.order);
 
   return (
     <PageLayout title={t('about_title')} typingSpeed={60} spacing="lg">
@@ -27,44 +28,35 @@ const AboutPage = () => {
         </div>
       )}
 
-      {/* Biography */}
-      <PageSection title={t('about_section_biography')} icon="ri-user-line">
-        <div className="space-y-4 text-[var(--color-secondary)] opacity-70 leading-relaxed text-sm">
-          {(content.biography?.paragraphs ?? []).map((para, idx) => (
-            <p key={idx}>{para}</p>
-          ))}
-        </div>
-      </PageSection>
-
-      {/* Musical Philosophy — 동적 항목 렌더링 */}
-      <PageSection title={t('about_section_philosophy')} icon="ri-music-2-line">
-        <div className="space-y-6">
-          {(content.musicalPhilosophy ?? []).map((item) => (
-            <div key={item.id}>
-              <blockquote
-                className="pl-4 border-l text-[var(--color-secondary)] opacity-80 italic text-base leading-relaxed mb-4"
-                style={borderMid}
-              >
-                {item.quote}
-              </blockquote>
-              <p className="text-sm text-[var(--color-secondary)] opacity-60 leading-relaxed">
-                {item.description}
-              </p>
+      {/* 동적 섹션 렌더링 */}
+      {sortedSections.map((section) => (
+        <PageSection key={section.id} title={section.title}>
+          {section.type === 'paragraphs' && (
+            <div className="space-y-4 text-[var(--color-secondary)] opacity-70 leading-relaxed text-sm">
+              {(section.paragraphs ?? []).map((para, idx) => (
+                <p key={idx}>{para}</p>
+              ))}
             </div>
-          ))}
-        </div>
-      </PageSection>
-
-      {/* Design Philosophy — 동적 단락 렌더링 */}
-      <PageSection title={t('about_section_design')} icon="ri-palette-line">
-        <div className="p-6 border space-y-4" style={borderFaint}>
-          {(content.designPhilosophy?.paragraphs ?? []).map((para, idx) => (
-            <p key={idx} className="text-sm text-[var(--color-secondary)] opacity-65 leading-relaxed">
-              {para}
-            </p>
-          ))}
-        </div>
-      </PageSection>
+          )}
+          {section.type === 'philosophy-items' && (
+            <div className="space-y-6">
+              {(section.items ?? []).map((item) => (
+                <div key={item.id}>
+                  <blockquote
+                    className="pl-4 border-l text-[var(--color-secondary)] opacity-80 italic text-base leading-relaxed mb-4"
+                    style={borderMid}
+                  >
+                    {item.quote}
+                  </blockquote>
+                  <p className="text-sm text-[var(--color-secondary)] opacity-60 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </PageSection>
+      ))}
     </PageLayout>
   );
 };

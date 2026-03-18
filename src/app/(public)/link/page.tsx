@@ -13,8 +13,8 @@ const LinkPage = () => {
 
   return (
     <PageLayout
-      title={t('link_title')}
-      subtitle={t('link_subtitle')}
+      title={content.pageMeta?.link?.title || t('link_title')}
+      subtitle={content.pageMeta?.link?.subtitle || t('link_subtitle')}
       spacing="lg"
     >
       {/* Terminal Featured Card */}
@@ -38,7 +38,7 @@ const LinkPage = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-[var(--color-secondary)] tracking-widest group-hover:text-[var(--color-primary)] transition-colors duration-300">
-                TERMINAL.STANN.KR
+                {content.pageMeta?.link?.terminalTitle || 'TERMINAL.STANN.KR'}
               </h3>
               <p className="text-xs text-[var(--color-secondary)] opacity-40 mt-1.5 group-hover:opacity-60 transition-all duration-300 leading-relaxed">
                 {terminalInfo?.description}

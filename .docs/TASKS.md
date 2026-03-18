@@ -75,10 +75,21 @@
 
 ---
 
-## 🔲 Phase 4-e: 데이터 마이그레이션
+## ✅ Phase 4-e: 데이터 마이그레이션
 
-- [ ] `src/app/api/admin/migrate/route.ts` — `POST`: localStorage JSON → D1 일괄 INSERT (일회성)
-  - 실행 후 라우트 삭제 또는 비활성화 처리
+- [x] `src/app/api/admin/migrate/route.ts` — `POST`: `MultiLanguageContent` JSON → D1 일괄 INSERT
+  - 전체 테이블 초기화 후 en/ko 재삽입 (batch 청크 90개 분할)
+  - 실행 후 라우트 삭제 권장 (일회성 엔드포인트)
+
+## ✅ 어드민 페이지 D1 API 연동
+
+- [x] `admin/home/page.tsx` — `saveChanges`: `updateHomeSections` + `updatePageMeta` + `updateTerminalInfo`
+- [x] `admin/about/page.tsx` — `handleSave`: `updateArtistInfo` + `updateAboutSections`
+- [x] `admin/music/page.tsx` — `saveChanges`: `updateTracks` + `updatePageMeta`
+- [x] `admin/events/page.tsx` — `saveChanges`: `updatePerformances` + `updatePageMeta`
+- [x] `admin/contact/page.tsx` — `saveChanges`: `updateContactInfo` + `updateEventsInfo` + `updatePageMeta`
+- [x] `admin/link/page.tsx` — `saveChanges`: `updateLinkPlatforms` + `updatePageMeta` + `updateTerminalInfo`
+- **비고**: DB 미사용 환경(dev)에서는 API 실패 시 `Promise.allSettled`로 무시 후 인메모리 업데이트 유지
 
 ---
 

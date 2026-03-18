@@ -7,7 +7,7 @@ import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 
 const ContactPage = () => {
   const { t } = useTranslation();
-  const { contactContent, eventsContent } = useContent();
+  const { contactContent, eventsContent, content } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
 
@@ -49,13 +49,15 @@ const ContactPage = () => {
 
   return (
     <PageLayout
-      title={t('contact_title')}
-      subtitle={t('contact_subtitle')}
+      title={content.pageMeta?.contact?.title || t('contact_title')}
+      subtitle={content.pageMeta?.contact?.subtitle || t('contact_subtitle')}
       spacing="lg"
     >
       {/* Guestbook Form */}
       <div className="space-y-8">
-        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">{t('contact_guestbook')}</h2>
+        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
+          {content.pageMeta?.contact?.guestbookTitle || t('contact_guestbook')}
+        </h2>
 
         <form
           id="guestbook-form"
@@ -150,7 +152,9 @@ const ContactPage = () => {
 
       {/* Direct Contact */}
       <div className="space-y-6 pt-8 border-t" style={borderFaint}>
-        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">{t('contact_direct')}</h2>
+        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
+          {content.pageMeta?.contact?.directTitle || t('contact_direct')}
+        </h2>
 
         <div className="grid md:grid-cols-3 gap-6">
           {contactContent.contactInfo.map((item, index) => (
@@ -176,7 +180,9 @@ const ContactPage = () => {
 
       {/* Booking Info */}
       <div className="space-y-8 pt-8 border-t" style={borderFaint}>
-        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">{t('contact_booking_info')}</h2>
+        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
+          {content.pageMeta?.contact?.bookingTitle || t('contact_booking_info')}
+        </h2>
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Set Duration */}
