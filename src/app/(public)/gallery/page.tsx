@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { GalleryPhoto, GallerySettings, GalleryData } from '@/types/content';
 import { createBorderFaint } from '@/utils/colorMix';
+import PageLayout from '@/components/feature/PageLayout';
 
 // ─── 설정 → CSS 클래스 매핑 ──────────────────────────────────────────────────
 
@@ -258,20 +259,10 @@ const GalleryPage = () => {
   const containerClasses = buildContainerClasses(settings);
 
   return (
-    <div className="space-y-12">
-      {/* 페이지 헤더 */}
-      <div className="border-b pb-8" style={borderStyle}>
-        <p className="text-xs text-[var(--color-accent)] tracking-widest mb-2">
-          {t('gallery_label')}
-        </p>
-        <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-primary)] tracking-wider mb-4">
-          {t('gallery_title')}
-        </h1>
-        <p className="text-[var(--color-secondary)]/50 text-sm tracking-wider">
-          {t('gallery_subtitle')}
-        </p>
-      </div>
-
+    <PageLayout
+      title={t('gallery_title')}
+      subtitle={t('gallery_subtitle')}
+    >
       {/* 사진 그리드 */}
       {isLoading ? (
         <div className="flex items-center justify-center py-24">
@@ -304,7 +295,7 @@ const GalleryPage = () => {
       {selectedPhoto && settings.lightboxEnabled && (
         <Lightbox photo={selectedPhoto} onClose={closeLightbox} />
       )}
-    </div>
+    </PageLayout>
   );
 };
 

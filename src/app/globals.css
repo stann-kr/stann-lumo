@@ -42,6 +42,21 @@ body {
     }
   }
 
+  .animate-fadeOut {
+    animation: fadeOut 0.25s ease-in forwards;
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+
   .animate-slideUp {
     animation: slideUp 0.45s ease-out both;
   }

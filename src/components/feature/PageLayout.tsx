@@ -76,7 +76,7 @@ const PageLayout = ({
   });
 
   return (
-    <div className={`${resolvedMaxWidth} mx-auto ${spacingMap[resolvedSpacing]} py-8`}>
+    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} py-8`}>
       {/* Page Header */}
       <div
         className={global.animationEnabled ? 'space-y-3 animate-slideUp' : 'space-y-3'}

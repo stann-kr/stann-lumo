@@ -1,5 +1,5 @@
 'use client';
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -28,11 +28,17 @@ const NAV_ITEMS = [
 
 const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useTranslation();
   const { language, toggleLanguage } = useLanguage();
   const { content } = useContent();
+
+  // 내비게이션 완료 시 페이드인 상태로 복귀
+  useEffect(() => {
+    setIsTransitioning(false);
+  }, [pathname]);
 
   const artistName = (() => {
     if (!Array.isArray(content.artistInfo)) return SITE_NAME;
@@ -41,8 +47,10 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   })();
 
   const handleNavClick = (path: string) => {
-    router.push(path);
+    if (path === pathname) return;
     setMobileMenuOpen(false);
+    setIsTransitioning(true);
+    setTimeout(() => router.push(path), 250);
   };
 
   const borderStyle = createColorMixStyle(COLOR_VARS.SECONDARY, 15);
@@ -239,7 +247,10 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
-        <div className="min-h-screen p-6 md:p-12 lg:p-16 animate-fadeIn">
+        <div
+          key={pathname}
+          className={`min-h-screen p-6 md:p-12 lg:p-16 ${isTransitioning ? 'animate-fadeOut' : 'animate-fadeIn'}`}
+        >
           {children}
         </div>
       </main>
