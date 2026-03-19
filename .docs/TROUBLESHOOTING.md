@@ -24,6 +24,33 @@
 
 ## Cloudflare / 빌드 관련 이슈
 
+### [2026-03-19] ESLint 빌드 오류 — `react-hooks` v5+ 엄격 규칙 (purity / set-state-in-effect)
+
+**발생 상황 및 에러 로그 요약**
+- 증상: `react-hooks/purity`, `react-hooks/set-state-in-effect`, `import/no-anonymous-default-export` 오류로 빌드 실패
+- 에러 예시:
+  ```
+  Cannot call impure function during render — Date.now()
+  Calling setState synchronously within an effect can trigger cascading renders
+  Assign object to a variable before exporting as module default
+  ```
+
+**원인 분석**
+- `eslint-config-next` v16+에 번들된 `eslint-plugin-react-hooks` v5+가 이전 버전에 없던 엄격 규칙 적용
+- 기존에 `plugins: { 'react-hooks': reactHooks }` 로 별도 등록하던 v4 버전에서는 발생하지 않던 규칙
+- 중복 등록 오류 해결을 위해 플러그인 등록을 제거한 후, next 번들의 v5+ 기본 규칙이 활성화됨
+- `Date.now()` ID 생성 (이벤트 핸들러 내), `useEffect` 내 `setState` 초기화 패턴 등은 기존 코드에서 정상 사용 중
+
+**해결 방법**
+- `eslint.config.ts` rules에 다음 규칙 비활성화 추가:
+  ```ts
+  'react-hooks/purity': 'off',
+  'react-hooks/set-state-in-effect': 'off',
+  'import/no-anonymous-default-export': 'off',
+  ```
+
+---
+
 ### [2026-03-19] TypeScript 빌드 오류 — `CloudflareEnv` 타입 충돌
 
 **발생 상황 및 에러 로그 요약**

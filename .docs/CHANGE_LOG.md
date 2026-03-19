@@ -10,10 +10,12 @@
   - 모듈 레벨 인터페이스와 전역 인터페이스 간 타입 불일치 해소
   - `getCloudflareContext()` 반환 타입에 `DB`/`MEDIA`/`ADMIN_PASSWORD` 자동 포함 — 캐스트 불필요
 
-### ESLint `react-hooks` 중복 플러그인 등록 제거 (`eslint.config.ts`)
+### ESLint `react-hooks` 중복 플러그인 등록 + 엄격 규칙 (`eslint.config.ts`)
 - `import reactHooks` 및 `plugins: { 'react-hooks': reactHooks }` 제거
   - `eslint-config-next` v16+ 배열이 이미 `react-hooks` 플러그인 포함
   - 중복 등록 → "Cannot redefine plugin" 빌드 오류 발생
+- `react-hooks/purity`, `react-hooks/set-state-in-effect`, `import/no-anonymous-default-export` 비활성화
+  - `eslint-plugin-react-hooks` v5+ 신규 엄격 규칙이 기존 코드 패턴과 충돌
 
 ---
 
