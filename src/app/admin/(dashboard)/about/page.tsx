@@ -67,8 +67,7 @@ const AdminAboutPage = () => {
   };
 
   const addArtistInfoItem = () => {
-    const newId = Date.now().toString();
-    updateField('artistInfo', [...artistInfoItems, { id: newId, key: '', value: '' }]);
+    updateField('artistInfo', [...artistInfoItems, { id: crypto.randomUUID(), key: '', value: '' }]);
   };
 
   const removeArtistInfoItem = (id: string) => {
@@ -83,13 +82,13 @@ const AdminAboutPage = () => {
 
   const addSection = (type: DynamicSectionType) => {
     const newSection: DynamicSection = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       title: 'NEW SECTION',
       type,
       order: sections.length,
       paragraphs: type === 'paragraphs' ? [''] : undefined,
       items: type === 'philosophy-items'
-        ? [{ id: Date.now().toString(), quote: '', description: '' }]
+        ? [{ id: crypto.randomUUID(), quote: '', description: '' }]
         : undefined,
     };
     updateField('aboutSections', [...(formData.aboutSections ?? []), newSection]);
@@ -115,7 +114,7 @@ const AdminAboutPage = () => {
         type,
         paragraphs: type === 'paragraphs' ? (s.paragraphs ?? ['']) : undefined,
         items: type === 'philosophy-items'
-          ? (s.items ?? [{ id: Date.now().toString(), quote: '', description: '' }])
+          ? (s.items ?? [{ id: crypto.randomUUID(), quote: '', description: '' }])
           : undefined,
       } : s
     ));
@@ -173,7 +172,7 @@ const AdminAboutPage = () => {
   };
 
   const addPhilosophyItem = (sectionId: string) => {
-    const newItem: PhilosophyItem = { id: Date.now().toString(), quote: '', description: '' };
+    const newItem: PhilosophyItem = { id: crypto.randomUUID(), quote: '', description: '' };
     updateField('aboutSections', (formData.aboutSections ?? []).map(s =>
       s.id === sectionId ? { ...s, items: [...(s.items ?? []), newItem] } : s
     ));

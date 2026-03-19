@@ -78,7 +78,7 @@ const AdminMusicPage = () => {
 
   const addNewTrack = () => {
     const newTrack: Track = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       title: 'New Track',
       type: 'Original',
       duration: '0:00',

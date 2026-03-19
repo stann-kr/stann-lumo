@@ -39,8 +39,6 @@ const TypingText = ({
   useEffect(() => {
     if (!started) return;
     indexRef.current = 0;
-    setDisplayed('');
-    setDone(false);
 
     const interval = setInterval(() => {
       if (indexRef.current < safeText.length) {

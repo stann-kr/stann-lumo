@@ -17,48 +17,47 @@ const ProtectedRoute = ({ children }: { children: ReactElement }) => {
   const [checked, setChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 
-  const verifySession = useCallback(
-    async (isInitial = false): Promise<boolean> => {
-      try {
-        const res = await fetch('/api/auth/session');
-        const data = (await res.json()) as { success: boolean; data?: { authenticated: boolean } };
-        if (data.data?.authenticated) {
-          if (isInitial) {
-            setAuthenticated(true);
-            setChecked(true);
-          }
-          return true;
-        }
-      } catch {
-        // 네트워크 오류 — 세션 상태 불명확, 초기 체크 시에만 리다이렉트
-      }
-      router.replace('/admin');
+  // setState 없이 인증 여부만 반환 — 상태 변경은 호출자 책임
+  const verifySession = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/session');
+      const data = (await res.json()) as { success: boolean; data?: { authenticated: boolean } };
+      return !!data.data?.authenticated;
+    } catch {
+      // 네트워크 오류 — 인증 불명확
       return false;
-    },
-    [router],
-  );
+    }
+  }, []);
 
   // 초기 세션 확인
   useEffect(() => {
     let cancelled = false;
-    verifySession(true).then(() => {
+    verifySession().then((isAuth) => {
       if (cancelled) return;
+      if (isAuth) {
+        setAuthenticated(true);
+        setChecked(true);
+      } else {
+        router.replace('/admin');
+      }
     });
     return () => {
       cancelled = true;
     };
-  }, [verifySession]);
+  }, [verifySession, router]);
 
   // 주기적 세션 재검증 (만료 감지)
   useEffect(() => {
     if (!authenticated) return;
 
     const intervalId = setInterval(() => {
-      verifySession(false);
+      verifySession().then((isAuth) => {
+        if (!isAuth) router.replace('/admin');
+      });
     }, SESSION_CHECK_INTERVAL);
 
     return () => clearInterval(intervalId);
-  }, [authenticated, verifySession]);
+  }, [authenticated, verifySession, router]);
 
   if (!checked || !authenticated) return null;
   return children;

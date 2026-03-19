@@ -20,7 +20,8 @@ const AdminLoginPage = () => {
       if (res.ok) {
         router.push('/admin/home');
       } else {
-        setError('Invalid password');
+        const data = await res.json() as { error?: { message?: string } };
+        setError(data?.error?.message ?? 'Invalid password');
         setPassword('');
       }
     } catch {

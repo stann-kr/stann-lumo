@@ -8,7 +8,14 @@ export async function POST(request: NextRequest) {
 
     const { ADMIN_PASSWORD } = getEnv();
 
-    if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
+    if (!ADMIN_PASSWORD) {
+      return NextResponse.json(
+        { success: false, error: { code: 'NOT_CONFIGURED', message: 'Admin password not configured on server' } },
+        { status: 401 },
+      );
+    }
+
+    if (password !== ADMIN_PASSWORD) {
       return NextResponse.json(
         { success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid password' } },
         { status: 401 },

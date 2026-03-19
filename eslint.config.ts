@@ -38,10 +38,7 @@ export default [
       'no-irregular-whitespace': 'off',
       'no-undef': 'off',
       '@next/next/no-img-element': 'off',
-      // eslint-config-next v16+ react-hooks 엄격 규칙 비활성화
-      // — 기존 코드의 정상 패턴(useEffect 초기화, Date.now ID 생성 등)과 충돌
-      'react-hooks/purity': 'off',
-      'react-hooks/set-state-in-effect': 'off',
+      // i18n 로케일 파일은 anonymous default export 패턴 사용
       'import/no-anonymous-default-export': 'off',
     },
   },

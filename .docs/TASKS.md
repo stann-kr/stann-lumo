@@ -1,31 +1,30 @@
 # 잔여 작업 목록
 
-> 최종 업데이트: 2026-03-19
-> Cloudflare Add Application 연동 완료. 배포 버그 수정 중 (어드민 로그인, 빌드 오류).
-
----
-
-## 🔄 진행 중: Cloudflare 배포 안정화
-
-- [x] Cloudflare Add Application 연동 (main 브랜치 push → 자동 빌드)
-- [x] `wrangler.json`: `main` + `assets` 필드 추가 (진입점 + 정적 자산)
-- [x] `eslint.config.ts`: `eslint-config-next` 배열 스프레드 처리 (빌드 오류 해결)
-- [x] `src/lib/db.ts`: `getCloudflareContext` 정적 import (어드민 로그인 수정)
-- [ ] **배포 후 어드민 로그인 확인** (다음 빌드 완료 후 검증 필요)
-- [ ] **`ADMIN_PASSWORD` Dashboard Variables 등록** 확인
+> 최종 업데이트: 2026-03-20
+> ESLint 근본 수정 완료 (0 errors). PR + CF 배포 후 어드민 로그인 검증 필요.
 
 ---
 
 ## 🔜 잔여 확인 항목
 
+- [ ] **배포 후 어드민 로그인 확인** (main PR 머지 → CF 자동 빌드 완료 후)
+- [ ] **`ADMIN_PASSWORD` Dashboard Variables 등록** 확인
 - [ ] D1 마이그레이션 0005 (display_settings) 원격 적용 여부 확인
 - [ ] 갤러리 R2 업로드 실제 동작 확인
-- [ ] 사이드바 네비게이션 클릭 정상 이동 확인 (CF Workers 환경)
 - [ ] 언어 전환(EN/KO) 번역 반영 확인
 
 ---
 
 ## ✅ 완료된 작업 (최신순)
+
+### [2026-03-20] ESLint react-hooks 규칙 근본 수정 (코드 패턴 교정)
+
+- [x] `about/page.tsx` + `events/page.tsx` + `link/page.tsx` + `music/page.tsx`: `Date.now().toString()` → `crypto.randomUUID()` (purity 위반 제거)
+- [x] `TerminalLayout.tsx`: `isTransitioning` useState + useEffect 제거 → `key={pathname}` 자연 재마운트 활용
+- [x] `TypingText.tsx`: useEffect 내 동기 `setDisplayed('')` + `setDone(false)` 제거 (dead code)
+- [x] `LanguageContext.tsx`: `useState + useEffect` → `useSyncExternalStore` 완전 재작성 (localStorage 외부 스토어 패턴)
+- [x] `ProtectedRoute.tsx`: `verifySession` 내 setState → `.then()` 콜백으로 이동 (비동기 분리)
+- [x] `eslint.config.ts`: `react-hooks/purity` + `react-hooks/set-state-in-effect` override 제거 (0 errors 달성)
 
 ### [2026-03-19] Cloudflare 빌드 오류 근본 수정
 

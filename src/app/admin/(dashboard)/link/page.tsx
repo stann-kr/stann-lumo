@@ -52,7 +52,7 @@ const AdminLinkPage = () => {
     setLinkPlatforms([
       ...linkPlatforms,
       {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         platform: 'New Platform',
         url: 'https://',
         icon: 'ri-link-line',

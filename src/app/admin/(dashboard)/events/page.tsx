@@ -122,7 +122,7 @@ const AdminEventsPage = () => {
 
   const addNewPerformance = () => {
     addPerformance({
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       date: new Date().toISOString().split('T')[0],
       venue: 'New Venue',
       title: 'New Performance',

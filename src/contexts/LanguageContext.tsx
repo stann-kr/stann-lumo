@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+'use client';
+import { createContext, useContext, useCallback, useEffect, useSyncExternalStore, ReactNode } from 'react';
 import i18n from '../i18n';
 
 type Language = 'en' | 'ko';
@@ -11,34 +12,42 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+// ──────────────────────────────────────────
+// 외부 스토어: localStorage 'app_language' 키
+// useSyncExternalStore 패턴으로 SSR 안전성 + setState-in-effect 회피
+// ──────────────────────────────────────────
+function subscribe(callback: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+
+function getSnapshot(): Language {
+  const saved = localStorage.getItem('app_language');
+  return saved === 'ko' || saved === 'en' ? saved : 'en';
+}
+
+function getServerSnapshot(): Language {
+  return 'en';
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // 서버와 클라이언트 첫 렌더 모두 'en'으로 시작 — hydration 불일치 방지
-  const [language, setLanguageState] = useState<Language>('en');
+  const language = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  // i18next를 언어 상태에 동기화 (setState 아님 — 외부 라이브러리 API 호출)
   useEffect(() => {
-    // hydration 완료 후 localStorage에서 저장된 언어 복원, i18next 동기화
-    const saved = localStorage.getItem('app_language');
-    const lang: Language = (saved === 'ko' || saved === 'en') ? saved : 'en';
-    setLanguageState(lang);
-    i18n.changeLanguage(lang);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('app_language', language);
+    i18n.changeLanguage(language);
   }, [language]);
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    i18n.changeLanguage(lang);
-  };
+  const setLanguage = useCallback((lang: Language) => {
+    localStorage.setItem('app_language', lang);
+    // storage 이벤트는 같은 탭에서 자동 발생하지 않으므로 수동 트리거
+    window.dispatchEvent(new StorageEvent('storage', { key: 'app_language', newValue: lang }));
+  }, []);
 
-  const toggleLanguage = () => {
-    setLanguageState(prev => {
-      const next = prev === 'en' ? 'ko' : 'en';
-      i18n.changeLanguage(next);
-      return next;
-    });
-  };
+  const toggleLanguage = useCallback(() => {
+    setLanguage(language === 'en' ? 'ko' : 'en');
+  }, [language, setLanguage]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage }}>

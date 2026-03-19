@@ -2,7 +2,35 @@
 
 ---
 
-## [Unreleased] — 2026-03-19 (Cloudflare 빌드 오류 근본 수정)
+## [Unreleased] — 2026-03-20 (ESLint react-hooks 코드 패턴 근본 수정)
+
+### `crypto.randomUUID()` 전환 (react-hooks/purity)
+- `admin/about/page.tsx`, `admin/events/page.tsx`, `admin/link/page.tsx`, `admin/music/page.tsx`
+  - `Date.now().toString()` → `crypto.randomUUID()` (렌더 중 impure 함수 호출 제거)
+
+### `TerminalLayout.tsx` — `isTransitioning` 상태 제거 (react-hooks/set-state-in-effect)
+- `useState(isTransitioning)` + `useEffect([pathname])` 패턴 제거
+- `key={pathname}` 자연 재마운트로 `animate-fadeIn` 항상 적용 (동일 효과)
+
+### `TypingText.tsx` — useEffect 내 동기 setState 제거 (react-hooks/set-state-in-effect)
+- `setDisplayed('')` + `setDone(false)` 는 `started: false→true` 단방향 전환 시 dead code — 제거
+
+### `LanguageContext.tsx` — `useSyncExternalStore` 재작성 (react-hooks/set-state-in-effect)
+- `useState + useEffect(setLanguageState)` → `useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)`
+- localStorage를 외부 스토어로 취급 — SSR 안전 + setState-in-effect 패턴 완전 제거
+- `storage` 이벤트 수동 dispatch로 같은 탭 내 스토어 업데이트 트리거
+
+### `ProtectedRoute.tsx` — setState 비동기 분리 (react-hooks/set-state-in-effect)
+- `verifySession()` 내 `setAuthenticated` + `setChecked` 제거 → `boolean` 반환으로 변경
+- 호출 측 useEffect에서 `.then(isAuth => { setState })` 패턴으로 이동
+
+### `eslint.config.ts` — override 제거 (0 errors 달성)
+- `react-hooks/purity: 'off'` + `react-hooks/set-state-in-effect: 'off'` 제거
+- 코드 패턴 수정으로 근본 해결 완료
+
+---
+
+## [2026-03-19] — Cloudflare 빌드 오류 근본 수정
 
 ### TypeScript 타입 충돌 해소 (`src/lib/db.ts`)
 - `export interface CloudflareEnv` → `declare global { interface CloudflareEnv }` 전환
