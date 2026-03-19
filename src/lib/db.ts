@@ -4,6 +4,7 @@
  * CF Workers 런타임에서는 getRequestContext()로 D1/R2 접근.
  * Docker 개발 환경(Node.js)에서는 getRequestContext()가 throw → null 반환 폴백.
  */
+import { getRequestContext } from '@opennextjs/cloudflare';
 
 // Cloudflare Workers 타입 정의 (@cloudflare/workers-types 미설치 시 대체)
 export interface D1PreparedStatement {
@@ -61,16 +62,10 @@ export interface CloudflareEnv {
   ADMIN_PASSWORD: string;
 }
 
-/** CF Workers 런타임 여부 확인 */
+/** CF Workers 런타임 여부 확인 — Node.js 개발환경에서는 throw → null 반환 */
 function getRequestCtx(): { env: CloudflareEnv } | null {
   try {
-    // @opennextjs/cloudflare는 CF Workers에서만 정상 작동
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('@opennextjs/cloudflare') as {
-      getRequestContext?: () => { env: CloudflareEnv };
-    };
-    if (typeof mod.getRequestContext !== 'function') return null;
-    return mod.getRequestContext();
+    return getRequestContext() as { env: CloudflareEnv };
   } catch {
     return null;
   }
