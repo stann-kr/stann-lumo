@@ -2,6 +2,136 @@
 
 ---
 
+## [Unreleased] — 2026-03-19 (빌드 환경 수정 — Cloudflare 배포 준비)
+
+### 빌드 파이프라인 수정
+
+- `docker-compose.yml`:
+  - `volumes`에 `/app/.open-next` 익명 볼륨 추가
+  - Docker Desktop VirtioFS의 `copyFileSync` → 바인드 마운트 시 `--w-------` 권한 문제 해결
+- `open-next.config.mjs` 삭제:
+  - 수동 생성 파일 제거 — `open-next.config.ts` 컴파일 결과로 대체
+- `package.json`:
+  - `"deploy": "opennextjs-cloudflare build && wrangler deploy"` 스크립트 추가
+  - 빌드 + 배포 단일 세션 실행 지원 (익명 볼륨 유지)
+- `.docs/DEPLOYMENT.md` 신규:
+  - 최초 배포 체크리스트, 단계별 명령어, 트러블슈팅 절차 문서화
+
+---
+
+## [Unreleased] — 2026-03-19 (전 페이지 Display Settings — Phase 4-h)
+
+### 어드민 레이아웃 동적 제어 전 페이지 확장
+
+- `migrations/0005_display_settings.sql`:
+  - `display_settings` 테이블 신규 (`page` PK + `settings` JSON 컬럼)
+  - 7개 페이지 기본 행 삽입 (global/home/about/music/events/contact/link)
+- `src/types/displaySettings.ts` 신규:
+  - `GlobalDisplaySettings`, `HomeDisplaySettings`, `AboutDisplaySettings`, `MusicDisplaySettings`, `EventsDisplaySettings`, `ContactDisplaySettings`, `LinkDisplaySettings` 인터페이스 정의
+  - `AllDisplaySettings` 통합 맵 타입
+  - `DISPLAY_SETTINGS_DEFAULTS` 기본값 상수 (기존 하드코딩 값 100% 보존)
+- `src/utils/displaySettingsMap.ts` 신규:
+  - `PADDING_MAP`, `GAP_MAP`, `SPACE_Y_MAP`, `MAX_WIDTH_MAP`, `GRID_COLS_MAP`, `MD_GRID_COLS_MAP` Tailwind 클래스 매핑 상수
+- `src/components/base/RadioGroup.tsx` 신규:
+  - 갤러리 어드민 내부 컴포넌트 → 공용 베이스 컴포넌트로 추출
+- `src/app/api/admin/display-settings/route.ts` 신규:
+  - `GET /api/admin/display-settings[?page=]` — 단일/전체 설정 조회
+  - `PUT /api/admin/display-settings` — 페이지별 설정 UPSERT
+- `src/app/api/content/[lang]/route.ts` 수정:
+  - 17번째 배치 쿼리 추가 (`SELECT * FROM display_settings`)
+  - 응답 `ContentData`에 `displaySettings: AllDisplaySettings` 포함
+- `src/types/content.ts` 수정: `ContentData`에 `displaySettings?` 옵셔널 필드 추가
+- `src/contexts/ContentContext.tsx` 수정: `displaySettings` context value 노출
+- `src/services/adminService.ts` 수정: `fetchDisplaySettings()`, `updateDisplaySettings()` 추가
+- **어드민 페이지 7개** DISPLAY SETTINGS 카드 추가:
+  - `events`, `music`, `about`, `contact`, `home`, `link` — RadioGroup/checkbox/number input 조합
+  - `theme` — GLOBAL DISPLAY SETTINGS (pageMaxWidth·defaultSpacing·typingSpeed·animationEnabled)
+- **공개 페이지 6개** 하드코딩 → settings 기반 동적 렌더링 전환:
+  - `events`: initialPastCount·loadMoreCount·pastEventOpacity·cardPadding·cardGap·spacing
+  - `music`: cardPadding·trackGap·showDuration·showYear·showTypeBadge·spacing
+  - `about`: typingSpeed·infoGridColumns·infoCardGap·spacing
+  - `contact`: messageMaxLength·textareaRows·contactInfoColumns·bookingColumns·spacing
+  - `home`: navGridColumns·navCardPadding·navGridGap·showTerminalInfo
+  - `link`: gridColumns·cardPadding·gridGap·showTerminalCard·spacing
+- `src/components/feature/PageLayout.tsx` 수정:
+  - `max-w-5xl` → `MAX_WIDTH_MAP[global.pageMaxWidth]` 동적 적용
+  - `typingSpeed` props 없으면 `global.typingSpeed` 폴백
+  - `spacing` props 없으면 `global.defaultSpacing` 폴백
+  - `global.animationEnabled` false 시 애니메이션 클래스/딜레이 스킵
+
+---
+
+## [Unreleased] — 2026-03-18 (갤러리 고도화 — Phase 4-g)
+
+### 갤러리 레이아웃 제어 + 미디어 확장 + DB 정리
+
+- `migrations/0004_gallery_media.sql`:
+  - 레거시 테이블 DROP (`biography_paragraphs`, `musical_philosophy`, `design_philosophy_paragraphs`, `media_files`)
+  - `gallery_photos` ALTER: `media_type`, `focal_x`, `focal_y`, `video_youtube_id`, `video_thumbnail_url` 컬럼 추가
+  - `gallery_settings` 테이블 신규 (단일 행 설정: layout_mode·columns·gap_size·aspect_ratio·hover_effect·caption_display·lightbox_enabled)
+- `src/types/content.ts`:
+  - `GalleryPhoto` 확장 (mediaType·focalX·focalY·videoYoutubeId·videoThumbnailUrl)
+  - `GallerySettings` 인터페이스 신규
+  - `GalleryData` 인터페이스 신규 (photos + settings)
+- **API 3개 신규 · 4개 수정:**
+  - 신규 `GET|PUT /api/admin/gallery-settings` — 레이아웃 설정 조회/저장
+  - 신규 `POST /api/admin/gallery/youtube` — YouTube URL → D1 INSERT (R2 없음)
+  - 수정 `GET /api/gallery` — 응답에 `settings` 포함 (db.batch 2쿼리)
+  - 수정 `GET|PUT /api/admin/gallery` — 신규 컬럼(mediaType·focalX·focalY) 포함
+  - 수정 `POST /api/admin/gallery/upload` — 동영상 MIME 추가 + `file.stream()` 전환 + media_type 자동 판별
+  - 수정 `GET /api/media/[id]` — 동영상 Content-Type 대응 + 캐시 정책 분리
+- **어드민 페이지** `src/app/admin/(dashboard)/gallery/page.tsx` 전면 개편:
+  - DISPLAY SETTINGS 카드: layout_mode·columns·gap_size·aspect_ratio·hover_effect·caption_display·lightbox 토글
+  - 이미지 카드: 포컬 포인트 피커 (crosshair 클릭 → objectPosition 실시간 미리보기)
+  - YouTube 추가 섹션: URL 입력 → 실시간 ID 파싱 → 썸네일 미리보기 → 갤러리 추가
+  - 파일 업로드 accept에 MP4/WebM/QuickTime 추가
+  - 미디어 타입별 카드 렌더 (image·video_file·video_youtube)
+  - 저장 시 photos + settings 병렬 PUT
+- **공개 페이지** `src/app/(public)/gallery/page.tsx` 설정 기반 동적 렌더링:
+  - DB 설정 → CSS 클래스 동적 생성 (masonry columns / grid, gap, 열 수)
+  - 포컬 포인트 objectPosition 적용
+  - captionDisplay: overlay(호버) / below(하단 항상) / hidden
+  - hoverEffect: zoom / fade / none
+  - 미디어별 그리드 렌더 (img + focal / video + 플레이 아이콘 / YT 썸네일 + 뱃지)
+  - 미디어별 라이트박스 렌더 (img 확대 / video controls autoPlay / YouTube iframe autoplay)
+
+---
+
+## [Unreleased] — 2026-03-18 (갤러리 기능 구현 — Phase 4-f)
+
+### 갤러리 페이지 신규 구현
+- `migrations/0003_gallery.sql`: `gallery_photos` 테이블 (id·filename·mime_type·size_bytes·alt_text·caption·sort_order·created_at)
+- `src/types/content.ts`: `GalleryPhoto` 인터페이스 추가
+- **API 라우트 5개 신규:**
+  - `GET /api/gallery` — 공개 사진 목록 (인증 불필요)
+  - `GET /api/media/[id]` — R2 이미지 프록시 서빙 (Cache-Control: immutable)
+  - `GET|PUT /api/admin/gallery` — 어드민 목록 조회 + 메타 일괄 업데이트
+  - `POST /api/admin/gallery/upload` — 다중 파일 업로드 (R2 + D1)
+  - `DELETE /api/admin/gallery/[id]` — D1 삭제 + R2 삭제
+- **공개 페이지** `src/app/(public)/gallery/page.tsx`:
+  - CSS columns 마소니 그리드 (2→3→4열 반응형)
+  - 호버 시 캡션 오버레이 + 확대 아이콘
+  - 클릭 시 라이트박스 (ESC/배경클릭 닫기, 스크롤 잠금)
+- **어드민 페이지** `src/app/admin/(dashboard)/gallery/page.tsx`:
+  - 드래그 앤 드롭 + 파일 선택 업로드
+  - 썸네일 미리보기 + altText/caption 인라인 편집
+  - 위/아래 버튼 순서 변경 + 삭제 확인 모달
+- 네비게이션 양쪽에 GALLERY 항목 추가 (TerminalLayout · AdminLayout)
+- i18n en/ko: `nav_gallery`, `gallery_*` 키 추가
+
+---
+
+## [Unreleased] — 2026-03-18 (raApiConfig D1 연동)
+
+### raApiConfig D1 영속화
+- `src/app/api/admin/ra-api-config/route.ts` 신규 생성 (`GET` / `PUT`)
+  - `ra_api_config` 테이블 단일 행(id=1) 조회·업데이트
+- `src/services/adminService.ts`: `fetchRaApiConfig`, `updateRaApiConfig` 함수 추가
+- `src/app/admin/(dashboard)/events/page.tsx`: `saveChanges`에 `apiUpdateRaApiConfig(raApiConfig)` 추가
+  - `Promise.allSettled` 병렬 저장 (performances + pageMeta + raApiConfig)
+
+---
+
 ## [Unreleased] — 2026-03-18 (기타 개선: i18n + 세션 만료 처리)
 
 ### events/page.tsx i18n 전환

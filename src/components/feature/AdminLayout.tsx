@@ -15,6 +15,7 @@ const ADMIN_NAV_ITEMS = [
   { label: 'ABOUT', path: '/admin/about' },
   { label: 'MUSIC', path: '/admin/music' },
   { label: 'EVENTS', path: '/admin/events' },
+  { label: 'GALLERY', path: '/admin/gallery' },
   { label: 'CONTACT', path: '/admin/contact' },
   { label: 'LINK', path: '/admin/link' },
   { label: 'THEME', path: '/admin/theme' },

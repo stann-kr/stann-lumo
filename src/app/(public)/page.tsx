@@ -5,12 +5,18 @@ import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import PageSection from '@/components/base/PageSection';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { PADDING_MAP, GAP_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { content } = useContent();
+  const { content, displaySettings } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
+
+  const settings = displaySettings.home;
+  const navColsClass = MD_GRID_COLS_MAP[settings.navGridColumns];
+  const navGapClass = GAP_MAP[settings.navGridGap];
+  const navPaddingClass = PADDING_MAP[settings.navCardPadding];
 
   const artistName = Array.isArray(content.artistInfo)
     ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
@@ -27,12 +33,12 @@ export default function HomePage() {
       <div className="space-y-12">
         {/* Navigation Grid */}
         <PageSection title={content.pageMeta?.home?.navTitle || t('home_nav_title') || 'NAVIGATION'} icon="ri-compass-3-line">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${navColsClass} ${navGapClass}`}>
             {content.homeSections.map((section, index) => (
               <Link
                 key={index}
                 href={section.path}
-                className="group p-6 border transition-all duration-300 cursor-pointer"
+                className={`group border transition-all duration-300 cursor-pointer ${navPaddingClass}`}
                 style={borderFaint}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor =
@@ -79,7 +85,7 @@ export default function HomePage() {
         </PageSection>
 
         {/* Terminal Info */}
-        {content.terminalInfo.url && (
+        {settings.showTerminalInfo && content.terminalInfo.url && (
           <div className="pt-8 border-t" style={borderMid}>
             <div className="flex items-center justify-between gap-6">
               <div className="space-y-1">

@@ -2,11 +2,14 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import tseslint from 'typescript-eslint'
+// @ts-expect-error — eslint-config-next has no type declarations
+import nextPlugin from 'eslint-config-next'
 
 export default [
   { ignores: ['dist', 'node_modules', '.next'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  nextPlugin,
   {
     files: ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
     languageOptions: {
@@ -36,7 +39,8 @@ export default [
       '@typescript-eslint/no-unused-expressions': 'off',
       'no-useless-catch': 'off',
       'no-irregular-whitespace': 'off',
-      'no-undef': 'error',
+      'no-undef': 'off', // TypeScript가 타입 체크 담당 — ESLint no-undef는 TS 프로젝트에서 불필요
+      '@next/next/no-img-element': 'off', // @next/next 플러그인 미설치 환경 대응
     },
   },
 ]

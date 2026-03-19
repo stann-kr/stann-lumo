@@ -11,6 +11,7 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
+      - /app/.open-next
     environment:
       - NODE_ENV=development
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}

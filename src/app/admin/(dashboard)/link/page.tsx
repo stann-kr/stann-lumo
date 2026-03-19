@@ -7,14 +7,19 @@ import FormInput from '@/components/base/FormInput';
 import FormTextarea from '@/components/base/FormTextarea';
 import SuccessMessage from '@/components/base/SuccessMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
+import RadioGroup from '@/components/base/RadioGroup';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint } from '@/utils/colorMix';
 import {
   updateLinkPlatforms as apiUpdateLinkPlatforms,
   updatePageMeta as apiUpdatePageMeta,
   updateTerminalInfo as apiUpdateTerminalInfo,
+  fetchDisplaySettings,
+  updateDisplaySettings,
 } from '@/services/adminService';
 import type { PageMeta } from '@/types/content';
+import type { LinkDisplaySettings } from '@/types/displaySettings';
+import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
 const AdminLinkPage = () => {
   const { allContent, updateContent, currentEditLanguage } = useContent();
@@ -22,6 +27,9 @@ const AdminLinkPage = () => {
   const [linkPlatforms, setLinkPlatforms] = useState(content.linkPlatforms);
   const [terminalInfo, setTerminalInfo] = useState(content.terminalInfo);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
+  const [displaySettings, setDisplaySettings] = useState<LinkDisplaySettings>(
+    DISPLAY_SETTINGS_DEFAULTS.link
+  );
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
@@ -31,6 +39,14 @@ const AdminLinkPage = () => {
     setTerminalInfo(allContent[currentEditLanguage].terminalInfo);
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
+
+  useEffect(() => {
+    fetchDisplaySettings('link').then((res) => {
+      if (res.success && res.data) {
+        setDisplaySettings(res.data as LinkDisplaySettings);
+      }
+    });
+  }, []);
 
   const addNewPlatform = () => {
     setLinkPlatforms([
@@ -72,6 +88,7 @@ const AdminLinkPage = () => {
       apiUpdateLinkPlatforms(currentEditLanguage, linkPlatforms),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
       apiUpdateTerminalInfo(terminalInfo),
+      updateDisplaySettings('link', displaySettings),
     ]);
     updateContent({ linkPlatforms, terminalInfo, pageMeta });
     showNotification();
@@ -97,6 +114,66 @@ const AdminLinkPage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* DISPLAY SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            DISPLAY SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="space-y-6">
+              <RadioGroup
+                label="SECTION SPACING"
+                value={displaySettings.spacing}
+                options={[
+                  { value: 'sm', label: 'SM' },
+                  { value: 'md', label: 'MD' },
+                  { value: 'lg', label: 'LG' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, spacing: v }))}
+              />
+              <RadioGroup
+                label="GRID COLUMNS"
+                value={displaySettings.gridColumns}
+                options={[
+                  { value: 2, label: '2' },
+                  { value: 3, label: '3' },
+                  { value: 4, label: '4' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, gridColumns: v }))}
+              />
+              <RadioGroup
+                label="CARD PADDING"
+                value={displaySettings.cardPadding}
+                options={[
+                  { value: 'sm', label: 'SM' },
+                  { value: 'md', label: 'MD' },
+                  { value: 'lg', label: 'LG' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, cardPadding: v }))}
+              />
+              <RadioGroup
+                label="GRID GAP"
+                value={displaySettings.gridGap}
+                options={[
+                  { value: 'sm', label: 'SM' },
+                  { value: 'md', label: 'MD' },
+                  { value: 'lg', label: 'LG' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, gridGap: v }))}
+              />
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={displaySettings.showTerminalCard}
+                  onChange={(e) => setDisplaySettings((prev) => ({ ...prev, showTerminalCard: e.target.checked }))}
+                  className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
+                />
+                <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW TERMINAL CARD</span>
+              </label>
+            </div>
+          </AdminCard>
+        </div>
 
         {/* PAGE SETTINGS */}
         <div>

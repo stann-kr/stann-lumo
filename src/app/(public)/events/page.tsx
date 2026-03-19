@@ -4,14 +4,17 @@ import { useTranslation } from "react-i18next";
 import { useContent } from "@/contexts/ContentContext";
 import PageLayout from "@/components/feature/PageLayout";
 import { createBorderFaint, createBorderMid } from "@/utils/colorMix";
+import { PADDING_MAP, SPACE_Y_MAP } from "@/utils/displaySettingsMap";
 
 const EventsPage = () => {
   const { t } = useTranslation();
-  const { eventsContent, content } = useContent();
+  const { eventsContent, content, displaySettings } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
 
-  const [visiblePastCount, setVisiblePastCount] = useState(10);
+  const settings = displaySettings.events;
+
+  const [visiblePastCount, setVisiblePastCount] = useState(settings.initialPastCount);
 
   const upcomingEvents = eventsContent.performances.filter((event) => {
     const eventDate = new Date(event.date);
@@ -31,14 +34,18 @@ const EventsPage = () => {
   const hasMorePastEvents = pastEvents.length > visiblePastCount;
 
   const handleLoadMore = () => {
-    setVisiblePastCount((prev) => prev + 10);
+    setVisiblePastCount((prev) => prev + settings.loadMoreCount);
   };
+
+  const cardPaddingClass = PADDING_MAP[settings.cardPadding];
+  const cardGapClass = SPACE_Y_MAP[settings.cardGap];
+  const pastOpacity = settings.pastEventOpacity / 100;
 
   return (
     <PageLayout
       title={content.pageMeta?.events?.title || t("events_title")}
       subtitle={content.pageMeta?.events?.subtitle || t("events_subtitle")}
-      spacing="lg"
+      spacing={settings.spacing}
     >
       {/* Upcoming Events */}
       <div className="space-y-6">
@@ -51,11 +58,11 @@ const EventsPage = () => {
             {t("msg_no_items")}
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className={cardGapClass}>
             {upcomingEvents.map((event) => (
               <div
                 key={event.id}
-                className="group border p-5 transition-all duration-300"
+                className={`group border ${cardPaddingClass} transition-all duration-300`}
                 style={borderFaint}
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -108,12 +115,12 @@ const EventsPage = () => {
           </p>
         ) : (
           <>
-            <div className="space-y-3">
+            <div className={cardGapClass}>
               {visiblePastEvents.map((event) => (
                 <div
                   key={event.id}
-                  className="group border p-5 transition-all duration-300 opacity-50 hover:opacity-75"
-                  style={borderFaint}
+                  className={`group border ${cardPaddingClass} transition-all duration-300 hover:opacity-75`}
+                  style={{ ...borderFaint, opacity: pastOpacity }}
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex-1 min-w-0 space-y-2">

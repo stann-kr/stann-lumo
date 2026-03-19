@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { label: 'nav_about', path: '/about' },
   { label: 'nav_music', path: '/music' },
   { label: 'nav_events', path: '/events' },
+  { label: 'nav_gallery', path: '/gallery' },
   { label: 'nav_contact', path: '/contact' },
   { label: 'nav_link', path: '/link' },
   { label: 'TERMINAL', path: TERMINAL_URL, external: true, raw: true },

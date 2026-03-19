@@ -7,14 +7,19 @@ import FormInput from '@/components/base/FormInput';
 import FormTextarea from '@/components/base/FormTextarea';
 import SuccessMessage from '@/components/base/SuccessMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
+import RadioGroup from '@/components/base/RadioGroup';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 import {
   updateHomeSections as apiUpdateHomeSections,
   updatePageMeta as apiUpdatePageMeta,
   updateTerminalInfo as apiUpdateTerminalInfo,
+  fetchDisplaySettings,
+  updateDisplaySettings,
 } from '@/services/adminService';
 import type { HomeSection, TerminalInfo, PageMeta } from '@/types/content';
+import type { HomeDisplaySettings } from '@/types/displaySettings';
+import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
 const AVAILABLE_ICONS = [
   { value: 'ri-user-line', label: 'User' },
@@ -46,6 +51,9 @@ const AdminHomePage = () => {
   const [homeSections, setHomeSections] = useState<HomeSection[]>(content.homeSections);
   const [terminalInfo, setTerminalInfo] = useState<TerminalInfo>(content.terminalInfo);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
+  const [displaySettings, setDisplaySettings] = useState<HomeDisplaySettings>(
+    DISPLAY_SETTINGS_DEFAULTS.home
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null);
   const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
@@ -56,6 +64,14 @@ const AdminHomePage = () => {
     setTerminalInfo(allContent[currentEditLanguage].terminalInfo);
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
+
+  useEffect(() => {
+    fetchDisplaySettings('home').then((res) => {
+      if (res.success && res.data) {
+        setDisplaySettings(res.data as HomeDisplaySettings);
+      }
+    });
+  }, []);
 
   const updateSectionField = (index: number, field: keyof HomeSection, value: string) => {
     setHomeSections(prev =>
@@ -98,6 +114,7 @@ const AdminHomePage = () => {
       apiUpdateHomeSections(currentEditLanguage, homeSections),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
       apiUpdateTerminalInfo(terminalInfo),
+      updateDisplaySettings('home', displaySettings),
     ]);
     updateContent({ homeSections, terminalInfo, pageMeta });
     showNotification();
@@ -123,6 +140,56 @@ const AdminHomePage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* DISPLAY SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            DISPLAY SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="space-y-6">
+              <RadioGroup
+                label="NAV GRID COLUMNS"
+                value={displaySettings.navGridColumns}
+                options={[
+                  { value: 1, label: '1' },
+                  { value: 2, label: '2' },
+                  { value: 3, label: '3' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, navGridColumns: v }))}
+              />
+              <RadioGroup
+                label="NAV CARD PADDING"
+                value={displaySettings.navCardPadding}
+                options={[
+                  { value: 'sm', label: 'SM' },
+                  { value: 'md', label: 'MD' },
+                  { value: 'lg', label: 'LG' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, navCardPadding: v }))}
+              />
+              <RadioGroup
+                label="NAV GRID GAP"
+                value={displaySettings.navGridGap}
+                options={[
+                  { value: 'sm', label: 'SM' },
+                  { value: 'md', label: 'MD' },
+                  { value: 'lg', label: 'LG' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, navGridGap: v }))}
+              />
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={displaySettings.showTerminalInfo}
+                  onChange={(e) => setDisplaySettings((prev) => ({ ...prev, showTerminalInfo: e.target.checked }))}
+                  className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
+                />
+                <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW TERMINAL INFO</span>
+              </label>
+            </div>
+          </AdminCard>
+        </div>
 
         {/* PAGE SETTINGS */}
         <div>

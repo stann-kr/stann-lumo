@@ -4,21 +4,26 @@ import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import PageSection from '@/components/base/PageSection';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { GAP_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 const AboutPage = () => {
   const { t } = useTranslation();
-  const { content } = useContent();
+  const { content, displaySettings } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
 
+  const settings = displaySettings.about;
   const artistInfoItems = content.artistInfo ?? [];
   const sortedSections = [...(content.aboutSections ?? [])].sort((a, b) => a.order - b.order);
 
+  const infoGapClass = GAP_MAP[settings.infoCardGap];
+  const infoColsClass = MD_GRID_COLS_MAP[settings.infoGridColumns];
+
   return (
-    <PageLayout title={t('about_title')} typingSpeed={60} spacing="lg">
+    <PageLayout title={t('about_title')} typingSpeed={settings.typingSpeed} spacing={settings.spacing}>
       {/* Artist Info Cards — 동적 key-value 렌더링 */}
       {artistInfoItems.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className={`grid grid-cols-2 ${infoColsClass} ${infoGapClass}`}>
           {artistInfoItems.map((info) => (
             <div key={info.id} className="p-4 border" style={borderFaint}>
               <p className="text-xs text-[var(--color-accent)] mb-2 tracking-widest">{info.key}</p>

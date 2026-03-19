@@ -4,12 +4,17 @@ import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 const ContactPage = () => {
   const { t } = useTranslation();
-  const { contactContent, eventsContent, content } = useContent();
+  const { contactContent, eventsContent, content, displaySettings } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
+
+  const settings = displaySettings.contact;
+  const contactColsClass = MD_GRID_COLS_MAP[settings.contactInfoColumns];
+  const bookingColsClass = MD_GRID_COLS_MAP[settings.bookingColumns];
 
   const [formData, setFormData] = useState({ callsign: '', email: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -17,7 +22,7 @@ const ContactPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!formData.callsign || !formData.email || !formData.message || formData.message.length > 500) {
+    if (!formData.callsign || !formData.email || !formData.message || formData.message.length > settings.messageMaxLength) {
       setStatus('error');
       setTimeout(() => setStatus('idle'), 3000);
       return;
@@ -51,7 +56,7 @@ const ContactPage = () => {
     <PageLayout
       title={content.pageMeta?.contact?.title || t('contact_title')}
       subtitle={content.pageMeta?.contact?.subtitle || t('contact_subtitle')}
-      spacing="lg"
+      spacing={settings.spacing}
     >
       {/* Guestbook Form */}
       <div className="space-y-8">
@@ -104,23 +109,23 @@ const ContactPage = () => {
               <label className="block text-xs font-medium text-[var(--color-accent)] tracking-widest">
                 {t('contact_form_message')} <span className="text-[var(--color-secondary)] opacity-40">{t('contact_form_required')}</span>
               </label>
-              <span className={`text-xs ${charCount > 450 ? 'opacity-70' : 'opacity-30'} text-[var(--color-secondary)]`}>
-                {charCount}/500
+              <span className={`text-xs ${charCount > settings.messageMaxLength * 0.9 ? 'opacity-70' : 'opacity-30'} text-[var(--color-secondary)]`}>
+                {charCount}/{settings.messageMaxLength}
               </span>
             </div>
             <textarea
               name="message"
               value={formData.message}
               onChange={(e) => {
-                if (e.target.value.length <= 500)
+                if (e.target.value.length <= settings.messageMaxLength)
                   setFormData({ ...formData, message: e.target.value });
               }}
-              rows={6}
+              rows={settings.textareaRows}
               className="w-full bg-transparent border-b text-[var(--color-secondary)] px-0 py-3 text-sm focus:outline-none transition-colors resize-none placeholder:opacity-20"
               style={borderMid}
               placeholder={t('contact_form_placeholder_message')}
               required
-              maxLength={500}
+              maxLength={settings.messageMaxLength}
             />
           </div>
 
@@ -156,7 +161,7 @@ const ContactPage = () => {
           {content.pageMeta?.contact?.directTitle || t('contact_direct')}
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className={`grid ${contactColsClass} gap-6`}>
           {contactContent.contactInfo.map((item, index) => (
             <div key={index} className="space-y-2">
               <div className="w-8 h-8 flex items-center justify-center">
@@ -184,7 +189,7 @@ const ContactPage = () => {
           {content.pageMeta?.contact?.bookingTitle || t('contact_booking_info')}
         </h2>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className={`grid ${bookingColsClass} gap-8`}>
           {/* Set Duration */}
           <div className="space-y-4">
             <div className="w-8 h-8 flex items-center justify-center">

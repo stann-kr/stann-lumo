@@ -6,14 +6,19 @@ import AdminSectionHeader from '@/components/base/AdminSectionHeader';
 import FormInput from '@/components/base/FormInput';
 import ListItemEditor from '@/components/base/ListItemEditor';
 import SuccessMessage from '@/components/base/SuccessMessage';
+import RadioGroup from '@/components/base/RadioGroup';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 import {
   updateContactInfo as apiUpdateContactInfo,
   updateEventsInfo as apiUpdateEventsInfo,
   updatePageMeta as apiUpdatePageMeta,
+  fetchDisplaySettings,
+  updateDisplaySettings,
 } from '@/services/adminService';
 import type { ContactItem, EventsInfo, PageMeta } from '@/types/content';
+import type { ContactDisplaySettings } from '@/types/displaySettings';
+import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
 const AVAILABLE_ICONS = [
   { value: 'ri-mail-line', label: 'Email' },
@@ -42,6 +47,9 @@ const AdminContactPage = () => {
   const [contactInfo, setContactInfo] = useState<ContactItem[]>(content.contactInfo);
   const [eventsInfo, setEventsInfo] = useState<EventsInfo>(content.eventsInfo);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
+  const [displaySettings, setDisplaySettings] = useState<ContactDisplaySettings>(
+    DISPLAY_SETTINGS_DEFAULTS.contact
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
@@ -51,6 +59,14 @@ const AdminContactPage = () => {
     setEventsInfo(allContent[currentEditLanguage].eventsInfo);
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
+
+  useEffect(() => {
+    fetchDisplaySettings('contact').then((res) => {
+      if (res.success && res.data) {
+        setDisplaySettings(res.data as ContactDisplaySettings);
+      }
+    });
+  }, []);
 
   const updateContactItemField = (index: number, field: keyof ContactItem, value: string) => {
     setContactInfo(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
@@ -102,6 +118,7 @@ const AdminContactPage = () => {
       apiUpdateContactInfo(currentEditLanguage, contactInfo),
       apiUpdateEventsInfo(currentEditLanguage, eventsInfo),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
+      updateDisplaySettings('contact', displaySettings),
     ]);
     updateContent({ contactInfo, eventsInfo, pageMeta });
     showNotification();
@@ -118,6 +135,61 @@ const AdminContactPage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* DISPLAY SETTINGS */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            DISPLAY SETTINGS
+          </h2>
+          <AdminCard>
+            <div className="space-y-6">
+              <RadioGroup
+                label="SECTION SPACING"
+                value={displaySettings.spacing}
+                options={[
+                  { value: 'sm', label: 'SM' },
+                  { value: 'md', label: 'MD' },
+                  { value: 'lg', label: 'LG' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, spacing: v }))}
+              />
+              <RadioGroup
+                label="CONTACT INFO COLUMNS"
+                value={displaySettings.contactInfoColumns}
+                options={[
+                  { value: 2, label: '2' },
+                  { value: 3, label: '3' },
+                  { value: 4, label: '4' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, contactInfoColumns: v }))}
+              />
+              <RadioGroup
+                label="BOOKING COLUMNS"
+                value={displaySettings.bookingColumns}
+                options={[
+                  { value: 2, label: '2' },
+                  { value: 3, label: '3' },
+                  { value: 4, label: '4' },
+                ]}
+                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, bookingColumns: v }))}
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormInput
+                  label="MESSAGE MAX LENGTH"
+                  type="number"
+                  value={String(displaySettings.messageMaxLength)}
+                  onChange={(v) => setDisplaySettings((prev) => ({ ...prev, messageMaxLength: Math.max(100, parseInt(v) || 100) }))}
+                />
+                <FormInput
+                  label="TEXTAREA ROWS"
+                  type="number"
+                  value={String(displaySettings.textareaRows)}
+                  onChange={(v) => setDisplaySettings((prev) => ({ ...prev, textareaRows: Math.max(2, parseInt(v) || 2) }))}
+                />
+              </div>
+            </div>
+          </AdminCard>
+        </div>
 
         {/* PAGE SETTINGS */}
         <div>

@@ -1,7 +1,10 @@
+'use client';
 import type { CSSProperties, ReactNode, ReactElement } from 'react';
 import { Children, isValidElement } from 'react';
 import TypingText from '../home/TypingText';
 import { createBorderMid } from '../../utils/colorMix';
+import { MAX_WIDTH_MAP } from '../../utils/displaySettingsMap';
+import { useContent } from '../../contexts/ContentContext';
 
 interface PageLayoutProps {
   title: string;
@@ -23,26 +26,33 @@ const PageLayout = ({
   title,
   titleExtra,
   subtitle,
-  typingSpeed = 80,
+  typingSpeed,
   typingDelay = 100,
   children,
-  spacing = 'md',
+  spacing,
 }: PageLayoutProps) => {
   const borderMid = createBorderMid();
+  const { displaySettings } = useContent();
+  const global = displaySettings.global;
+
+  // 페이지별 props 우선, 없으면 global 설정 사용
+  const resolvedTypingSpeed = typingSpeed ?? global.typingSpeed;
+  const resolvedSpacing = spacing ?? global.defaultSpacing;
+  const resolvedMaxWidth = MAX_WIDTH_MAP[global.pageMaxWidth];
 
   const extraDelays = (titleExtra ?? []).reduce<number[]>((acc, part, i) => {
     if (i === 0) {
-      acc.push(typingDelay + title.length * typingSpeed + 200);
+      acc.push(typingDelay + title.length * resolvedTypingSpeed + 200);
     } else {
       const prev = acc[i - 1];
       const prevLen = (titleExtra ?? [])[i - 1].length;
-      acc.push(prev + prevLen * typingSpeed + 200);
+      acc.push(prev + prevLen * resolvedTypingSpeed + 200);
     }
     return acc;
   }, []);
 
-  const baseDelay = 200;
-  const stepDelay = 120;
+  const baseDelay = global.animationEnabled ? 200 : 0;
+  const stepDelay = global.animationEnabled ? 120 : 0;
 
   const animatedChildren = Children.map(children, (child, index) => {
     const delay = baseDelay + index * stepDelay;
@@ -51,8 +61,12 @@ const PageLayout = ({
       return (
         <div
           key={index}
-          className="animate-slideUp"
-          style={{ animationDelay: `${delay}ms`, animationFillMode: 'both', opacity: 0 }}
+          className={global.animationEnabled ? 'animate-slideUp' : ''}
+          style={
+            global.animationEnabled
+              ? { animationDelay: `${delay}ms`, animationFillMode: 'both', opacity: 0 }
+              : undefined
+          }
         >
           {el}
         </div>
@@ -62,19 +76,23 @@ const PageLayout = ({
   });
 
   return (
-    <div className={`max-w-5xl mx-auto ${spacingMap[spacing]} py-8`}>
+    <div className={`${resolvedMaxWidth} mx-auto ${spacingMap[resolvedSpacing]} py-8`}>
       {/* Page Header */}
       <div
-        className="space-y-3 animate-slideUp"
-        style={{ animationDelay: '0ms', animationFillMode: 'both', opacity: 0 }}
+        className={global.animationEnabled ? 'space-y-3 animate-slideUp' : 'space-y-3'}
+        style={
+          global.animationEnabled
+            ? { animationDelay: '0ms', animationFillMode: 'both', opacity: 0 }
+            : undefined
+        }
       >
         <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-primary)] tracking-tight leading-tight">
-          <TypingText text={title} speed={typingSpeed} delay={typingDelay} />
+          <TypingText text={title} speed={resolvedTypingSpeed} delay={typingDelay} />
           {titleExtra && titleExtra.map((part, i) => (
             <span key={i} className="block">
               <TypingText
                 text={part}
-                speed={typingSpeed}
+                speed={resolvedTypingSpeed}
                 delay={extraDelays[i]}
               />
             </span>

@@ -3,25 +3,30 @@ import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { PADDING_MAP, GAP_MAP } from '@/utils/displaySettingsMap';
 
 const MusicPage = () => {
   const { t } = useTranslation();
-  const { musicContent, content } = useContent();
+  const { musicContent, content, displaySettings } = useContent();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
+
+  const settings = displaySettings.music;
+  const cardPaddingClass = PADDING_MAP[settings.cardPadding];
+  const trackGapClass = GAP_MAP[settings.trackGap];
 
   return (
     <PageLayout
       title={content.pageMeta?.music?.title || t('music_title')}
       subtitle={content.pageMeta?.music?.subtitle || t('music_subtitle')}
-      spacing="md"
+      spacing={settings.spacing}
     >
       {/* Track List */}
-      <div className="grid gap-3">
+      <div className={`grid ${trackGapClass}`}>
         {musicContent.tracks.map((track) => (
           <div
             key={track.id}
-            className="group border p-5 transition-all duration-300"
+            className={`group border ${cardPaddingClass} transition-all duration-300`}
             style={borderFaint}
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -30,11 +35,17 @@ const MusicPage = () => {
                   {track.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-3 text-xs">
-                  <span className="px-2 py-0.5 border text-[var(--color-accent)] tracking-wider" style={borderMid}>
-                    {track.type}
-                  </span>
-                  <span className="text-[var(--color-secondary)] opacity-40">{track.duration}</span>
-                  <span className="text-[var(--color-secondary)] opacity-30">{track.year}</span>
+                  {settings.showTypeBadge && (
+                    <span className="px-2 py-0.5 border text-[var(--color-accent)] tracking-wider" style={borderMid}>
+                      {track.type}
+                    </span>
+                  )}
+                  {settings.showDuration && (
+                    <span className="text-[var(--color-secondary)] opacity-40">{track.duration}</span>
+                  )}
+                  {settings.showYear && (
+                    <span className="text-[var(--color-secondary)] opacity-30">{track.year}</span>
+                  )}
                 </div>
               </div>
 

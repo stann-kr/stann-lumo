@@ -1,11 +1,17 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useContent } from '@/contexts/ContentContext';
 import AdminCard from '@/components/base/AdminCard';
 import AdminSectionHeader from '@/components/base/AdminSectionHeader';
+import FormInput from '@/components/base/FormInput';
 import SuccessMessage from '@/components/base/SuccessMessage';
+import RadioGroup from '@/components/base/RadioGroup';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { fetchDisplaySettings, updateDisplaySettings } from '@/services/adminService';
+import { updateThemeColors as apiUpdateThemeColors } from '@/services/adminService';
+import type { GlobalDisplaySettings } from '@/types/displaySettings';
+import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
 const COLOR_PRESETS = [
   {
@@ -36,7 +42,18 @@ const AdminThemePage = () => {
   const { content, updateContent, allContent, setCurrentEditLanguage, currentEditLanguage } = useContent();
   // 테마 색상은 언어와 무관하게 공유 — en 기준으로 읽음
   const [colors, setColors] = useState(allContent.en.themeColors);
+  const [globalSettings, setGlobalSettings] = useState<GlobalDisplaySettings>(
+    DISPLAY_SETTINGS_DEFAULTS.global
+  );
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
+
+  useEffect(() => {
+    fetchDisplaySettings('global').then((res) => {
+      if (res.success && res.data) {
+        setGlobalSettings(res.data as GlobalDisplaySettings);
+      }
+    });
+  }, []);
 
   const updateColorField = (key: keyof typeof colors, value: string) => {
     setColors(prev => ({ ...prev, [key]: value }));
@@ -46,7 +63,7 @@ const AdminThemePage = () => {
     setColors(preset.colors);
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     // 두 언어 모두에 동일한 테마 색상 적용
     const prevLang = currentEditLanguage;
     setCurrentEditLanguage('en');
@@ -54,6 +71,11 @@ const AdminThemePage = () => {
     setCurrentEditLanguage('ko');
     updateContent({ themeColors: colors });
     setCurrentEditLanguage(prevLang);
+
+    await Promise.allSettled([
+      apiUpdateThemeColors(colors),
+      updateDisplaySettings('global', globalSettings),
+    ]);
     showNotification();
   };
 
@@ -229,7 +251,52 @@ const AdminThemePage = () => {
               </AdminCard>
             </div>
 
-            {/* Color Reference */}
+            {/* Global Display Settings */}
+            <div>
+              <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">GLOBAL DISPLAY SETTINGS</h2>
+              <AdminCard>
+                <div className="space-y-6">
+                  <RadioGroup
+                    label="PAGE MAX WIDTH"
+                    value={globalSettings.pageMaxWidth}
+                    options={[
+                      { value: 'sm', label: 'SM (3xl)' },
+                      { value: 'md', label: 'MD (4xl)' },
+                      { value: 'lg', label: 'LG (5xl)' },
+                      { value: 'xl', label: 'XL (6xl)' },
+                    ]}
+                    onChange={(v) => setGlobalSettings((prev) => ({ ...prev, pageMaxWidth: v }))}
+                  />
+                  <RadioGroup
+                    label="DEFAULT SPACING"
+                    value={globalSettings.defaultSpacing}
+                    options={[
+                      { value: 'sm', label: 'SM' },
+                      { value: 'md', label: 'MD' },
+                      { value: 'lg', label: 'LG' },
+                    ]}
+                    onChange={(v) => setGlobalSettings((prev) => ({ ...prev, defaultSpacing: v }))}
+                  />
+                  <FormInput
+                    label="TYPING SPEED (MS/CHAR)"
+                    type="number"
+                    value={String(globalSettings.typingSpeed)}
+                    onChange={(v) => setGlobalSettings((prev) => ({ ...prev, typingSpeed: Math.max(1, parseInt(v) || 1) }))}
+                  />
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={globalSettings.animationEnabled}
+                      onChange={(e) => setGlobalSettings((prev) => ({ ...prev, animationEnabled: e.target.checked }))}
+                      className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
+                    />
+                    <span className="text-xs text-[var(--color-secondary)] tracking-widest">ENABLE ANIMATIONS</span>
+                  </label>
+                </div>
+              </AdminCard>
+            </div>
+
+          {/* Color Reference */}
             <div>
               <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">COLOR REFERENCE</h2>
               <AdminCard>

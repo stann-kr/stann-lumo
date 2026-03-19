@@ -24,6 +24,8 @@ import type {
   RAApiConfig,
   TerminalInfo,
 } from '@/types/content';
+import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
+import type { AllDisplaySettings } from '@/types/displaySettings';
 
 // ---------- DB 행 타입 ----------
 
@@ -74,6 +76,9 @@ interface SiteConfigRow {
 }
 interface RAApiConfigRow {
   id: number; user_id: string | null; api_key: string | null; dj_id: string | null; option: string;
+}
+interface DisplaySettingsRow {
+  page: string; settings: string;
 }
 
 // ---------- 헬퍼: page_meta 행 → PageMeta 객체 ----------
@@ -178,6 +183,7 @@ export async function GET(
       themeColorsRes,
       raApiConfigRes,
       siteConfigRes,
+      displaySettingsRes,
     ] = await db.batch([
       db.prepare('SELECT * FROM artist_info WHERE lang = ? ORDER BY sort_order').bind(lang),
       db.prepare('SELECT * FROM about_sections WHERE lang = ? ORDER BY section_order').bind(lang),
@@ -195,6 +201,7 @@ export async function GET(
       db.prepare('SELECT * FROM theme_colors WHERE id = 1'),
       db.prepare('SELECT * FROM ra_api_config WHERE id = 1'),
       db.prepare('SELECT * FROM site_config WHERE id = 1'),
+      db.prepare('SELECT * FROM display_settings'),
     ]);
 
     const artistInfoRows    = (artistInfoRes.results   as ArtistInfoRow[]);
@@ -210,9 +217,10 @@ export async function GET(
     const techReqRows       = (techReqRes.results       as EventsListRow[]);
     const linkPlatformRows  = (linkPlatformsRes.results as LinkPlatformRow[]);
     const contactInfoRows   = (contactInfoRes.results   as ContactInfoRow[]);
-    const themeRow          = (themeColorsRes.results[0] as ThemeColorsRow | undefined);
-    const raRow             = (raApiConfigRes.results[0] as RAApiConfigRow | undefined);
-    const siteRow           = (siteConfigRes.results[0]  as SiteConfigRow | undefined);
+    const themeRow              = (themeColorsRes.results[0]   as ThemeColorsRow | undefined);
+    const raRow                 = (raApiConfigRes.results[0]   as RAApiConfigRow | undefined);
+    const siteRow               = (siteConfigRes.results[0]    as SiteConfigRow | undefined);
+    const displaySettingsRows   = (displaySettingsRes.results  as DisplaySettingsRow[]);
 
     // ArtistInfo
     const artistInfo: ArtistInfoItem[] = artistInfoRows.map((r) => ({
@@ -297,6 +305,26 @@ export async function GET(
           }
         : undefined;
 
+    // DisplaySettings — 기본값과 shallow merge
+    const dsMap = Object.fromEntries(displaySettingsRows.map((r) => [r.page, r.settings]));
+    function mergeDs<K extends keyof AllDisplaySettings>(page: K): AllDisplaySettings[K] {
+      try {
+        const parsed = JSON.parse(dsMap[page] ?? '{}') as Partial<AllDisplaySettings[K]>;
+        return { ...DISPLAY_SETTINGS_DEFAULTS[page], ...parsed };
+      } catch {
+        return DISPLAY_SETTINGS_DEFAULTS[page];
+      }
+    }
+    const displaySettings: AllDisplaySettings = {
+      global:  mergeDs('global'),
+      home:    mergeDs('home'),
+      about:   mergeDs('about'),
+      music:   mergeDs('music'),
+      events:  mergeDs('events'),
+      contact: mergeDs('contact'),
+      link:    mergeDs('link'),
+    };
+
     const data: ContentData = {
       artistInfo,
       aboutSections,
@@ -310,6 +338,7 @@ export async function GET(
       contactInfo,
       themeColors,
       ...(raApiConfig && { raApiConfig }),
+      displaySettings,
     };
 
     return NextResponse.json({ success: true, data });

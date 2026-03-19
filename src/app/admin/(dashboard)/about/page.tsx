@@ -1,30 +1,48 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useContent } from '@/contexts/ContentContext';
 import AdminCard from '@/components/base/AdminCard';
 import AdminSectionHeader from '@/components/base/AdminSectionHeader';
 import FormInput from '@/components/base/FormInput';
 import FormTextarea from '@/components/base/FormTextarea';
 import SuccessMessage from '@/components/base/SuccessMessage';
+import RadioGroup from '@/components/base/RadioGroup';
 import { useAdminForm } from '@/hooks/useAdminForm';
 import {
   updateArtistInfo as apiUpdateArtistInfo,
   updateAboutSections as apiUpdateAboutSections,
+  fetchDisplaySettings,
+  updateDisplaySettings,
 } from '@/services/adminService';
 import type { ArtistInfoItem, ContentData, DynamicSection, DynamicSectionType, PhilosophyItem } from '@/types/content';
+import type { AboutDisplaySettings } from '@/types/displaySettings';
+import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 import { createBorderFaint } from '@/utils/colorMix';
 
 const AdminAboutPage = () => {
   const { allContent, updateContent, currentEditLanguage } = useContent();
   const content = allContent[currentEditLanguage];
 
+  const [displaySettings, setDisplaySettings] = useState<AboutDisplaySettings>(
+    DISPLAY_SETTINGS_DEFAULTS.about
+  );
+
+  useEffect(() => {
+    fetchDisplaySettings('about').then((res) => {
+      if (res.success && res.data) {
+        setDisplaySettings(res.data as AboutDisplaySettings);
+      }
+    });
+  }, []);
+
   const handleSave = useCallback(async (data: ContentData) => {
     await Promise.allSettled([
       apiUpdateArtistInfo(currentEditLanguage, data.artistInfo),
       apiUpdateAboutSections(currentEditLanguage, data.aboutSections),
+      updateDisplaySettings('about', displaySettings),
     ]);
     updateContent(data);
-  }, [currentEditLanguage, updateContent]);
+  }, [currentEditLanguage, updateContent, displaySettings]);
 
   const {
     formData,
@@ -179,6 +197,53 @@ const AdminAboutPage = () => {
       />
 
       <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+      {/* DISPLAY SETTINGS */}
+      <div>
+        <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+          DISPLAY SETTINGS
+        </h2>
+        <AdminCard>
+          <div className="space-y-6">
+            <RadioGroup
+              label="SECTION SPACING"
+              value={displaySettings.spacing}
+              options={[
+                { value: 'sm', label: 'SM' },
+                { value: 'md', label: 'MD' },
+                { value: 'lg', label: 'LG' },
+              ]}
+              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, spacing: v }))}
+            />
+            <RadioGroup
+              label="INFO GRID COLUMNS"
+              value={displaySettings.infoGridColumns}
+              options={[
+                { value: 2, label: '2' },
+                { value: 3, label: '3' },
+                { value: 4, label: '4' },
+              ]}
+              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, infoGridColumns: v }))}
+            />
+            <RadioGroup
+              label="INFO CARD GAP"
+              value={displaySettings.infoCardGap}
+              options={[
+                { value: 'sm', label: 'SM' },
+                { value: 'md', label: 'MD' },
+                { value: 'lg', label: 'LG' },
+              ]}
+              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, infoCardGap: v }))}
+            />
+            <FormInput
+              label="TYPING SPEED (MS/CHAR)"
+              type="number"
+              value={String(displaySettings.typingSpeed)}
+              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, typingSpeed: Math.max(1, parseInt(v) || 1) }))}
+            />
+          </div>
+        </AdminCard>
+      </div>
 
       {/* Artist Info — 동적 key-value 리스트 */}
       <div>

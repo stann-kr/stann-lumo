@@ -4,6 +4,7 @@ export default {
   nav_about: '소개',
   nav_music: '음악',
   nav_events: '이벤트',
+  nav_gallery: '갤러리',
   nav_contact: '연락',
   nav_link: '링크',
   nav_admin: '관리자',
@@ -184,4 +185,11 @@ export default {
   
   // Time
   time_seoul: '서울 시간',
+
+  // Gallery
+  gallery_label: '갤러리',
+  gallery_title: '사진',
+  gallery_subtitle: '비주얼 아카이브',
+  gallery_empty: '업로드된 사진이 없습니다',
+  gallery_lightbox_close: '닫기',
 };
