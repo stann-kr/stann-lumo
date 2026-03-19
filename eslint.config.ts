@@ -2,7 +2,6 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import tseslint from 'typescript-eslint'
-// @ts-expect-error — eslint-config-next has no type declarations
 import nextPlugin from 'eslint-config-next'
 
 export default [
