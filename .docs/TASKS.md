@@ -7,8 +7,8 @@
 
 ## 🔜 잔여 확인 항목
 
-- [ ] **배포 후 어드민 로그인 확인** (main PR 머지 → CF 자동 빌드 완료 후)
-- [ ] **`ADMIN_PASSWORD` Dashboard Variables 등록** 확인
+- [ ] **CF 빌드 완료 후 어드민 로그인 확인** (`ADMIN_PASSWORD` Secret 설정 완료)
+- [ ] **어드민 로그인 후 콘텐츠 마이그레이션** (`/api/admin/migrate` 실행)
 - [ ] D1 마이그레이션 0005 (display_settings) 원격 적용 여부 확인
 - [ ] 갤러리 R2 업로드 실제 동작 확인
 - [ ] 언어 전환(EN/KO) 번역 반영 확인
@@ -16,6 +16,13 @@
 ---
 
 ## ✅ 완료된 작업 (최신순)
+
+### [2026-03-20] 콘텐츠 로딩 플래시 방지 + 로그인 에러 진단
+
+- [x] `ContentContext`: `isLoading` 추가 — DB 조회 완료 전 기본값 flash 방지
+- [x] `TerminalLayout`: 로딩 중 `LOADING...` 표시, 완료 후 `animate-fadeIn`
+- [x] 로그인 에러 메시지 세분화 (`NOT_CONFIGURED` vs `UNAUTHORIZED`)
+- [x] `ADMIN_PASSWORD` Secret 설정 (`wrangler secret put` / CF 대시보드)
 
 ### [2026-03-20] ESLint react-hooks 규칙 근본 수정 (코드 패턴 교정)
 
