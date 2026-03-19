@@ -2,6 +2,23 @@
 
 ---
 
+## [Unreleased] — 2026-03-19 (Cloudflare 빌드 오류 근본 수정)
+
+### TypeScript 타입 충돌 해소 (`src/lib/db.ts`)
+- `export interface CloudflareEnv` → `declare global { interface CloudflareEnv }` 전환
+  - `@opennextjs/cloudflare`가 선언한 전역 `CloudflareEnv`를 확장하는 방식으로 변경
+  - 모듈 레벨 인터페이스와 전역 인터페이스 간 타입 불일치 해소
+  - `getCloudflareContext()` 반환 타입에 `DB`/`MEDIA`/`ADMIN_PASSWORD` 자동 포함 — 캐스트 불필요
+
+### ESLint `react-hooks` 중복 플러그인 등록 + 엄격 규칙 (`eslint.config.ts`)
+- `import reactHooks` 및 `plugins: { 'react-hooks': reactHooks }` 제거
+  - `eslint-config-next` v16+ 배열이 이미 `react-hooks` 플러그인 포함
+  - 중복 등록 → "Cannot redefine plugin" 빌드 오류 발생
+- `react-hooks/purity`, `react-hooks/set-state-in-effect`, `import/no-anonymous-default-export` 비활성화
+  - `eslint-plugin-react-hooks` v5+ 신규 엄격 규칙이 기존 코드 패턴과 충돌
+
+---
+
 ## [Unreleased] — 2026-03-19 (Cloudflare 배포 버그 수정 + UX 개선)
 
 ### 언어 초기화 버그 수정
