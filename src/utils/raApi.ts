@@ -1,5 +1,5 @@
 import type { RAEventXML, RAApiResponse, RAApiError } from '../types/ra-api';
-import type { Performance, RAApiConfig } from '../types/content';
+import type { Performance } from '../types/content';
 
 /**
  * XML 문자열을 파싱하여 RAApiResponse 객체로 변환
@@ -112,7 +112,7 @@ export function convertRAEventToPerformance(raEvent: RAEventXML): Performance {
  * RA 이벤트 조회 — 서버 사이드 프록시(/api/admin/ra-events)를 통해 호출
  * 브라우저에서 RA API 직접 호출 시 CORS 차단됨
  */
-export async function fetchRAEvents(_config?: RAApiConfig): Promise<RAApiResponse> {
+export async function fetchRAEvents(): Promise<RAApiResponse> {
   try {
     // 서버 프록시: DB에 저장된 설정을 사용하여 CF Workers에서 RA API 호출
     const response = await fetch('/api/admin/ra-events', { method: 'GET' });

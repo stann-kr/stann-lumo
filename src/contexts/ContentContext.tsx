@@ -444,15 +444,19 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // hydration 완료 후 D1 API에서 양 언어 콘텐츠 로드
     // API 미사용 환경(dev, DB 없음) → 기본값 유지
-    Promise.all([fetchContent("en"), fetchContent("ko")]).then(
-      ([enData, koData]) => {
+    Promise.all([fetchContent("en"), fetchContent("ko")])
+      .then(([enData, koData]) => {
         setAllContent({
           en: enData ?? defaultEnContent,
           ko: koData ?? defaultKoContent,
         });
+      })
+      .catch(() => {
+        // 네트워크 오류 등 — 기본값 유지
+      })
+      .finally(() => {
         setIsLoading(false);
-      },
-    );
+      });
   }, []);
 
   const content = allContent[language];

@@ -16,17 +16,22 @@ const EventsPage = () => {
 
   const [visiblePastCount, setVisiblePastCount] = useState(settings.initialPastCount);
 
+  // YYYY.MM.DD (RA) / YYYY-MM-DD (수동) 양쪽 형식 지원
+  const parseEventDate = (dateStr: string): Date => {
+    const normalized = dateStr.replace(/\./g, '-');
+    return new Date(normalized);
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const upcomingEvents = eventsContent.performances.filter((event) => {
-    const eventDate = new Date(event.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const eventDate = parseEventDate(event.date);
     return eventDate >= today;
   });
 
   const pastEvents = eventsContent.performances.filter((event) => {
-    const eventDate = new Date(event.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const eventDate = parseEventDate(event.date);
     return eventDate < today;
   });
 
