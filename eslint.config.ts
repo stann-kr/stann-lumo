@@ -8,7 +8,9 @@ export default [
   { ignores: ['dist', 'node_modules', '.next'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  nextPlugin,
+  // eslint-config-next v16+는 배열을 반환할 수 있으므로 스프레드 처리
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...(Array.isArray(nextPlugin) ? nextPlugin : [nextPlugin]) as any[],
   {
     files: ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
     languageOptions: {
