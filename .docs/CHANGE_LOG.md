@@ -2,6 +2,49 @@
 
 ---
 
+## [Unreleased] — 2026-03-19 (Cloudflare 배포 버그 수정 + UX 개선)
+
+### 언어 초기화 버그 수정
+- `src/i18n/index.ts`:
+  - `i18next-browser-languagedetector` 제거 — 브라우저 언어(`navigator.language`, 한국어)가 자동 감지되어 초기 언어가 한국어로 고정되던 문제 해결
+  - `lng: 'en'` 고정으로 초기화, `LanguageContext` hydration 후 `changeLanguage()` 호출로 전환
+- `src/contexts/LanguageContext.tsx`:
+  - `i18n.changeLanguage()` 연동 추가 — React state와 i18next가 분리되어 `t()` 번역에 언어 설정이 반영되지 않던 문제 해결
+  - `setLanguage()` / `toggleLanguage()` / 초기 `localStorage` 복원 시 모두 `i18n.changeLanguage()` 호출
+  - `LanguageContext`가 단일 언어 소스로 동작
+
+### 사이드바 네비게이션 수정
+- `src/components/feature/TerminalLayout.tsx`:
+  - `<button onClick={() => router.push()}>` → `<Link href>` 전환 (데스크톱/모바일 모두)
+  - `<Link>`는 `<a>` 태그로 렌더링되어 JS 하이드레이션 없이도 클릭 시 이동 가능 — CF Workers 정적 자산 로딩 전 네비게이션 불가 문제 해결
+  - NAV_ITEMS 레이블을 i18n 키 → 영어 직접 값으로 변경 (`'nav_home'` → `'Home'` 등)
+  - 언어 설정(KO/EN)과 무관하게 사이드바 메뉴 항상 영어 표시
+  - `useTranslation` / `t()` 제거 (사이드바에서 불필요)
+- 페이지 전환 애니메이션: `isTransitioning` 상태 + `animate-fadeOut`/`animate-fadeIn` 클래스 + `key={pathname}` 적용
+
+### Cloudflare CF 환경변수 바인딩 수정
+- `src/lib/db.ts`:
+  - `require('@opennextjs/cloudflare')` dynamic require → `import { getCloudflareContext }` 정적 import 전환
+  - 기존 dynamic require가 CF Workers 번들에서 실패 시 `null` 반환 → `ADMIN_PASSWORD = ''` 폴백 → 어드민 로그인 불가 원인 제거
+  - `@opennextjs/cloudflare` v1.17.1 실제 export명: `getCloudflareContext` (이전 코드의 `getRequestContext`는 미존재)
+
+### ESLint 빌드 오류 수정
+- `eslint.config.ts`:
+  - `eslint-config-next` v16+가 flat config에서 배열 반환 → 직접 포함 시 ESLint "Unexpected array" 오류 발생
+  - `Array.isArray` 체크 후 스프레드 처리로 해결
+
+### Cloudflare 배포 연동 수정
+- `wrangler.json`:
+  - `"vars": { "ADMIN_PASSWORD": "" }` → `"vars": {}` — 빈 값 vars가 Cloudflare Dashboard Variable을 덮어쓰던 문제 제거
+  - `"main": ".open-next/worker.js"` 추가 — `wrangler versions upload` 진입점 지정
+  - `"assets": { "directory": ".open-next/assets" }` 추가 — 정적 자산(`_next/static/`) 404 해결
+
+### 갤러리 + 레이아웃 통일
+- `src/app/(public)/gallery/page.tsx`: 커스텀 헤더 → `PageLayout` 래퍼로 교체 (다른 페이지와 동일 구조)
+- `src/components/feature/PageLayout.tsx`: `mx-auto` 제거 → 좌측 정렬 적용
+
+---
+
 ## [Unreleased] — 2026-03-19 (빌드 환경 수정 — Cloudflare 배포 준비)
 
 ### 빌드 파이프라인 수정

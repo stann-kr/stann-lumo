@@ -1,24 +1,45 @@
 # 잔여 작업 목록
 
 > 최종 업데이트: 2026-03-19
-> Phase 4-h(전 페이지 Display Settings) + 빌드 환경 수정 완료. Phase 5(배포) 진입 가능.
+> Cloudflare Add Application 연동 완료. 배포 버그 수정 중 (어드민 로그인, 빌드 오류).
 
 ---
 
-## 🔜 Phase 5: 최초 배포 체크리스트
+## 🔄 진행 중: Cloudflare 배포 안정화
 
-- [ ] **Cloudflare Dashboard 환경 변수 설정**: `ADMIN_PASSWORD` Secret 등록
-- [ ] **R2 버킷 생성** (미생성 시): `docker compose run --rm web sh -c "npx wrangler r2 bucket create stann-lumo-media"`
-- [ ] **D1 마이그레이션 전체 적용**: `docker compose run --rm web sh -c "npx wrangler d1 migrations apply stann-lumo-db --remote"`
-- [ ] **빌드 + 배포**: `docker compose run --rm web npm run deploy`
-- [ ] **배포 후 어드민 접속 확인**: `https://[workers-url]/admin`
-- [ ] **배포 후 공개 페이지 확인**: `https://[workers-url]/`
+- [x] Cloudflare Add Application 연동 (main 브랜치 push → 자동 빌드)
+- [x] `wrangler.json`: `main` + `assets` 필드 추가 (진입점 + 정적 자산)
+- [x] `eslint.config.ts`: `eslint-config-next` 배열 스프레드 처리 (빌드 오류 해결)
+- [x] `src/lib/db.ts`: `getCloudflareContext` 정적 import (어드민 로그인 수정)
+- [ ] **배포 후 어드민 로그인 확인** (다음 빌드 완료 후 검증 필요)
+- [ ] **`ADMIN_PASSWORD` Dashboard Variables 등록** 확인
 
-> 상세 절차 → `.docs/DEPLOYMENT.md` 참고
+---
+
+## 🔜 잔여 확인 항목
+
+- [ ] D1 마이그레이션 0005 (display_settings) 원격 적용 여부 확인
+- [ ] 갤러리 R2 업로드 실제 동작 확인
+- [ ] 사이드바 네비게이션 클릭 정상 이동 확인 (CF Workers 환경)
+- [ ] 언어 전환(EN/KO) 번역 반영 확인
 
 ---
 
 ## ✅ 완료된 작업 (최신순)
+
+### [2026-03-19] Cloudflare 배포 버그 수정 + UX 개선
+
+- [x] `src/lib/db.ts`: `getCloudflareContext` 정적 import 전환 (어드민 로그인 ADMIN_PASSWORD 누락 해결)
+- [x] `wrangler.json`: `ADMIN_PASSWORD` 빈 vars 제거 (Dashboard Variable 덮어쓰기 방지)
+- [x] `eslint.config.ts`: `eslint-config-next` 배열 스프레드 처리 (빌드 오류)
+- [x] `src/components/feature/TerminalLayout.tsx`: `<button>` → `<Link>` 전환, 사이드바 메뉴 영어 고정
+- [x] `src/i18n/index.ts`: `LanguageDetector` 제거 — 한국어 자동 감지 초기화 문제 해결
+- [x] `src/contexts/LanguageContext.tsx`: `i18n.changeLanguage()` 연동
+- [x] `src/app/(public)/gallery/page.tsx`: `PageLayout` 래퍼로 교체
+- [x] `src/components/feature/PageLayout.tsx`: 좌측 정렬 (`mx-auto` 제거)
+- [x] `wrangler.json`: `main` + `assets` 필드 추가 (Cloudflare Add Application 호환)
+- [x] `package.json`: `deploy` 스크립트 추가
+- [x] PR #4~#7 main 머지 완료
 
 ### [2026-03-19] 빌드 환경 수정 — Cloudflare 배포 준비
 

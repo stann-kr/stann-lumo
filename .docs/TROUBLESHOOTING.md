@@ -24,6 +24,88 @@
 
 ## Cloudflare / 빌드 관련 이슈
 
+### [2026-03-19] 어드민 로그인 실패 — `getCloudflareContext` 잘못된 import
+
+**발생 상황 및 에러 로그 요약**
+- 증상: Cloudflare Dashboard Variables에 `ADMIN_PASSWORD` 설정했으나 로그인 시 "비밀번호 불일치" 오류
+- 원인 확인: `src/lib/db.ts`의 `getRequestCtx()`가 CF Workers 런타임에서 `null` 반환 → `ADMIN_PASSWORD = ''` 폴백
+
+**원인 분석**
+- 기존 코드: `require('@opennextjs/cloudflare').getRequestContext` — 함수가 존재하지 않아 `null` 반환
+- `@opennextjs/cloudflare` v1.17.1 실제 export: `getCloudflareContext` (이전 버전의 `getRequestContext`와 다름)
+- `null` 반환 → `getEnv()` 폴백: `process.env.ADMIN_PASSWORD` (undefined) → `''` 빈 문자열
+- 추가로 `wrangler.json`의 `"vars": { "ADMIN_PASSWORD": "" }` 빈 값이 Dashboard Variable을 덮어쓰는 구조적 문제도 병존
+
+**해결 방법**
+- `src/lib/db.ts`: `require()` dynamic → `import { getCloudflareContext } from '@opennextjs/cloudflare'` 정적 import 전환
+  ```ts
+  import { getCloudflareContext } from '@opennextjs/cloudflare';
+  function getRequestCtx() { try { return getCloudflareContext(); } catch { return null; } }
+  ```
+- `wrangler.json`: `"vars": { "ADMIN_PASSWORD": "" }` → `"vars": {}` 로 수정 (빈 값 제거)
+- Cloudflare Dashboard → Workers → Settings → Variables에서 `ADMIN_PASSWORD` 설정 후 재배포
+
+---
+
+### [2026-03-19] Cloudflare 자동 배포 빌드 오류 — `eslint-config-next` Unexpected array
+
+**발생 상황 및 에러 로그 요약**
+- 증상: Cloudflare Add Application CI/CD 빌드 실패
+- 에러:
+  ```
+  ⨯ ESLint: Unexpected array.
+  ```
+
+**원인 분석**
+- `eslint-config-next` v16+는 ESLint flat config 형식에서 배열(Array)을 default export로 반환
+- `eslint.config.ts`에서 배열을 config 항목에 직접 포함 시 ESLint "Unexpected array" 오류 발생
+- v15 이하에서는 단일 객체 반환이었으나 v16부터 배열로 변경됨
+
+**해결 방법**
+- `eslint.config.ts`에서 `Array.isArray` 체크 후 스프레드 처리:
+  ```ts
+  ...(Array.isArray(nextPlugin) ? nextPlugin : [nextPlugin]) as any[],
+  ```
+
+---
+
+### [2026-03-19] Cloudflare 자동 배포 빌드 오류 — `getRequestContext` not exported
+
+**발생 상황 및 에러 로그 요약**
+- 증상: Cloudflare Add Application CI/CD 빌드 실패
+- 에러:
+  ```
+  Type error: Module '"@opennextjs/cloudflare"' has no exported member 'getRequestContext'.
+  ```
+
+**원인 분석**
+- `@opennextjs/cloudflare` v1.17.1의 실제 export명은 `getCloudflareContext`
+- 정적 import `import { getRequestContext } from '@opennextjs/cloudflare'` → 타입 오류 발생
+
+**해결 방법**
+- import명을 `getCloudflareContext`로 수정
+
+---
+
+### [2026-03-19] Cloudflare 자동 배포 빌드 오류 — `wrangler versions upload` 진입점 미지정
+
+**발생 상황 및 에러 로그 요약**
+- 증상: Cloudflare Add Application CI/CD 빌드/업로드 실패
+- 에러:
+  ```
+  Missing entry-point to Worker script
+  ```
+
+**원인 분석**
+- Cloudflare Add Application은 내부적으로 `wrangler versions upload` 사용
+- `wrangler.json`에 `"main"` 필드가 없으면 Worker 스크립트 진입점을 찾지 못함
+
+**해결 방법**
+- `wrangler.json`에 `"main": ".open-next/worker.js"` 추가
+- `"assets": { "directory": ".open-next/assets" }` 추가로 정적 자산 404도 동시 해결
+
+---
+
 ### [2026-03-19] `opennextjs-cloudflare build` — `open-next.config.mjs` Permission denied
 
 **발생 상황 및 에러 로그 요약**
