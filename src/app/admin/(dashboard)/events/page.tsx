@@ -17,7 +17,6 @@ import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 import {
   fetchRAEvents,
   convertRAEventsToPerformances,
-  removeDuplicateEvents,
   sortEventsByDate,
 } from '@/utils/raApi';
 import { createBorderFaint } from '@/utils/colorMix';
@@ -108,11 +107,27 @@ const AdminEventsPage = () => {
     try {
       const response = await fetchRAEvents();
       const raPerformances = convertRAEventsToPerformances(response.events);
-      const manualPerformances = performances.filter((p) => !p.raEventId);
-      const merged = removeDuplicateEvents([...manualPerformances, ...raPerformances]);
-      const sorted = sortEventsByDate(merged, true);
-      setPerformances(sorted);
-      setFetchSuccess(`${t('events_sync_success')} (${raPerformances.length})`);
+
+      // 이미 저장된 RA 이벤트 ID 집합 (raEventId 기준 중복 제외)
+      const existingRaIds = new Set(
+        performances.filter((p) => p.raEventId).map((p) => p.raEventId)
+      );
+      const newPerformances = raPerformances.filter(
+        (p) => p.raEventId && !existingRaIds.has(p.raEventId)
+      );
+      const skipped = raPerformances.length - newPerformances.length;
+
+      // 기존 이벤트 + 새 RA 이벤트 병합 후 날짜순 정렬
+      const merged = sortEventsByDate([...performances, ...newPerformances], true);
+      setPerformances(merged);
+
+      // D1에 자동 저장
+      await apiUpdatePerformances(merged);
+      updateContent({ performances: merged });
+
+      setFetchSuccess(
+        `${newPerformances.length}개 추가됨${skipped > 0 ? ` (${skipped}개 중복 제외)` : ''}`
+      );
     } catch (error) {
       setFetchError(error instanceof Error ? error.message : t('events_sync_error'));
     } finally {
