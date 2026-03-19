@@ -27,6 +27,11 @@
 
 ## ✅ 완료된 작업 (최신순)
 
+### [2026-03-19] Cloudflare 빌드 오류 근본 수정
+
+- [x] `src/lib/db.ts`: `CloudflareEnv` 전역 확장 (`declare global`) — 타입 충돌 해소
+- [x] `eslint.config.ts`: `react-hooks` 플러그인 중복 등록 제거
+
 ### [2026-03-19] Cloudflare 배포 버그 수정 + UX 개선
 
 - [x] `src/lib/db.ts`: `getCloudflareContext` 정적 import 전환 (어드민 로그인 ADMIN_PASSWORD 누락 해결)
