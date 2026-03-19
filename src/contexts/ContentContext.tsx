@@ -27,6 +27,7 @@ interface ContentContextType {
   setCurrentEditLanguage: (lang: "en" | "ko") => void;
   allContent: MultiLanguageContent;
   displaySettings: AllDisplaySettings;
+  isLoading: boolean;
 }
 
 const defaultEnContent: ContentData = {
@@ -435,10 +436,10 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     "en",
   );
 
-  // 서버/클라이언트 첫 렌더 모두 기본값으로 시작 — hydration 불일치 방지
   const [allContent, setAllContent] = useState<MultiLanguageContent>(
     defaultMultiLanguageContent,
   );
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // hydration 완료 후 D1 API에서 양 언어 콘텐츠 로드
@@ -449,6 +450,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
           en: enData ?? defaultEnContent,
           ko: koData ?? defaultKoContent,
         });
+        setIsLoading(false);
       },
     );
   }, []);
@@ -504,6 +506,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
         setCurrentEditLanguage,
         allContent,
         displaySettings,
+        isLoading,
       }}
     >
       {children}

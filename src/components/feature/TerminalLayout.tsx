@@ -30,7 +30,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { language, toggleLanguage } = useLanguage();
-  const { content } = useContent();
+  const { content, isLoading } = useContent();
 
   const artistName = (() => {
     if (!Array.isArray(content.artistInfo)) return SITE_NAME;
@@ -239,12 +239,20 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
-        <div
-          key={pathname}
-          className="min-h-screen p-6 md:p-12 lg:p-16 animate-fadeIn"
-        >
-          {children}
-        </div>
+        {isLoading ? (
+          <div className="min-h-screen flex items-center justify-center">
+            <span className="text-xs tracking-widest text-[var(--color-secondary)]/30 animate-pulse">
+              LOADING...
+            </span>
+          </div>
+        ) : (
+          <div
+            key={pathname}
+            className="min-h-screen p-6 md:p-12 lg:p-16 animate-fadeIn"
+          >
+            {children}
+          </div>
+        )}
       </main>
     </div>
   );
