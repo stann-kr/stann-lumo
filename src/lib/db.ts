@@ -1,12 +1,13 @@
 /**
  * Cloudflare 런타임 바인딩 접근 헬퍼
  *
- * CF Workers 런타임에서는 getRequestContext()로 D1/R2 접근.
- * Docker 개발 환경(Node.js)에서는 getRequestContext()가 throw → null 반환 폴백.
+ * CF Workers 런타임에서는 getCloudflareContext()로 D1/R2 접근.
+ * Docker 개발 환경(Node.js)에서는 getCloudflareContext()가 throw → null 반환 폴백.
  */
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-// Cloudflare Workers 타입 정의 (@cloudflare/workers-types 미설치 시 대체)
+// ── Cloudflare Workers 타입 정의 (@cloudflare/workers-types 미설치 대체) ──────
+
 export interface D1PreparedStatement {
   bind(...values: unknown[]): D1PreparedStatement;
   first<T = unknown>(colName?: string): Promise<T | null>;
@@ -56,16 +57,22 @@ export interface R2Bucket {
   delete(keys: string | string[]): Promise<void>;
 }
 
-export interface CloudflareEnv {
-  DB: D1Database;
-  MEDIA: R2Bucket;
-  ADMIN_PASSWORD: string;
+// ── @opennextjs/cloudflare 전역 CloudflareEnv 인터페이스 확장 ─────────────────
+// 로컬 export 대신 global 확장 — getCloudflareContext() 반환 타입과 일치
+declare global {
+  interface CloudflareEnv {
+    DB: D1Database;
+    MEDIA: R2Bucket;
+    ADMIN_PASSWORD: string;
+  }
 }
 
+// ── CF 런타임 바인딩 접근 ──────────────────────────────────────────────────────
+
 /** CF Workers 런타임 여부 확인 — Node.js 개발환경에서는 throw → null 반환 */
-function getRequestCtx(): { env: CloudflareEnv } | null {
+function getRequestCtx() {
   try {
-    return getCloudflareContext() as { env: CloudflareEnv };
+    return getCloudflareContext();
   } catch {
     return null;
   }
@@ -91,11 +98,10 @@ export function getR2(): R2Bucket | null {
  * CF 환경변수 접근
  * @returns CF Workers: env vars / Node.js: process.env
  */
-export function getEnv(): Pick<CloudflareEnv, 'ADMIN_PASSWORD'> {
+export function getEnv(): { ADMIN_PASSWORD: string } {
   const ctx = getRequestCtx();
   if (ctx) return ctx.env;
   return {
-    // Next.js 서버 환경에서는 process.env 사용
     ADMIN_PASSWORD: (typeof process !== 'undefined' ? process.env.ADMIN_PASSWORD : undefined) ?? '',
   };
 }
