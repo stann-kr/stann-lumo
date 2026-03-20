@@ -2,6 +2,30 @@
 
 ---
 
+## [Unreleased] — 2026-03-20 (iOS 모바일 개선 + 갤러리 힌트 라벨 수정)
+
+### iOS 안전영역 배경색 수정
+- `app/globals.css` — `body { background-color: var(--color-bg) }` 추가 → 노치/홈 인디케이터 영역이 앱 배경색과 일치
+- `app/layout.tsx` — `<meta name="viewport" content="...viewport-fit=cover">` 추가, `<meta name="theme-color">` DB 테마값으로 동적 주입
+- `components/feature/TerminalLayout.tsx` — 모바일 헤더에 `padding-top: env(safe-area-inset-top)` 적용
+- `app/globals.css` — `.mobile-header-offset` 클래스 추가: 모바일 `calc(4rem + env(safe-area-inset-top))`, 데스크톱(lg) `0`
+
+### 페이지 타이틀 상단 여백 축소
+- `components/feature/PageLayout.tsx` — `py-8` → `pt-4 pb-8 md:pt-8` (모바일 상단 여백 절반 축소)
+
+### 로고 클릭 → Home 이동
+- `components/feature/TerminalLayout.tsx`
+  - 데스크톱 사이드바 `<h1>` → `<Link href="/">` 전환
+  - 모바일 헤더 `<h1>` → `<Link href="/">` 전환
+
+### 갤러리 상세 키보드 힌트 라벨 수정
+- `(public)/gallery/[id]/page.tsx`
+  - `t('gallery_navigate')` / `t('gallery_back')` — 키 미존재 시 키 문자열 그대로 반환(truthy) → `||` 폴백 미동작 문제 수정
+  - `t('back')` 동일 문제 수정
+  - 모두 하드코딩 문자열(`NAVIGATE`, `BACK TO GALLERY`)로 교체
+
+---
+
 ## [Unreleased] — 2026-03-20 (Link 어드민 아이콘 선택 UI + 갤러리 상세 페이지 수정)
 
 ### Link 어드민 아이콘 선택 UI
