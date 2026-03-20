@@ -67,7 +67,14 @@ const AdminEventsPage = () => {
   } = useDeleteConfirm();
 
   useEffect(() => {
-    setPerformances(allContent[currentEditLanguage].performances);
+    // 구버전 status 값 정규화 (DB 마이그레이션 전 환경 대비)
+    const normalized = allContent[currentEditLanguage].performances.map((p) => ({
+      ...p,
+      status: (p.status === ('Confirmed' as string) ? 'Announced'
+             : p.status === ('Pending'   as string) ? 'TBA'
+             : p.status) as Performance['status'],
+    }));
+    setPerformances(normalized);
     setRaApiConfig(
       allContent[currentEditLanguage].raApiConfig || { userId: '', apiKey: '', djId: '', option: '1' }
     );
