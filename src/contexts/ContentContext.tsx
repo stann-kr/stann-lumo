@@ -446,12 +446,17 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     // API 미사용 환경(dev, DB 없음) → 기본값 유지
     Promise.all([fetchContent("en"), fetchContent("ko")])
       .then(([enData, koData]) => {
-        // setAllContent + setIsLoading(false)를 동일 배치로 처리 — 중간 렌더링 방지
-        setAllContent({
+        const next: MultiLanguageContent = {
           en: enData ?? defaultEnContent,
           ko: koData ?? defaultKoContent,
-        });
+        };
+        // setAllContent + setIsLoading(false)를 동일 배치로 처리 — 중간 렌더링 방지
+        setAllContent(next);
         setIsLoading(false);
+        // 다음 방문 시 layout.tsx 인라인 스크립트가 플래시 없이 테마 즉시 적용할 수 있도록 저장
+        try {
+          localStorage.setItem('stann_content_multilang', JSON.stringify(next));
+        } catch { /* 스토리지 제한 등 무시 */ }
       })
       .catch(() => {
         // 네트워크 오류 등 — 기본값 유지
