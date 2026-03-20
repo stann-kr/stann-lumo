@@ -23,6 +23,7 @@ interface GalleryPhotoRow {
   focal_y: number;
   video_youtube_id: string | null;
   video_thumbnail_url: string | null;
+  linked_event_id: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       focalY: r.focal_y ?? 50,
       videoYoutubeId: r.video_youtube_id ?? undefined,
       videoThumbnailUrl: r.video_thumbnail_url ?? undefined,
+      linkedEventId: r.linked_event_id ?? undefined,
     }));
 
     return NextResponse.json({ success: true, data });
@@ -95,10 +97,10 @@ export async function PUT(request: NextRequest) {
         db
           .prepare(
             `UPDATE gallery_photos
-             SET alt_text = ?, caption = ?, sort_order = ?, focal_x = ?, focal_y = ?
+             SET alt_text = ?, caption = ?, sort_order = ?, focal_x = ?, focal_y = ?, linked_event_id = ?
              WHERE id = ?`,
           )
-          .bind(p.altText ?? '', p.caption ?? '', idx, p.focalX ?? 50, p.focalY ?? 50, p.id),
+          .bind(p.altText ?? '', p.caption ?? '', idx, p.focalX ?? 50, p.focalY ?? 50, p.linkedEventId ?? null, p.id),
       ),
     );
 

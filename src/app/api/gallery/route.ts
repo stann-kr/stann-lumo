@@ -21,6 +21,7 @@ interface GalleryPhotoRow {
   focal_y: number;
   video_youtube_id: string | null;
   video_thumbnail_url: string | null;
+  linked_event_id: string | null;
 }
 
 interface GallerySettingsRow {
@@ -73,6 +74,7 @@ export async function GET() {
       focalY: r.focal_y ?? 50,
       videoYoutubeId: r.video_youtube_id ?? undefined,
       videoThumbnailUrl: r.video_thumbnail_url ?? undefined,
+      linkedEventId: r.linked_event_id ?? undefined,
     }));
 
     const settingsRow = (settingsResult.results as GallerySettingsRow[])[0];

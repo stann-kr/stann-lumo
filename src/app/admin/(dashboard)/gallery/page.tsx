@@ -8,7 +8,7 @@ import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { createBorderFaint } from '@/utils/colorMix';
-import type { GalleryPhoto, GallerySettings } from '@/types/content';
+import type { GalleryPhoto, GallerySettings, Performance } from '@/types/content';
 
 // ─── YouTube URL 파싱 (클라이언트 전용) ───────────────────────────────────────
 function extractYoutubeId(url: string): string | null {
@@ -115,6 +115,33 @@ function FocalPicker({ photoId, focalX, focalY, onFocalChange }: FocalPickerProp
   );
 }
 
+// ─── 이벤트 선택 셀렉트 ──────────────────────────────────────────────────────
+interface EventSelectProps {
+  value: string;
+  performances: Performance[];
+  onChange: (eventId: string) => void;
+  label?: string;
+}
+function EventSelect({ value, performances, onChange, label = 'LINKED EVENT' }: EventSelectProps) {
+  return (
+    <div>
+      <label className="block text-xs text-[var(--color-accent)] tracking-widest mb-2">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full bg-[var(--color-bg)] border-b border-[var(--color-secondary)]/30 text-[var(--color-secondary)] text-sm tracking-wider py-2 focus:outline-none focus:border-[var(--color-accent)] cursor-pointer"
+      >
+        <option value="">— 없음 —</option>
+        {performances.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.date} · {p.title}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 // ─── 메인 페이지 ─────────────────────────────────────────────────────────────
 const AdminGalleryPage = () => {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
@@ -124,9 +151,12 @@ const AdminGalleryPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
 
+  const [performances, setPerformances] = useState<Performance[]>([]);
+
   // YouTube 입력
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubePreviewId, setYoutubePreviewId] = useState<string | null>(null);
+  const [youtubeLinkedEventId, setYoutubeLinkedEventId] = useState('');
   const [isAddingYoutube, setIsAddingYoutube] = useState(false);
   const [youtubeError, setYoutubeError] = useState('');
 
@@ -138,14 +168,17 @@ const AdminGalleryPage = () => {
   // ─── 초기 데이터 로드 ────────────────────────────────────────────────────
   const fetchData = async () => {
     try {
-      const [photosRes, settingsRes] = await Promise.all([
+      const [photosRes, settingsRes, perfsRes] = await Promise.all([
         fetch('/api/admin/gallery'),
         fetch('/api/admin/gallery-settings'),
+        fetch('/api/admin/performances'),
       ]);
       const photosJson = (await photosRes.json()) as { success: boolean; data: GalleryPhoto[] };
       const settingsJson = (await settingsRes.json()) as { success: boolean; data: GallerySettings };
+      const perfsJson = (await perfsRes.json()) as { success: boolean; data: Performance[] };
       if (photosJson.success) setPhotos(photosJson.data);
       if (settingsJson.success) setSettings(settingsJson.data);
+      if (perfsJson.success) setPerformances(perfsJson.data);
     } catch {
       // 조용히 실패
     } finally {
@@ -167,8 +200,8 @@ const AdminGalleryPage = () => {
   };
 
   // ─── 사진 메타 필드 업데이트 ─────────────────────────────────────────────
-  const updatePhotoField = (index: number, field: keyof Pick<GalleryPhoto, 'altText' | 'caption'>, value: string) => {
-    setPhotos((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  const updatePhotoField = (index: number, field: keyof Pick<GalleryPhoto, 'altText' | 'caption' | 'linkedEventId'>, value: string) => {
+    setPhotos((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value || undefined } : p));
   };
 
   // ─── 포컬 포인트 업데이트 ───────────────────────────────────────────────
@@ -251,12 +284,16 @@ const AdminGalleryPage = () => {
       const res = await fetch('/api/admin/gallery/youtube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ youtubeUrl }),
+        body: JSON.stringify({
+          youtubeUrl,
+          ...(youtubeLinkedEventId && { linkedEventId: youtubeLinkedEventId }),
+        }),
       });
       const json = (await res.json()) as { success: boolean; data: GalleryPhoto; error?: { message: string } };
       if (json.success) {
         setPhotos((prev) => [...prev, json.data]);
         setYoutubeUrl('');
+        setYoutubeLinkedEventId('');
         showNotification();
       } else {
         setYoutubeError(json.error?.message ?? 'YouTube 추가 실패');
@@ -495,37 +532,47 @@ const AdminGalleryPage = () => {
           <p className="text-xs text-[var(--color-accent)] tracking-widest border-b pb-3" style={borderStyle}>
             YOUTUBE 동영상 추가
           </p>
-          <div className="flex gap-3 items-start">
-            <div className="flex-1">
-              <FormInput
-                label="YouTube URL"
-                value={youtubeUrl}
-                onChange={setYoutubeUrl}
-                placeholder="https://youtu.be/... 또는 https://youtube.com/watch?v=..."
-              />
-              {youtubeError && (
-                <p className="text-red-400 text-xs tracking-wider mt-1">{youtubeError}</p>
-              )}
-            </div>
-            {/* 썸네일 미리보기 */}
-            {youtubePreviewId && (
-              <div className="shrink-0 w-24 h-16 overflow-hidden border" style={borderStyle}>
-                <img
-                  src={`https://img.youtube.com/vi/${youtubePreviewId}/mqdefault.jpg`}
-                  alt="YouTube preview"
-                  className="w-full h-full object-cover"
+          <div className="space-y-3">
+            <div className="flex gap-3 items-start">
+              <div className="flex-1">
+                <FormInput
+                  label="YouTube URL"
+                  value={youtubeUrl}
+                  onChange={setYoutubeUrl}
+                  placeholder="https://youtu.be/... 또는 https://youtube.com/watch?v=..."
                 />
+                {youtubeError && (
+                  <p className="text-red-400 text-xs tracking-wider mt-1">{youtubeError}</p>
+                )}
               </div>
+              {/* 썸네일 미리보기 */}
+              {youtubePreviewId && (
+                <div className="shrink-0 w-24 h-16 overflow-hidden border" style={borderStyle}>
+                  <img
+                    src={`https://img.youtube.com/vi/${youtubePreviewId}/mqdefault.jpg`}
+                    alt="YouTube preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <button
+                onClick={handleAddYoutube}
+                disabled={!youtubePreviewId || isAddingYoutube}
+                className="px-4 py-2 border text-sm text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap tracking-wider self-end"
+                style={borderStyle}
+              >
+                <i className="ri-youtube-line mr-1.5"></i>
+                {isAddingYoutube ? '추가 중...' : '갤러리에 추가'}
+              </button>
+            </div>
+            {performances.length > 0 && (
+              <EventSelect
+                value={youtubeLinkedEventId}
+                performances={performances}
+                onChange={setYoutubeLinkedEventId}
+                label="LINKED EVENT (선택)"
+              />
             )}
-            <button
-              onClick={handleAddYoutube}
-              disabled={!youtubePreviewId || isAddingYoutube}
-              className="px-4 py-2 border text-sm text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap tracking-wider self-end"
-              style={borderStyle}
-            >
-              <i className="ri-youtube-line mr-1.5"></i>
-              {isAddingYoutube ? '추가 중...' : '갤러리에 추가'}
-            </button>
           </div>
         </div>
       </AdminCard>
@@ -625,6 +672,15 @@ const AdminGalleryPage = () => {
                         placeholder="갤러리에 표시될 캡션"
                       />
                     </div>
+                    {performances.length > 0 && (
+                      <div className="md:col-span-2">
+                        <EventSelect
+                          value={photo.linkedEventId ?? ''}
+                          performances={performances}
+                          onChange={(eventId) => updatePhotoField(index, 'linkedEventId', eventId)}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* 액션 버튼 */}

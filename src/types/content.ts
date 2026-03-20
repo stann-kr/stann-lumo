@@ -125,7 +125,8 @@ export interface Performance {
   lineup?: string;
   raEventLink?: string;
   raEventId?: string;
-  status: 'Confirmed' | 'Pending' | 'Cancelled';
+  posterImageId?: string;
+  status: 'Announced' | 'TBA' | 'Cancelled';
 }
 
 /**
@@ -150,11 +151,35 @@ export interface LinkPlatform {
 }
 
 /**
+ * 터미널 커스텀 필드 타입 (동적 key-value)
+ */
+export interface TerminalCustomField {
+  id: string;
+  fieldKey: string;
+  fieldValue: string;
+  fieldType: 'text' | 'url' | 'badge';
+  sortOrder: number;
+}
+
+/**
+ * 터미널 스타일 설정 타입
+ */
+export interface TerminalStyleConfig {
+  fontSize: 'sm' | 'md' | 'lg';
+  animationSpeed: 'slow' | 'normal' | 'fast';
+  promptText: string;
+  showEmbed: boolean;
+  embedHeight: string;
+}
+
+/**
  * 터미널 정보 타입
  */
 export interface TerminalInfo {
   url: string;
   description: string;
+  customFields?: TerminalCustomField[];
+  style?: TerminalStyleConfig;
 }
 
 /**
@@ -195,6 +220,7 @@ export interface GalleryPhoto {
   focalY: number;
   videoYoutubeId?: string;
   videoThumbnailUrl?: string;
+  linkedEventId?: string;
 }
 
 /**

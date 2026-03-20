@@ -10,6 +10,40 @@ import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import RadioGroup from '@/components/base/RadioGroup';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { createBorderFaint } from '@/utils/colorMix';
+
+const AVAILABLE_ICONS = [
+  { value: 'ri-soundcloud-line',   label: 'SoundCloud' },
+  { value: 'ri-spotify-line',      label: 'Spotify' },
+  { value: 'ri-youtube-line',      label: 'YouTube' },
+  { value: 'ri-instagram-line',    label: 'Instagram' },
+  { value: 'ri-facebook-line',     label: 'Facebook' },
+  { value: 'ri-twitter-x-line',    label: 'X (Twitter)' },
+  { value: 'ri-twitter-line',      label: 'Twitter' },
+  { value: 'ri-tiktok-line',       label: 'TikTok' },
+  { value: 'ri-linkedin-line',     label: 'LinkedIn' },
+  { value: 'ri-github-line',       label: 'GitHub' },
+  { value: 'ri-bandcamp-line',     label: 'Bandcamp' },
+  { value: 'ri-mixcloud-line',     label: 'Mixcloud' },
+  { value: 'ri-twitch-line',       label: 'Twitch' },
+  { value: 'ri-discord-line',      label: 'Discord' },
+  { value: 'ri-telegram-line',     label: 'Telegram' },
+  { value: 'ri-calendar-line',     label: 'Calendar' },
+  { value: 'ri-calendar-event-line', label: 'Event' },
+  { value: 'ri-map-pin-line',      label: 'Location' },
+  { value: 'ri-global-line',       label: 'Website' },
+  { value: 'ri-links-line',        label: 'Link' },
+  { value: 'ri-link-line',         label: 'Link Alt' },
+  { value: 'ri-mail-line',         label: 'Email' },
+  { value: 'ri-store-line',        label: 'Store' },
+  { value: 'ri-music-line',        label: 'Music' },
+  { value: 'ri-headphone-line',    label: 'Headphone' },
+  { value: 'ri-radio-line',        label: 'Radio' },
+  { value: 'ri-film-line',         label: 'Film' },
+  { value: 'ri-image-line',        label: 'Image' },
+  { value: 'ri-star-line',         label: 'Star' },
+  { value: 'ri-heart-line',        label: 'Heart' },
+  { value: 'ri-user-line',         label: 'Profile' },
+];
 import {
   updateLinkPlatforms as apiUpdateLinkPlatforms,
   updatePageMeta as apiUpdatePageMeta,
@@ -31,6 +65,7 @@ const AdminLinkPage = () => {
     DISPLAY_SETTINGS_DEFAULTS.link
   );
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
+  const [iconSelectorOpen, setIconSelectorOpen] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
 
@@ -271,12 +306,50 @@ const AdminLinkPage = () => {
                       value={platform.platform}
                       onChange={(value) => updatePlatformField(platform.id, 'platform', value)}
                     />
-                    <FormInput
-                      label="ICON CLASS"
-                      value={platform.icon}
-                      onChange={(value) => updatePlatformField(platform.id, 'icon', value)}
-                      placeholder="ri-link-line"
-                    />
+                    {/* Icon Selector */}
+                    <div>
+                      <label className="block text-xs text-[var(--color-accent)] mb-2 tracking-wider">ICON</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setIconSelectorOpen(iconSelectorOpen === platform.id ? null : platform.id)}
+                          className="w-full bg-[var(--color-bg)] border text-[var(--color-secondary)] px-3 py-2 text-sm focus:outline-none cursor-pointer flex items-center justify-between"
+                          style={createBorderFaint()}
+                        >
+                          <div className="flex items-center gap-2">
+                            <i className={`${platform.icon} text-lg text-[var(--color-accent)]`}></i>
+                            <span className="text-xs">{AVAILABLE_ICONS.find(ic => ic.value === platform.icon)?.label ?? platform.icon}</span>
+                          </div>
+                          <i className="ri-arrow-down-s-line text-[var(--color-muted)]"></i>
+                        </button>
+
+                        {iconSelectorOpen === platform.id && (
+                          <div className="absolute z-50 mt-1 w-72 bg-[var(--color-bg)] border shadow-lg p-3" style={createBorderFaint()}>
+                            <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
+                              {AVAILABLE_ICONS.map((icon) => (
+                                <button
+                                  key={icon.value}
+                                  type="button"
+                                  onClick={() => {
+                                    updatePlatformField(platform.id, 'icon', icon.value);
+                                    setIconSelectorOpen(null);
+                                  }}
+                                  className={`w-10 h-10 flex items-center justify-center border transition-colors cursor-pointer ${
+                                    platform.icon === icon.value
+                                      ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]'
+                                      : 'hover:bg-[var(--color-secondary)]/10'
+                                  }`}
+                                  style={createBorderFaint()}
+                                  title={icon.label}
+                                >
+                                  <i className={`${icon.value} text-lg text-[var(--color-accent)]`}></i>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <FormInput
                     label="URL"

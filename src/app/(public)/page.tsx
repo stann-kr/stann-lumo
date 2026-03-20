@@ -86,7 +86,8 @@ export default function HomePage() {
 
         {/* Terminal Info */}
         {settings.showTerminalInfo && content.terminalInfo.url && (
-          <div className="pt-8 border-t" style={borderMid}>
+          <div className="pt-8 border-t space-y-6" style={borderMid}>
+            {/* 헤더 행: 설명 + 링크 버튼 */}
             <div className="flex items-center justify-between gap-6">
               <div className="space-y-1">
                 <p
@@ -122,6 +123,57 @@ export default function HomePage() {
                 {t('home_terminal_enter')} →
               </a>
             </div>
+
+            {/* 커스텀 필드 */}
+            {content.terminalInfo.customFields && content.terminalInfo.customFields.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+                {content.terminalInfo.customFields.map((field) => (
+                  <div key={field.id} className="space-y-0.5">
+                    <p className="text-[10px] tracking-widest" style={{ color: 'var(--color-accent)', opacity: 0.6 }}>
+                      {field.fieldKey.toUpperCase()}
+                    </p>
+                    {field.fieldType === 'url' ? (
+                      <a
+                        href={field.fieldValue}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs tracking-wider underline underline-offset-2"
+                        style={{ color: 'var(--color-secondary)', opacity: 0.7 }}
+                      >
+                        {field.fieldValue}
+                      </a>
+                    ) : field.fieldType === 'badge' ? (
+                      <span
+                        className="inline-block text-[10px] tracking-widest px-2 py-0.5 border"
+                        style={{
+                          borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
+                          color: 'var(--color-accent)',
+                        }}
+                      >
+                        {field.fieldValue}
+                      </span>
+                    ) : (
+                      <p className="text-xs tracking-wider" style={{ color: 'var(--color-secondary)', opacity: 0.7 }}>
+                        {field.fieldValue}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 임베드 */}
+            {content.terminalInfo.style?.showEmbed && (
+              <div className="border" style={borderFaint}>
+                <iframe
+                  src={content.terminalInfo.url}
+                  style={{ width: '100%', height: content.terminalInfo.style.embedHeight, border: 'none' }}
+                  title="Terminal"
+                  sandbox="allow-scripts allow-same-origin"
+                  loading="lazy"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

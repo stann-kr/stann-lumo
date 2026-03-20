@@ -155,7 +155,7 @@ const defaultEnContent: ContentData = {
       time: "23:00",
       title: "CONTRA Seoul",
       lineup: "Artist Name, Guest DJ",
-      status: "Confirmed",
+      status: "Announced",
     },
     {
       id: "2",
@@ -165,7 +165,7 @@ const defaultEnContent: ContentData = {
       time: "22:00",
       title: "MODECI Night",
       lineup: "Artist Name",
-      status: "Confirmed",
+      status: "Announced",
     },
   ],
   eventsInfo: {
@@ -350,7 +350,7 @@ const defaultKoContent: ContentData = {
       time: "23:00",
       title: "FAUST Seoul",
       lineup: "아티스트 이름, 게스트 DJ",
-      status: "Confirmed",
+      status: "Announced",
     },
     {
       id: "2",
@@ -360,7 +360,7 @@ const defaultKoContent: ContentData = {
       time: "22:00",
       title: "FAUST Night",
       lineup: "아티스트 이름",
-      status: "Confirmed",
+      status: "Announced",
     },
   ],
   eventsInfo: {
@@ -444,15 +444,24 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // hydration 완료 후 D1 API에서 양 언어 콘텐츠 로드
     // API 미사용 환경(dev, DB 없음) → 기본값 유지
-    Promise.all([fetchContent("en"), fetchContent("ko")]).then(
-      ([enData, koData]) => {
-        setAllContent({
+    Promise.all([fetchContent("en"), fetchContent("ko")])
+      .then(([enData, koData]) => {
+        const next: MultiLanguageContent = {
           en: enData ?? defaultEnContent,
           ko: koData ?? defaultKoContent,
-        });
+        };
+        // setAllContent + setIsLoading(false)를 동일 배치로 처리 — 중간 렌더링 방지
+        setAllContent(next);
         setIsLoading(false);
-      },
-    );
+        // 다음 방문 시 layout.tsx 인라인 스크립트가 플래시 없이 테마 즉시 적용할 수 있도록 저장
+        try {
+          localStorage.setItem('stann_content_multilang', JSON.stringify(next));
+        } catch { /* 스토리지 제한 등 무시 */ }
+      })
+      .catch(() => {
+        // 네트워크 오류 등 — 기본값 유지
+        setIsLoading(false);
+      });
   }, []);
 
   const content = allContent[language];

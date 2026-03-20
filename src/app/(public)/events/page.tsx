@@ -1,5 +1,6 @@
 'use client';
 import { useState } from "react";
+import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useContent } from "@/contexts/ContentContext";
 import PageLayout from "@/components/feature/PageLayout";
@@ -16,17 +17,22 @@ const EventsPage = () => {
 
   const [visiblePastCount, setVisiblePastCount] = useState(settings.initialPastCount);
 
+  // YYYY.MM.DD (RA) / YYYY-MM-DD (수동) 양쪽 형식 지원
+  const parseEventDate = (dateStr: string): Date => {
+    const normalized = dateStr.replace(/\./g, '-');
+    return new Date(normalized);
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const upcomingEvents = eventsContent.performances.filter((event) => {
-    const eventDate = new Date(event.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const eventDate = parseEventDate(event.date);
     return eventDate >= today;
   });
 
   const pastEvents = eventsContent.performances.filter((event) => {
-    const eventDate = new Date(event.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const eventDate = parseEventDate(event.date);
     return eventDate < today;
   });
 
@@ -60,69 +66,21 @@ const EventsPage = () => {
         ) : (
           <div className={cardGapClass}>
             {upcomingEvents.map((event) => (
-              <div
+              <Link
                 key={event.id}
-                className={`group border ${cardPaddingClass} transition-all duration-300`}
+                href={`/events/${event.id}`}
+                className={`group border ${cardPaddingClass} transition-all duration-300 block`}
                 style={borderFaint}
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
-                      {event.title}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <span className="text-[var(--color-secondary)] opacity-50">
-                        {event.venue}
-                      </span>
-                      {event.location && (
-                        <>
-                          <span className="text-[var(--color-secondary)] opacity-25">
-                            ·
-                          </span>
-                          <span className="text-[var(--color-secondary)] opacity-40">
-                            {event.location}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right space-y-1 shrink-0">
-                    <p className="text-sm font-mono text-[var(--color-secondary)] opacity-80">
-                      {event.date}
-                    </p>
-                    {event.time && (
-                      <p className="text-xs font-mono text-[var(--color-secondary)] opacity-40">
-                        {event.time}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Past Events */}
-      <div className="space-y-6 pt-8 border-t" style={borderFaint}>
-        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
-          {content.pageMeta?.events?.pastTitle || t("events_past")}
-        </h2>
-
-        {pastEvents.length === 0 ? (
-          <p className="text-sm text-[var(--color-secondary)] opacity-40">
-            {t("msg_no_items")}
-          </p>
-        ) : (
-          <>
-            <div className={cardGapClass}>
-              {visiblePastEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className={`group border ${cardPaddingClass} transition-all duration-300 hover:opacity-75`}
-                  style={{ ...borderFaint, opacity: pastOpacity }}
-                >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  {event.posterImageId && (
+                    <img
+                      src={`/api/media/${event.posterImageId}`}
+                      alt={event.title}
+                      className="w-12 h-12 object-cover shrink-0"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col md:flex-row md:items-center md:justify-between gap-4 min-w-0">
                     <div className="flex-1 min-w-0 space-y-2">
                       <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
                         {event.title}
@@ -133,9 +91,7 @@ const EventsPage = () => {
                         </span>
                         {event.location && (
                           <>
-                            <span className="text-[var(--color-secondary)] opacity-25">
-                              ·
-                            </span>
+                            <span className="text-[var(--color-secondary)] opacity-25">·</span>
                             <span className="text-[var(--color-secondary)] opacity-40">
                               {event.location}
                             </span>
@@ -155,6 +111,72 @@ const EventsPage = () => {
                     </div>
                   </div>
                 </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Past Events */}
+      <div className="space-y-6 pt-8 border-t" style={borderFaint}>
+        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
+          {content.pageMeta?.events?.pastTitle || t("events_past")}
+        </h2>
+
+        {pastEvents.length === 0 ? (
+          <p className="text-sm text-[var(--color-secondary)] opacity-40">
+            {t("msg_no_items")}
+          </p>
+        ) : (
+          <>
+            <div className={cardGapClass}>
+              {visiblePastEvents.map((event) => (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className={`group border ${cardPaddingClass} transition-all duration-300 hover:opacity-75 block`}
+                  style={{ ...borderFaint, opacity: pastOpacity }}
+                >
+                  <div className="flex items-center gap-4">
+                    {event.posterImageId && (
+                      <img
+                        src={`/api/media/${event.posterImageId}`}
+                        alt={event.title}
+                        className="w-12 h-12 object-cover shrink-0"
+                      />
+                    )}
+                    <div className="flex flex-1 flex-col md:flex-row md:items-center md:justify-between gap-4 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
+                          {event.title}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 text-xs">
+                          <span className="text-[var(--color-secondary)] opacity-50">
+                            {event.venue}
+                          </span>
+                          {event.location && (
+                            <>
+                              <span className="text-[var(--color-secondary)] opacity-25">·</span>
+                              <span className="text-[var(--color-secondary)] opacity-40">
+                                {event.location}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1 shrink-0">
+                        <p className="text-sm font-mono text-[var(--color-secondary)] opacity-80">
+                          {event.date}
+                        </p>
+                        {event.time && (
+                          <p className="text-xs font-mono text-[var(--color-secondary)] opacity-40">
+                            {event.time}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
 

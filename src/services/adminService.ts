@@ -18,6 +18,8 @@ import type {
   ContactItem,
   ThemeColors,
   RAApiConfig,
+  TerminalCustomField,
+  TerminalStyleConfig,
 } from '@/types/content';
 import type { SiteConfigData } from '@/app/api/admin/site-config/route';
 import type { AllDisplaySettings } from '@/types/displaySettings';
@@ -74,6 +76,39 @@ export function fetchPerformances() {
 }
 export function updatePerformances(items: Performance[]) {
   return apiPut<void>('/api/admin/performances', { items });
+}
+
+/**
+ * 이벤트 포스터 이미지 업로드
+ * @param eventId - 대상 이벤트(performances) ID
+ * @param file - 업로드할 이미지 파일
+ */
+export async function uploadEventPoster(
+  eventId: string,
+  file: File,
+): Promise<{ success: boolean; data?: { photoId: string; eventId: string }; error?: { code: string; message: string } }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`/api/admin/events/${eventId}/poster`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  return res.json();
+}
+
+/**
+ * 이벤트 포스터 이미지 삭제
+ * @param eventId - 대상 이벤트(performances) ID
+ */
+export async function deleteEventPoster(
+  eventId: string,
+): Promise<{ success: boolean; error?: { code: string; message: string } }> {
+  const res = await fetch(`/api/admin/events/${eventId}/poster`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  return res.json();
 }
 
 // ---------- RA API 설정 ----------
@@ -148,11 +183,25 @@ export function updateDisplaySettings(
   return apiPut<void>('/api/admin/display-settings', { page, settings: settings as unknown as Record<string, unknown> });
 }
 
-// ---------- 터미널 정보 (site_config 부분 업데이트) ----------
+// ---------- 터미널 통합 설정 ----------
+
+export interface TerminalConfigData {
+  url:          string;
+  description:  string;
+  customFields: TerminalCustomField[];
+  style:        TerminalStyleConfig;
+}
+
+export function fetchTerminalConfig() {
+  return apiGet<TerminalConfigData>('/api/admin/terminal-config');
+}
+export function updateTerminalConfig(config: TerminalConfigData) {
+  return apiPut<void>('/api/admin/terminal-config', { config });
+}
 
 /**
- * 터미널 URL·설명만 업데이트 — 나머지 site_config 필드는 유지
- * DB 미사용 환경에서는 조용히 실패 (인메모리 업데이트는 호출부에서 별도 처리)
+ * 하위 호환: 기존 호출부에서 사용 중인 updateTerminalInfo
+ * 커스텀 필드·스타일이 없는 경우에도 안전하게 처리
  */
 export async function updateTerminalInfo(
   terminalInfo: import('@/types/content').TerminalInfo,

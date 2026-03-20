@@ -58,9 +58,13 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         {/* Logo/Brand */}
         <div className="p-8 border-b" style={borderStyle}>
           <h1 className="text-2xl font-bold text-[var(--color-primary)] tracking-wider">
-            {artistName.split(' ').map((word, i) => (
-              <span key={i} className="block">{word}</span>
-            ))}
+            {isLoading ? (
+              <span className="opacity-0 select-none">—</span>
+            ) : (
+              artistName.split(' ').map((word, i) => (
+                <span key={i} className="block">{word}</span>
+              ))
+            )}
           </h1>
         </div>
 
@@ -68,7 +72,11 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         <nav className="flex-1 p-6">
           <ul className="space-y-1">
             {NAV_ITEMS.map((item) => {
-              const isActive = !item.external && pathname === item.path;
+              const isActive = !item.external && (
+                item.path === '/'
+                  ? pathname === '/'
+                  : pathname === item.path || pathname.startsWith(item.path + '/')
+              );
               return (
                 <li key={item.path}>
                   {item.external ? (
@@ -150,7 +158,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
       >
         <div className="flex items-center justify-between px-6 h-16">
           <h1 className="text-xl font-bold text-[var(--color-primary)] tracking-wider">
-            {artistName}
+            {isLoading ? '' : artistName}
           </h1>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -172,7 +180,11 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         >
           <ul className="py-4">
             {NAV_ITEMS.map((item) => {
-              const isActive = !item.external && pathname === item.path;
+              const isActive = !item.external && (
+                item.path === '/'
+                  ? pathname === '/'
+                  : pathname === item.path || pathname.startsWith(item.path + '/')
+              );
               return (
                 <li key={item.path}>
                   {item.external ? (
@@ -240,7 +252,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
       {/* Main Content */}
       <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
         {isLoading ? (
-          <div className="min-h-screen flex items-center justify-center">
+          <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
             <span className="text-xs tracking-widest text-[var(--color-secondary)]/30 animate-pulse">
               LOADING...
             </span>
@@ -248,7 +260,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         ) : (
           <div
             key={pathname}
-            className="min-h-screen p-6 md:p-12 lg:p-16 animate-fadeIn"
+            className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-6 md:p-12 lg:p-16 animate-fadeIn"
           >
             {children}
           </div>

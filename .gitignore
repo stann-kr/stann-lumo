@@ -67,3 +67,5 @@ yarn-error.log*
 next-env.d.ts
 
 .open-next
+
+.docs/private/

@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       youtubeUrl: string;
       caption?: string;
       altText?: string;
+      linkedEventId?: string;
     };
 
     if (!body.youtubeUrl) {
@@ -73,15 +74,16 @@ export async function POST(request: NextRequest) {
     const id = crypto.randomUUID();
     const caption = body.caption ?? '';
     const altText = body.altText ?? `YouTube: ${videoId}`;
+    const linkedEventId = body.linkedEventId ?? null;
 
     await db
       .prepare(
         `INSERT INTO gallery_photos
           (id, filename, mime_type, size_bytes, alt_text, caption, sort_order,
-           media_type, focal_x, focal_y, video_youtube_id, video_thumbnail_url)
-         VALUES (?, ?, 'video/youtube', 0, ?, ?, ?, 'video_youtube', 50, 50, ?, ?)`,
+           media_type, focal_x, focal_y, video_youtube_id, video_thumbnail_url, linked_event_id)
+         VALUES (?, ?, 'video/youtube', 0, ?, ?, ?, 'video_youtube', 50, 50, ?, ?, ?)`,
       )
-      .bind(id, `youtube_${videoId}`, altText, caption, nextOrder, videoId, thumbnailUrl)
+      .bind(id, `youtube_${videoId}`, altText, caption, nextOrder, videoId, thumbnailUrl, linkedEventId)
       .run();
 
     const photo: GalleryPhoto = {
@@ -98,6 +100,7 @@ export async function POST(request: NextRequest) {
       focalY: 50,
       videoYoutubeId: videoId,
       videoThumbnailUrl: thumbnailUrl,
+      ...(linkedEventId && { linkedEventId }),
     };
 
     return NextResponse.json({ success: true, data: photo });

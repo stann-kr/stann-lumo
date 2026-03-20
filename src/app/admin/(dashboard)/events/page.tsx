@@ -26,6 +26,8 @@ import {
   updateRaApiConfig as apiUpdateRaApiConfig,
   fetchDisplaySettings,
   updateDisplaySettings,
+  uploadEventPoster,
+  deleteEventPoster,
 } from '@/services/adminService';
 
 const AdminEventsPage = () => {
@@ -52,6 +54,7 @@ const AdminEventsPage = () => {
   const [fetchError, setFetchError] = useState('');
   const [fetchSuccess, setFetchSuccess] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [posterUploading, setPosterUploading] = useState<Record<string, boolean>>({});
 
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
 
@@ -64,7 +67,14 @@ const AdminEventsPage = () => {
   } = useDeleteConfirm();
 
   useEffect(() => {
-    setPerformances(allContent[currentEditLanguage].performances);
+    // 구버전 status 값 정규화 (DB 마이그레이션 전 환경 대비)
+    const normalized = allContent[currentEditLanguage].performances.map((p) => ({
+      ...p,
+      status: (p.status === ('Confirmed' as string) ? 'Announced'
+             : p.status === ('Pending'   as string) ? 'TBA'
+             : p.status) as Performance['status'],
+    }));
+    setPerformances(normalized);
     setRaApiConfig(
       allContent[currentEditLanguage].raApiConfig || { userId: '', apiKey: '', djId: '', option: '1' }
     );
@@ -139,7 +149,7 @@ const AdminEventsPage = () => {
       title: 'New Performance',
       location: 'Seoul',
       time: '23:00',
-      status: 'Pending',
+      status: 'TBA',
     });
   };
 
@@ -152,6 +162,34 @@ const AdminEventsPage = () => {
 
   const updateRaApiConfigField = (field: keyof RAApiConfig, value: string) => {
     setRaApiConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePosterUpload = async (eventId: string, file: File) => {
+    setPosterUploading((prev) => ({ ...prev, [eventId]: true }));
+    try {
+      const result = await uploadEventPoster(eventId, file);
+      if (result.success && result.data) {
+        setPerformances(
+          performances.map((p) => p.id === eventId ? { ...p, posterImageId: result.data!.photoId } : p)
+        );
+      }
+    } finally {
+      setPosterUploading((prev) => ({ ...prev, [eventId]: false }));
+    }
+  };
+
+  const handlePosterDelete = async (eventId: string) => {
+    setPosterUploading((prev) => ({ ...prev, [eventId]: true }));
+    try {
+      const result = await deleteEventPoster(eventId);
+      if (result.success) {
+        setPerformances(
+          performances.map((p) => p.id === eventId ? { ...p, posterImageId: undefined } : p)
+        );
+      }
+    } finally {
+      setPosterUploading((prev) => ({ ...prev, [eventId]: false }));
+    }
   };
 
   return (
@@ -344,7 +382,23 @@ const AdminEventsPage = () => {
                 />
               ) : (
                 <div className="flex items-start gap-4">
+                  {/* 포스터 썸네일 — 있을 때만 좌측 표시 */}
+                  {performance.posterImageId && (
+                    <div className="shrink-0 w-20 h-20 overflow-hidden">
+                      <img
+                        src={`/api/media/${performance.posterImageId}`}
+                        alt="Poster"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormInput
+                      label="TITLE"
+                      value={performance.title}
+                      onChange={(value) => updatePerformanceField(index, 'title', value)}
+                      placeholder="Performance Title"
+                    />
                     <FormInput
                       label="DATE"
                       type="date"
@@ -374,8 +428,8 @@ const AdminEventsPage = () => {
                         onChange={(e) => updatePerformanceField(index, 'status', e.target.value)}
                         className="w-full bg-[var(--color-bg)] border-b border-[var(--color-secondary)]/30 text-[var(--color-secondary)] text-sm tracking-wider py-2 focus:outline-none focus:border-[var(--color-accent)] cursor-pointer"
                       >
-                        <option value="Confirmed">Confirmed</option>
-                        <option value="Pending">Pending</option>
+                        <option value="Announced">Announced</option>
+                        <option value="TBA">TBA</option>
                         <option value="Cancelled">Cancelled</option>
                       </select>
                     </div>
@@ -386,6 +440,36 @@ const AdminEventsPage = () => {
                         </p>
                       </div>
                     )}
+                    {/* 포스터 이미지 업로드 (선택 사항) */}
+                    <div className="md:col-span-2 space-y-2">
+                      <label className="block text-xs text-[var(--color-accent)] tracking-widest">
+                        POSTER IMAGE <span className="text-[var(--color-secondary)]/30 normal-case font-normal">(선택)</span>
+                      </label>
+                      {performance.posterImageId ? (
+                        <button
+                          onClick={() => handlePosterDelete(performance.id)}
+                          disabled={posterUploading[performance.id]}
+                          className="text-xs text-red-400 hover:text-red-300 tracking-widest disabled:opacity-50 cursor-pointer"
+                        >
+                          {posterUploading[performance.id] ? 'REMOVING...' : 'REMOVE POSTER'}
+                        </button>
+                      ) : (
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] tracking-widest transition-colors">
+                          <i className="ri-upload-line"></i>
+                          {posterUploading[performance.id] ? 'UPLOADING...' : 'UPLOAD POSTER'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={posterUploading[performance.id]}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handlePosterUpload(performance.id, file);
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => openDeleteConfirm(index)}

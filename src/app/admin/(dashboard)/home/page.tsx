@@ -13,11 +13,16 @@ import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 import {
   updateHomeSections as apiUpdateHomeSections,
   updatePageMeta as apiUpdatePageMeta,
-  updateTerminalInfo as apiUpdateTerminalInfo,
+  updateArtistInfo as apiUpdateArtistInfo,
   fetchDisplaySettings,
   updateDisplaySettings,
+  fetchTerminalConfig,
+  updateTerminalConfig,
 } from '@/services/adminService';
-import type { HomeSection, TerminalInfo, PageMeta } from '@/types/content';
+import type {
+  HomeSection, TerminalInfo, PageMeta, ArtistInfoItem,
+  TerminalCustomField, TerminalStyleConfig,
+} from '@/types/content';
 import type { HomeDisplaySettings } from '@/types/displaySettings';
 import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
@@ -51,9 +56,19 @@ const AdminHomePage = () => {
   const [homeSections, setHomeSections] = useState<HomeSection[]>(content.homeSections);
   const [terminalInfo, setTerminalInfo] = useState<TerminalInfo>(content.terminalInfo);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
+  const [artistInfo, setArtistInfo] = useState<ArtistInfoItem[]>(content.artistInfo);
   const [displaySettings, setDisplaySettings] = useState<HomeDisplaySettings>(
     DISPLAY_SETTINGS_DEFAULTS.home
   );
+  const [terminalCustomFields, setTerminalCustomFields] = useState<TerminalCustomField[]>([]);
+  const [terminalStyle, setTerminalStyle] = useState<TerminalStyleConfig>({
+    fontSize: 'md',
+    animationSpeed: 'normal',
+    promptText: '>',
+    showEmbed: false,
+    embedHeight: '400px',
+  });
+  const [showEmbedPreview, setShowEmbedPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null);
   const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
@@ -63,12 +78,19 @@ const AdminHomePage = () => {
     setHomeSections(allContent[currentEditLanguage].homeSections);
     setTerminalInfo(allContent[currentEditLanguage].terminalInfo);
     setPageMeta(allContent[currentEditLanguage].pageMeta);
+    setArtistInfo(allContent[currentEditLanguage].artistInfo);
   }, [currentEditLanguage, allContent]);
 
   useEffect(() => {
     fetchDisplaySettings('home').then((res) => {
       if (res.success && res.data) {
         setDisplaySettings(res.data as HomeDisplaySettings);
+      }
+    });
+    fetchTerminalConfig().then((res) => {
+      if (res.success && res.data) {
+        setTerminalCustomFields(res.data.customFields ?? []);
+        if (res.data.style) setTerminalStyle(res.data.style);
       }
     });
   }, []);
@@ -104,8 +126,55 @@ const AdminHomePage = () => {
     setHomeSections(updated);
   };
 
+  // ─── 터미널 커스텀 필드 핸들러 ─────────────────────────────────
+  const addCustomField = () => {
+    setTerminalCustomFields((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), fieldKey: '', fieldValue: '', fieldType: 'text', sortOrder: prev.length },
+    ]);
+  };
+
+  const updateCustomField = (index: number, updates: Partial<TerminalCustomField>) => {
+    setTerminalCustomFields((prev) =>
+      prev.map((f, i) => (i === index ? { ...f, ...updates } : f))
+    );
+  };
+
+  const removeCustomField = (index: number) => {
+    setTerminalCustomFields((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const moveCustomField = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= terminalCustomFields.length) return;
+    const updated = [...terminalCustomFields];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    setTerminalCustomFields(updated);
+  };
+  // ─────────────────────────────────────────────────────────────
+
   const updatePageMetaField = (field: keyof PageMeta['home'], value: string) => {
     setPageMeta(prev => ({ ...prev, home: { ...prev.home, [field]: value } }));
+  };
+
+  const getArtistName = () => {
+    const nameKey = currentEditLanguage === 'ko' ? '이름' : 'Name';
+    return artistInfo.find((i) => i.key === nameKey || i.key === 'Name' || i.key === '이름')?.value ?? '';
+  };
+
+  const setArtistName = (value: string) => {
+    const nameKey = currentEditLanguage === 'ko' ? '이름' : 'Name';
+    setArtistInfo((prev) => {
+      const exists = prev.some((item) => item.key === 'Name' || item.key === '이름');
+      if (exists) {
+        return prev.map((item) =>
+          item.key === 'Name' || item.key === '이름'
+            ? { ...item, key: nameKey, value }
+            : item,
+        );
+      }
+      return [...prev, { id: crypto.randomUUID(), key: nameKey, value }];
+    });
   };
 
   const saveChanges = async () => {
@@ -113,10 +182,21 @@ const AdminHomePage = () => {
     await Promise.allSettled([
       apiUpdateHomeSections(currentEditLanguage, homeSections),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
-      apiUpdateTerminalInfo(terminalInfo),
+      updateTerminalConfig({
+        url:          terminalInfo.url,
+        description:  terminalInfo.description,
+        customFields: terminalCustomFields,
+        style:        terminalStyle,
+      }),
+      apiUpdateArtistInfo(currentEditLanguage, artistInfo),
       updateDisplaySettings('home', displaySettings),
     ]);
-    updateContent({ homeSections, terminalInfo, pageMeta });
+    updateContent({
+      homeSections,
+      terminalInfo: { ...terminalInfo, customFields: terminalCustomFields, style: terminalStyle },
+      pageMeta,
+      artistInfo,
+    });
     showNotification();
     setIsSaving(false);
   };
@@ -140,6 +220,26 @@ const AdminHomePage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+
+        {/* ARTIST INFO */}
+        <div>
+          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
+            ARTIST INFO
+          </h2>
+          <AdminCard>
+            <div className="space-y-2">
+              <FormInput
+                label="ARTIST NAME (타이핑 애니메이션 타이틀)"
+                value={getArtistName()}
+                onChange={setArtistName}
+                placeholder="ARTIST NAME"
+              />
+              <p className="text-xs text-[var(--color-secondary)] opacity-40 tracking-wider">
+                홈 화면 상단 타이핑 애니메이션으로 표시되는 아티스트 이름. About 페이지의 Artist Info Name 필드와 연동됨.
+              </p>
+            </div>
+          </AdminCard>
+        </div>
 
         {/* DISPLAY SETTINGS */}
         <div>
@@ -213,6 +313,8 @@ const AdminHomePage = () => {
           <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
             TERMINAL INFO
           </h2>
+
+          {/* 기본 정보 */}
           <AdminCard>
             <div className="space-y-4">
               <FormInput
@@ -229,6 +331,171 @@ const AdminHomePage = () => {
               />
             </div>
           </AdminCard>
+
+          {/* 스타일 옵션 */}
+          <div className="mt-4">
+            <h3 className="text-sm font-semibold text-[var(--color-secondary)]/70 tracking-widest mb-3">
+              STYLE OPTIONS
+            </h3>
+            <AdminCard>
+              <div className="space-y-5">
+                <RadioGroup
+                  label="FONT SIZE"
+                  value={terminalStyle.fontSize}
+                  options={[
+                    { value: 'sm', label: 'SM' },
+                    { value: 'md', label: 'MD' },
+                    { value: 'lg', label: 'LG' },
+                  ]}
+                  onChange={(v) => setTerminalStyle((prev) => ({ ...prev, fontSize: v as TerminalStyleConfig['fontSize'] }))}
+                />
+                <RadioGroup
+                  label="ANIMATION SPEED"
+                  value={terminalStyle.animationSpeed}
+                  options={[
+                    { value: 'slow', label: 'SLOW' },
+                    { value: 'normal', label: 'NORMAL' },
+                    { value: 'fast', label: 'FAST' },
+                  ]}
+                  onChange={(v) => setTerminalStyle((prev) => ({ ...prev, animationSpeed: v as TerminalStyleConfig['animationSpeed'] }))}
+                />
+                <FormInput
+                  label="PROMPT TEXT"
+                  value={terminalStyle.promptText}
+                  onChange={(v) => setTerminalStyle((prev) => ({ ...prev, promptText: v }))}
+                  placeholder=">"
+                />
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={terminalStyle.showEmbed}
+                      onChange={(e) => setTerminalStyle((prev) => ({ ...prev, showEmbed: e.target.checked }))}
+                      className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
+                    />
+                    <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW EMBED ON PUBLIC PAGE</span>
+                  </label>
+                  {terminalStyle.showEmbed && (
+                    <FormInput
+                      label="EMBED HEIGHT"
+                      value={terminalStyle.embedHeight}
+                      onChange={(v) => setTerminalStyle((prev) => ({ ...prev, embedHeight: v }))}
+                      placeholder="400px"
+                    />
+                  )}
+                </div>
+
+                {/* 임베드 미리보기 토글 */}
+                {terminalInfo.url && (
+                  <div className="pt-2 border-t" style={{ borderColor: 'color-mix(in srgb, var(--color-secondary) 15%, transparent)' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmbedPreview((prev) => !prev)}
+                      className="text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors cursor-pointer flex items-center gap-2"
+                    >
+                      <i className={`${showEmbedPreview ? 'ri-eye-off-line' : 'ri-eye-line'}`}></i>
+                      {showEmbedPreview ? 'HIDE PREVIEW' : 'SHOW PREVIEW'}
+                    </button>
+                    {showEmbedPreview && (
+                      <div className="mt-3 border" style={{ borderColor: 'color-mix(in srgb, var(--color-secondary) 20%, transparent)' }}>
+                        <iframe
+                          src={terminalInfo.url}
+                          style={{ width: '100%', height: terminalStyle.embedHeight, border: 'none' }}
+                          title="Terminal Preview"
+                          sandbox="allow-scripts allow-same-origin"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </AdminCard>
+          </div>
+
+          {/* 커스텀 필드 */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-[var(--color-secondary)]/70 tracking-widest">
+                CUSTOM FIELDS
+              </h3>
+              <button
+                onClick={addCustomField}
+                className="text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <i className="ri-add-line"></i>ADD FIELD
+              </button>
+            </div>
+
+            {terminalCustomFields.length === 0 ? (
+              <AdminCard>
+                <p className="text-xs text-[var(--color-secondary)]/30 tracking-widest text-center py-2">
+                  필드 없음 — ADD FIELD로 추가
+                </p>
+              </AdminCard>
+            ) : (
+              <div className="space-y-3">
+                {terminalCustomFields.map((field, index) => (
+                  <AdminCard key={field.id}>
+                    <div className="flex items-start gap-3">
+                      {/* 순서 이동 */}
+                      <div className="flex flex-col gap-1 shrink-0 pt-6">
+                        <button
+                          onClick={() => moveCustomField(index, 'up')}
+                          disabled={index === 0}
+                          className="w-6 h-6 flex items-center justify-center text-[var(--color-secondary)]/40 hover:text-[var(--color-secondary)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <i className="ri-arrow-up-s-line text-sm"></i>
+                        </button>
+                        <button
+                          onClick={() => moveCustomField(index, 'down')}
+                          disabled={index === terminalCustomFields.length - 1}
+                          className="w-6 h-6 flex items-center justify-center text-[var(--color-secondary)]/40 hover:text-[var(--color-secondary)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <i className="ri-arrow-down-s-line text-sm"></i>
+                        </button>
+                      </div>
+
+                      {/* 필드 입력 */}
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <FormInput
+                          label="KEY"
+                          value={field.fieldKey}
+                          onChange={(v) => updateCustomField(index, { fieldKey: v })}
+                          placeholder="Label"
+                        />
+                        <FormInput
+                          label="VALUE"
+                          value={field.fieldValue}
+                          onChange={(v) => updateCustomField(index, { fieldValue: v })}
+                          placeholder="Content"
+                        />
+                        <div>
+                          <label className="block text-xs text-[var(--color-accent)] tracking-widest mb-2">TYPE</label>
+                          <select
+                            value={field.fieldType}
+                            onChange={(e) => updateCustomField(index, { fieldType: e.target.value as TerminalCustomField['fieldType'] })}
+                            className="w-full bg-[var(--color-bg)] border-b border-[var(--color-secondary)]/30 text-[var(--color-secondary)] text-sm tracking-wider py-2 focus:outline-none focus:border-[var(--color-accent)] cursor-pointer"
+                          >
+                            <option value="text">TEXT</option>
+                            <option value="url">URL (링크)</option>
+                            <option value="badge">BADGE</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* 삭제 */}
+                      <button
+                        onClick={() => removeCustomField(index)}
+                        className="w-7 h-7 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer shrink-0 mt-5"
+                      >
+                        <i className="ri-delete-bin-line text-sm"></i>
+                      </button>
+                    </div>
+                  </AdminCard>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation Cards */}

@@ -23,6 +23,7 @@ import type {
   ThemeColors,
   RAApiConfig,
   TerminalInfo,
+  TerminalCustomField,
 } from '@/types/content';
 import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 import type { AllDisplaySettings } from '@/types/displaySettings';
@@ -53,7 +54,7 @@ interface TrackRow {
 interface PerformanceRow {
   id: string; date: string; venue: string; location: string | null; time: string | null;
   title: string; lineup: string | null; ra_event_link: string | null; ra_event_id: string | null;
-  status: string; sort_order: number;
+  poster_image_id: string | null; status: string; sort_order: number;
 }
 interface EventsInfoRow {
   id: number; contact_email: string; response_time: string;
@@ -73,6 +74,13 @@ interface ThemeColorsRow {
 interface SiteConfigRow {
   id: number; site_name: string; tagline: string; version: string;
   terminal_url: string | null; terminal_description: string | null;
+  terminal_font_size: string | null; terminal_animation_speed: string | null;
+  terminal_prompt_text: string | null; terminal_show_embed: number | null;
+  terminal_embed_height: string | null;
+}
+
+interface TerminalCustomFieldRow {
+  id: string; field_key: string; field_value: string; field_type: string; sort_order: number;
 }
 interface RAApiConfigRow {
   id: number; user_id: string | null; api_key: string | null; dj_id: string | null; option: string;
@@ -184,6 +192,7 @@ export async function GET(
       raApiConfigRes,
       siteConfigRes,
       displaySettingsRes,
+      terminalCustomFieldsRes,
     ] = await db.batch([
       db.prepare('SELECT * FROM artist_info WHERE lang = ? ORDER BY sort_order').bind(lang),
       db.prepare('SELECT * FROM about_sections WHERE lang = ? ORDER BY section_order').bind(lang),
@@ -202,6 +211,7 @@ export async function GET(
       db.prepare('SELECT * FROM ra_api_config WHERE id = 1'),
       db.prepare('SELECT * FROM site_config WHERE id = 1'),
       db.prepare('SELECT * FROM display_settings'),
+      db.prepare('SELECT * FROM terminal_custom_fields ORDER BY sort_order ASC'),
     ]);
 
     const artistInfoRows    = (artistInfoRes.results   as ArtistInfoRow[]);
@@ -221,6 +231,7 @@ export async function GET(
     const raRow                 = (raApiConfigRes.results[0]   as RAApiConfigRow | undefined);
     const siteRow               = (siteConfigRes.results[0]    as SiteConfigRow | undefined);
     const displaySettingsRows   = (displaySettingsRes.results  as DisplaySettingsRow[]);
+    const terminalFieldRows     = (terminalCustomFieldsRes.results as TerminalCustomFieldRow[]);
 
     // ArtistInfo
     const artistInfo: ArtistInfoItem[] = artistInfoRows.map((r) => ({
@@ -253,8 +264,9 @@ export async function GET(
       ...(r.time      != null && { time:        r.time }),
       title: r.title,
       ...(r.lineup       != null && { lineup:       r.lineup }),
-      ...(r.ra_event_link != null && { raEventLink: r.ra_event_link }),
-      ...(r.ra_event_id   != null && { raEventId:   r.ra_event_id }),
+      ...(r.ra_event_link   != null && { raEventLink:   r.ra_event_link }),
+      ...(r.ra_event_id     != null && { raEventId:     r.ra_event_id }),
+      ...(r.poster_image_id != null && { posterImageId: r.poster_image_id }),
       status: r.status as Performance['status'],
     }));
 
@@ -271,10 +283,26 @@ export async function GET(
       id: r.id, platform: r.platform, url: r.url, icon: r.icon, description: r.description,
     }));
 
-    // TerminalInfo
+    // TerminalInfo (커스텀 필드 + 스타일 포함)
+    const terminalCustomFields: TerminalCustomField[] = terminalFieldRows.map((r) => ({
+      id:         r.id,
+      fieldKey:   r.field_key,
+      fieldValue: r.field_value,
+      fieldType:  (r.field_type as TerminalCustomField['fieldType']) ?? 'text',
+      sortOrder:  r.sort_order,
+    }));
+
     const terminalInfo: TerminalInfo = {
       url:         siteRow?.terminal_url         ?? '',
       description: siteRow?.terminal_description ?? '',
+      customFields: terminalCustomFields,
+      style: {
+        fontSize:       (siteRow?.terminal_font_size       as 'sm' | 'md' | 'lg')          ?? 'md',
+        animationSpeed: (siteRow?.terminal_animation_speed as 'slow' | 'normal' | 'fast') ?? 'normal',
+        promptText:     siteRow?.terminal_prompt_text  ?? '>',
+        showEmbed:      (siteRow?.terminal_show_embed  ?? 0) === 1,
+        embedHeight:    siteRow?.terminal_embed_height ?? '400px',
+      },
     };
 
     // ContactInfo

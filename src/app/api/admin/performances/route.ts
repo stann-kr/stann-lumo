@@ -12,7 +12,7 @@ import type { Performance } from '@/types/content';
 interface PerformanceRow {
   id: string; date: string; venue: string; location: string | null; time: string | null;
   title: string; lineup: string | null; ra_event_link: string | null; ra_event_id: string | null;
-  status: string; sort_order: number;
+  poster_image_id: string | null; status: string; sort_order: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
       title: r.title,
       ...(r.lineup        != null && { lineup:      r.lineup }),
       ...(r.ra_event_link != null && { raEventLink: r.ra_event_link }),
-      ...(r.ra_event_id   != null && { raEventId:   r.ra_event_id }),
+      ...(r.ra_event_id     != null && { raEventId:     r.ra_event_id }),
+      ...(r.poster_image_id != null && { posterImageId: r.poster_image_id }),
       status: r.status as Performance['status'],
     }));
 
@@ -80,8 +81,8 @@ export async function PUT(request: NextRequest) {
       ...items.map((perf, idx) =>
         db.prepare(
           `INSERT INTO performances
-           (id, date, venue, location, time, title, lineup, ra_event_link, ra_event_id, status, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           (id, date, venue, location, time, title, lineup, ra_event_link, ra_event_id, poster_image_id, status, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         ).bind(
           perf.id,
           perf.date,
@@ -92,6 +93,7 @@ export async function PUT(request: NextRequest) {
           perf.lineup ?? null,
           perf.raEventLink ?? null,
           perf.raEventId ?? null,
+          perf.posterImageId ?? null,
           perf.status,
           idx,
         ),
