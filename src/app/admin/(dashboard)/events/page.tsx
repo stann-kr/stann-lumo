@@ -162,8 +162,8 @@ const AdminEventsPage = () => {
     try {
       const result = await uploadEventPoster(eventId, file);
       if (result.success && result.data) {
-        setPerformances((prev) =>
-          prev.map((p) => p.id === eventId ? { ...p, posterImageId: result.data!.photoId } : p)
+        setPerformances(
+          performances.map((p) => p.id === eventId ? { ...p, posterImageId: result.data!.photoId } : p)
         );
       }
     } finally {
@@ -176,8 +176,8 @@ const AdminEventsPage = () => {
     try {
       const result = await deleteEventPoster(eventId);
       if (result.success) {
-        setPerformances((prev) =>
-          prev.map((p) => p.id === eventId ? { ...p, posterImageId: undefined } : p)
+        setPerformances(
+          performances.map((p) => p.id === eventId ? { ...p, posterImageId: undefined } : p)
         );
       }
     } finally {
