@@ -72,36 +72,43 @@ const EventsPage = () => {
                 className={`group border ${cardPaddingClass} transition-all duration-300 block`}
                 style={borderFaint}
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
-                      {event.title}
-                    </h3>
-                    <div className="flex flex-wrap items-center gap-3 text-xs">
-                      <span className="text-[var(--color-secondary)] opacity-50">
-                        {event.venue}
-                      </span>
-                      {event.location && (
-                        <>
-                          <span className="text-[var(--color-secondary)] opacity-25">
-                            ·
-                          </span>
-                          <span className="text-[var(--color-secondary)] opacity-40">
-                            {event.location}
-                          </span>
-                        </>
+                <div className="flex items-center gap-4">
+                  {event.posterImageId && (
+                    <img
+                      src={`/api/media/${event.posterImageId}`}
+                      alt={event.title}
+                      className="w-12 h-12 object-cover shrink-0"
+                    />
+                  )}
+                  <div className="flex flex-1 flex-col md:flex-row md:items-center md:justify-between gap-4 min-w-0">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
+                        {event.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-3 text-xs">
+                        <span className="text-[var(--color-secondary)] opacity-50">
+                          {event.venue}
+                        </span>
+                        {event.location && (
+                          <>
+                            <span className="text-[var(--color-secondary)] opacity-25">·</span>
+                            <span className="text-[var(--color-secondary)] opacity-40">
+                              {event.location}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right space-y-1 shrink-0">
+                      <p className="text-sm font-mono text-[var(--color-secondary)] opacity-80">
+                        {event.date}
+                      </p>
+                      {event.time && (
+                        <p className="text-xs font-mono text-[var(--color-secondary)] opacity-40">
+                          {event.time}
+                        </p>
                       )}
                     </div>
-                  </div>
-                  <div className="text-right space-y-1 shrink-0">
-                    <p className="text-sm font-mono text-[var(--color-secondary)] opacity-80">
-                      {event.date}
-                    </p>
-                    {event.time && (
-                      <p className="text-xs font-mono text-[var(--color-secondary)] opacity-40">
-                        {event.time}
-                      </p>
-                    )}
                   </div>
                 </div>
               </Link>
@@ -130,36 +137,43 @@ const EventsPage = () => {
                   className={`group border ${cardPaddingClass} transition-all duration-300 hover:opacity-75 block`}
                   style={{ ...borderFaint, opacity: pastOpacity }}
                 >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
-                        {event.title}
-                      </h3>
-                      <div className="flex flex-wrap items-center gap-3 text-xs">
-                        <span className="text-[var(--color-secondary)] opacity-50">
-                          {event.venue}
-                        </span>
-                        {event.location && (
-                          <>
-                            <span className="text-[var(--color-secondary)] opacity-25">
-                              ·
-                            </span>
-                            <span className="text-[var(--color-secondary)] opacity-40">
-                              {event.location}
-                            </span>
-                          </>
+                  <div className="flex items-center gap-4">
+                    {event.posterImageId && (
+                      <img
+                        src={`/api/media/${event.posterImageId}`}
+                        alt={event.title}
+                        className="w-12 h-12 object-cover shrink-0"
+                      />
+                    )}
+                    <div className="flex flex-1 flex-col md:flex-row md:items-center md:justify-between gap-4 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <h3 className="text-[var(--color-secondary)] font-semibold text-base tracking-wide group-hover:text-[var(--color-primary)] transition-colors">
+                          {event.title}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 text-xs">
+                          <span className="text-[var(--color-secondary)] opacity-50">
+                            {event.venue}
+                          </span>
+                          {event.location && (
+                            <>
+                              <span className="text-[var(--color-secondary)] opacity-25">·</span>
+                              <span className="text-[var(--color-secondary)] opacity-40">
+                                {event.location}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right space-y-1 shrink-0">
+                        <p className="text-sm font-mono text-[var(--color-secondary)] opacity-80">
+                          {event.date}
+                        </p>
+                        {event.time && (
+                          <p className="text-xs font-mono text-[var(--color-secondary)] opacity-40">
+                            {event.time}
+                          </p>
                         )}
                       </div>
-                    </div>
-                    <div className="text-right space-y-1 shrink-0">
-                      <p className="text-sm font-mono text-[var(--color-secondary)] opacity-80">
-                        {event.date}
-                      </p>
-                      {event.time && (
-                        <p className="text-xs font-mono text-[var(--color-secondary)] opacity-40">
-                          {event.time}
-                        </p>
-                      )}
                     </div>
                   </div>
                 </Link>
