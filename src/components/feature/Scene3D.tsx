@@ -3,6 +3,8 @@
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Icosahedron, Ring } from '@react-three/drei';
+import { EffectComposer, Bloom, Noise, ChromaticAberration, Vignette } from '@react-three/postprocessing';
+import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useContent } from '../../contexts/ContentContext';
 
@@ -101,7 +103,7 @@ export default function Scene3D() {
   const mutedColor = content.themeColors.muted || '#333333';
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[-10] opacity-30 mix-blend-screen">
+    <div className="fixed inset-0 pointer-events-none z-[-10] opacity-80">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }} gl={{ antialias: true, powerPreference: "high-performance" }}>
         <color attach="background" args={['#000000']} />
         <fog attach="fog" args={['#000000', 5, 25]} />
@@ -111,10 +113,17 @@ export default function Scene3D() {
         
         {/* Core Geometry (Target / Data Core) */}
         <Icosahedron args={[2, 1]} position={[0, 0, -10]}>
-          <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.15} />
+          <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.3} />
         </Icosahedron>
         
         <CameraRig />
+
+        <EffectComposer>
+          <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={2.0} />
+          <Noise opacity={0.4} blendFunction={BlendFunction.OVERLAY} />
+          <ChromaticAberration offset={new THREE.Vector2(0.002, 0.002)} blendFunction={BlendFunction.NORMAL} />
+          <Vignette eskil={false} offset={0.1} darkness={1.1} />
+        </EffectComposer>
       </Canvas>
     </div>
   );

@@ -1,6 +1,8 @@
 'use client';
-import type { CSSProperties, ReactNode, ReactElement } from 'react';
-import { Children, isValidElement } from 'react';
+import type { ReactNode, ReactElement } from 'react';
+import { Children, isValidElement, useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import TypingText from '../home/TypingText';
 import { createBorderMid } from '../../utils/colorMix';
 import { MAX_WIDTH_MAP } from '../../utils/displaySettingsMap';
@@ -51,24 +53,25 @@ const PageLayout = ({
     return acc;
   }, []);
 
-  const baseDelay = global.animationEnabled ? 200 : 0;
-  const stepDelay = global.animationEnabled ? 120 : 0;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!global.animationEnabled) return;
+    
+    gsap.fromTo('.gsap-stagger-item', 
+      { y: 20, opacity: 0 }, 
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power3.out', delay: 0.2 }
+    );
+  }, { scope: containerRef });
 
   const animatedChildren = Children.map(children, (child, index) => {
-    const delay = baseDelay + index * stepDelay;
     if (isValidElement(child)) {
-      const el = child as ReactElement<{ className?: string; style?: CSSProperties }>;
       return (
         <div
           key={index}
-          className={global.animationEnabled ? 'animate-slideUp' : ''}
-          style={
-            global.animationEnabled
-              ? { animationDelay: `${delay}ms`, animationFillMode: 'both', opacity: 0 }
-              : undefined
-          }
+          className={global.animationEnabled ? 'gsap-stagger-item opacity-0' : ''}
         >
-          {el}
+          {child}
         </div>
       );
     }
@@ -76,15 +79,10 @@ const PageLayout = ({
   });
 
   return (
-    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pb-8 relative`}>
+    <div ref={containerRef} className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pb-8 relative`}>
       {/* Sci-Fi Page Header */}
       <div
-        className={`relative ${global.animationEnabled ? 'space-y-4 animate-slideUp' : 'space-y-4'}`}
-        style={
-          global.animationEnabled
-            ? { animationDelay: '0ms', animationFillMode: 'both', opacity: 0 }
-            : undefined
-        }
+        className={`relative ${global.animationEnabled ? 'space-y-4 gsap-stagger-item opacity-0' : 'space-y-4'}`}
       >
         <div className="font-mono text-[10px] text-[var(--color-accent)] tracking-widest flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-[var(--color-accent)] animate-pulse"></span>
