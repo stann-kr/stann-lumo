@@ -55,6 +55,10 @@ interface PerformanceRow {
   id: string; date: string; venue: string; location: string | null; time: string | null;
   title: string; lineup: string | null; ra_event_link: string | null; ra_event_id: string | null;
   poster_image_id: string | null; status: string; sort_order: number;
+  ra_venue_id: string | null; ra_country_name: string | null; ra_area_name: string | null;
+  ra_area_id: string | null; ra_address: string | null; ra_cost: string | null;
+  ra_promoter: string | null; ra_venue_link: string | null; ra_has_tickets: string | null;
+  ra_has_barcode: string | null; ra_promoter_id: string | null; ra_lineup_raw: string | null;
 }
 interface EventsInfoRow {
   id: number; contact_email: string; response_time: string;
@@ -83,7 +87,7 @@ interface TerminalCustomFieldRow {
   id: string; field_key: string; field_value: string; field_type: string; sort_order: number;
 }
 interface RAApiConfigRow {
-  id: number; user_id: string | null; api_key: string | null; dj_id: string | null; option: string;
+  id: number; user_id: string | null; api_key: string | null; dj_id: string | null; option: string; year: string | null;
 }
 interface DisplaySettingsRow {
   page: string; settings: string;
@@ -268,6 +272,18 @@ export async function GET(
       ...(r.ra_event_id     != null && { raEventId:     r.ra_event_id }),
       ...(r.poster_image_id != null && { posterImageId: r.poster_image_id }),
       status: r.status as Performance['status'],
+      ...(r.ra_venue_id != null && { raVenueId: r.ra_venue_id }),
+      ...(r.ra_country_name != null && { raCountryName: r.ra_country_name }),
+      ...(r.ra_area_name != null && { raAreaName: r.ra_area_name }),
+      ...(r.ra_area_id != null && { raAreaId: r.ra_area_id }),
+      ...(r.ra_address != null && { raAddress: r.ra_address }),
+      ...(r.ra_cost != null && { raCost: r.ra_cost }),
+      ...(r.ra_promoter != null && { raPromoter: r.ra_promoter }),
+      ...(r.ra_venue_link != null && { raVenueLink: r.ra_venue_link }),
+      raHasTickets: r.ra_has_tickets === '1',
+      raHasBarcode: r.ra_has_barcode === '1',
+      ...(r.ra_promoter_id != null && { raPromoterId: r.ra_promoter_id }),
+      ...(r.ra_lineup_raw != null && { raLineupRaw: r.ra_lineup_raw }),
     }));
 
     // EventsInfo
@@ -330,6 +346,7 @@ export async function GET(
             apiKey:  raRow.api_key  ?? '',
             djId:    raRow.dj_id    ?? '',
             option:  (raRow.option as RAApiConfig['option']) ?? '1',
+            year:    raRow.year     ?? '',
           }
         : undefined;
 

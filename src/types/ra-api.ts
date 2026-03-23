@@ -19,6 +19,7 @@ export interface RAEventXML {
   venuelink: string;
   hastickets: string;
   hasbarcode: string;
+  promoterId?: string;
 }
 
 /**

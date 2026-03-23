@@ -1,0 +1,12 @@
+ALTER TABLE performances ADD COLUMN ra_venue_id TEXT;
+ALTER TABLE performances ADD COLUMN ra_country_name TEXT;
+ALTER TABLE performances ADD COLUMN ra_area_name TEXT;
+ALTER TABLE performances ADD COLUMN ra_area_id TEXT;
+ALTER TABLE performances ADD COLUMN ra_address TEXT;
+ALTER TABLE performances ADD COLUMN ra_cost TEXT;
+ALTER TABLE performances ADD COLUMN ra_promoter TEXT;
+ALTER TABLE performances ADD COLUMN ra_venue_link TEXT;
+ALTER TABLE performances ADD COLUMN ra_has_tickets TEXT;
+ALTER TABLE performances ADD COLUMN ra_has_barcode TEXT;
+ALTER TABLE performances ADD COLUMN ra_promoter_id TEXT;
+ALTER TABLE performances ADD COLUMN ra_lineup_raw TEXT;
