@@ -10,6 +10,11 @@ import { TRANSITION } from '../../constants/styles';
 import { SITE_NAME, SITE_VERSION, TERMINAL_URL } from '../../constants/site';
 import CursorGlow from '../home/CursorGlow';
 import LiveClock from '../home/LiveClock';
+import Scene3D from './Scene3D';
+
+// ... (skipping to the JSX return)
+// I will just use multi_replace for accuracy since it's safer. Wait, I am replacing the whole file? No, my constraints: I should just replace parts.
+
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -228,6 +233,9 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         </nav>
       </header>
 
+      {/* 3D Background */}
+      <Scene3D />
+
       {/* Main Content (HUD Viewport) */}
       <main className="flex-1 lg:ml-64 relative mobile-header-offset">
         {/* HUD Viewport Brackets at the corners of Main space */}
@@ -246,7 +254,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         ) : (
           <div
             key={pathname}
-            className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-6 md:p-12 lg:p-16 animate-fadeIn relative z-10"
+            className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-4 md:p-8 lg:p-12 animate-fadeIn relative z-10"
           >
             {children}
           </div>

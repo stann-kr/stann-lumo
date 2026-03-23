@@ -76,7 +76,7 @@ const PageLayout = ({
   });
 
   return (
-    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pt-4 pb-8 md:pt-12 relative`}>
+    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pb-8 relative`}>
       {/* Sci-Fi Page Header */}
       <div
         className={`relative ${global.animationEnabled ? 'space-y-4 animate-slideUp' : 'space-y-4'}`}
