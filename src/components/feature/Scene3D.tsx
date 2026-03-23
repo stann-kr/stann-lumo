@@ -2,11 +2,11 @@
 
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Line, Sphere } from '@react-three/drei';
+import { Icosahedron, Ring } from '@react-three/drei';
 import * as THREE from 'three';
 import { useContent } from '../../contexts/ContentContext';
 
-const Particles = ({ count = 500, color = '#ffffff' }) => {
+const Particles = ({ count = 300, color = '#ffffff' }) => {
   const mesh = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
@@ -14,31 +14,29 @@ const Particles = ({ count = 500, color = '#ffffff' }) => {
     const temp = [];
     for (let i = 0; i < count; i++) {
       const t = Math.random() * 100;
-      const factor = 20 + Math.random() * 100;
-      const speed = 0.01 + Math.random() / 200;
-      const xFactor = -50 + Math.random() * 100;
-      const yFactor = -50 + Math.random() * 100;
-      const zFactor = -50 + Math.random() * 100;
+      const factor = 10 + Math.random() * 50;
+      const speed = 0.005 + Math.random() / 200;
+      const xFactor = -30 + Math.random() * 60;
+      const yFactor = -30 + Math.random() * 60;
+      const zFactor = -30 + Math.random() * 60;
       temp.push({ t, factor, speed, xFactor, yFactor, zFactor, mx: 0, my: 0 });
     }
     return temp;
   }, [count]);
 
-  useFrame((state) => {
+  useFrame(() => {
     particles.forEach((particle, i) => {
       let { t, factor, speed, xFactor, yFactor, zFactor } = particle;
-      t = particle.t += speed / 2;
-      const a = Math.cos(t) + Math.sin(t * 1) / 10;
-      const b = Math.sin(t) + Math.cos(t * 2) / 10;
-      const s = Math.cos(t);
+      t = particle.t += speed;
       
       dummy.position.set(
-        (particle.mx / 10) * a + xFactor + Math.cos((t / 10) * factor) + (Math.sin(t * 1) * factor) / 10,
-        (particle.my / 10) * b + yFactor + Math.sin((t / 10) * factor) + (Math.cos(t * 2) * factor) / 10,
-        (particle.my / 10) * b + zFactor + Math.cos((t / 10) * factor) + (Math.sin(t * 3) * factor) / 10
+        xFactor + Math.cos((t / 10) * factor),
+        yFactor + Math.sin((t / 10) * factor),
+        zFactor + Math.sin(t * 2) * 5
       );
+      
+      const s = 0.5 + Math.sin(t) * 0.5;
       dummy.scale.set(s, s, s);
-      dummy.rotation.set(s * 5, s * 5, s * 5);
       dummy.updateMatrix();
       if (mesh.current) {
         mesh.current.setMatrixAt(i, dummy.matrix);
@@ -51,16 +49,37 @@ const Particles = ({ count = 500, color = '#ffffff' }) => {
 
   return (
     <instancedMesh ref={mesh} args={[null as any, null as any, count]}>
-      <dodecahedronGeometry args={[0.2, 0]} />
-      <meshBasicMaterial color={color} wireframe />
+      <octahedronGeometry args={[0.05, 0]} />
+      <meshBasicMaterial color={color} wireframe transparent opacity={0.3} />
     </instancedMesh>
   );
 };
 
-const GridFloor = ({ color = '#00ff00' }) => {
+// 미니멀 FUI 느낌을 위한 회전하는 레이더 링
+const FuiRings = ({ color = '#00ff00' }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.z = state.clock.getElapsedTime() * 0.05;
+      groupRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.1) * 0.2;
+      groupRef.current.rotation.y = Math.cos(state.clock.getElapsedTime() * 0.1) * 0.2;
+    }
+  });
+
   return (
-    <group position={[0, -10, 0]}>
-      <gridHelper args={[200, 100, color, color]} position={[0, 0, 0]} />
+    <group ref={groupRef} position={[0, 0, -15]}>
+      {/* Outer Ring */}
+      <Ring args={[14, 14.05, 64]} >
+        <meshBasicMaterial color={color} transparent opacity={0.2} side={THREE.DoubleSide} />
+      </Ring>
+      {/* Inner Dashed/Segmented Ring effect using low poly */}
+      <Ring args={[10, 10.1, 32, 1, 0, Math.PI * 1.5]} >
+        <meshBasicMaterial color={color} transparent opacity={0.4} side={THREE.DoubleSide} />
+      </Ring>
+      <Ring args={[6, 6.05, 16]} >
+        <meshBasicMaterial color={color} transparent opacity={0.1} side={THREE.DoubleSide} />
+      </Ring>
     </group>
   );
 };
@@ -68,10 +87,10 @@ const GridFloor = ({ color = '#00ff00' }) => {
 const CameraRig = () => {
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    state.camera.position.z = 20 + Math.sin(t / 4) * 5;
-    state.camera.position.x = Math.sin(t / 4) * 5;
-    state.camera.position.y = Math.cos(t / 4) * 2;
-    state.camera.lookAt(0, 0, 0);
+    // 마우스 포인터에 따른 미세한 Parallax 이동
+    state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, (state.pointer.x * 2), 0.05);
+    state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, (state.pointer.y * 2), 0.05);
+    state.camera.lookAt(0, 0, -10);
   });
   return null;
 };
@@ -82,19 +101,18 @@ export default function Scene3D() {
   const mutedColor = content.themeColors.muted || '#333333';
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[-10] opacity-30">
-      <Canvas camera={{ position: [0, 0, 20], fov: 75 }} gl={{ antialias: false, powerPreference: "high-performance" }}>
+    <div className="fixed inset-0 pointer-events-none z-[-10] opacity-30 mix-blend-screen">
+      <Canvas camera={{ position: [0, 0, 5], fov: 75 }} gl={{ antialias: true, powerPreference: "high-performance" }}>
         <color attach="background" args={['#000000']} />
-        <fog attach="fog" args={['#000000', 10, 50]} />
-        <ambientLight intensity={0.5} />
+        <fog attach="fog" args={['#000000', 5, 25]} />
         
-        <Particles count={200} color={mutedColor} />
-        <GridFloor color={accentColor} />
+        <Particles count={250} color={mutedColor} />
+        <FuiRings color={accentColor} />
         
-        {/* Wireframe Planet */}
-        <Sphere args={[8, 16, 16]} position={[0, 0, -10]}>
-          <meshBasicMaterial color={mutedColor} wireframe transparent opacity={0.2} />
-        </Sphere>
+        {/* Core Geometry (Target / Data Core) */}
+        <Icosahedron args={[2, 1]} position={[0, 0, -10]}>
+          <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.15} />
+        </Icosahedron>
         
         <CameraRig />
       </Canvas>
