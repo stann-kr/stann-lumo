@@ -127,6 +127,20 @@ export interface Performance {
   raEventId?: string;
   posterImageId?: string;
   status: 'Announced' | 'TBA' | 'Cancelled';
+
+  // RA API 원본 데이터 (부가 정보 보존용)
+  raVenueId?: string;
+  raCountryName?: string;
+  raAreaName?: string;
+  raAreaId?: string;
+  raAddress?: string;
+  raCost?: string;
+  raPromoter?: string;
+  raVenueLink?: string;
+  raHasTickets?: boolean;
+  raHasBarcode?: boolean;
+  raPromoterId?: string;
+  raLineupRaw?: string;
 }
 
 /**
@@ -254,6 +268,7 @@ export interface RAApiConfig {
   apiKey: string;
   djId: string;
   option: '1' | '2' | '3' | '4'; // 1: upcoming, 2: previous 50, 3: all dates by year, 4: most recent 100
+  year?: string;
 }
 
 /**

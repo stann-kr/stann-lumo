@@ -44,7 +44,7 @@ const AdminEventsPage = () => {
   } = useListEditor<Performance>(content.performances);
 
   const [raApiConfig, setRaApiConfig] = useState<RAApiConfig>(
-    content.raApiConfig || { userId: '', apiKey: '', djId: '', option: '1' }
+    content.raApiConfig || { userId: '', apiKey: '', djId: '', option: '1', year: '' }
   );
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [displaySettings, setDisplaySettings] = useState<EventsDisplaySettings>(
@@ -76,7 +76,7 @@ const AdminEventsPage = () => {
     }));
     setPerformances(normalized);
     setRaApiConfig(
-      allContent[currentEditLanguage].raApiConfig || { userId: '', apiKey: '', djId: '', option: '1' }
+      allContent[currentEditLanguage].raApiConfig || { userId: '', apiKey: '', djId: '', option: '1', year: '' }
     );
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent, setPerformances]);
@@ -349,6 +349,12 @@ const AdminEventsPage = () => {
                   <option value="4">{t('events_api_option_4')}</option>
                 </select>
               </div>
+              <FormInput
+                label="YEAR (선택사항, 미입력시 올해 기준)"
+                value={raApiConfig.year ?? ''}
+                onChange={(value) => updateRaApiConfigField('year', value)}
+                placeholder="2025"
+              />
             </div>
             <div className="space-y-2">
               <button

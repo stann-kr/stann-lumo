@@ -15,6 +15,7 @@ interface RaApiConfigRow {
   api_key: string | null;
   dj_id: string | null;
   option: string;
+  year: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -37,6 +38,7 @@ export async function GET(request: NextRequest) {
       apiKey: row?.api_key ?? '',
       djId: row?.dj_id ?? '',
       option: (row?.option ?? '1') as RAApiConfig['option'],
+      year: row?.year ?? '',
     };
 
     return NextResponse.json({ success: true, data });
@@ -73,13 +75,14 @@ export async function PUT(request: NextRequest) {
 
     await db
       .prepare(
-        'UPDATE ra_api_config SET user_id = ?, api_key = ?, dj_id = ?, option = ? WHERE id = 1',
+        'UPDATE ra_api_config SET user_id = ?, api_key = ?, dj_id = ?, option = ?, year = ? WHERE id = 1',
       )
       .bind(
         raApiConfig.userId ?? null,
         raApiConfig.apiKey ?? null,
         raApiConfig.djId ?? null,
         raApiConfig.option ?? '1',
+        raApiConfig.year ?? null,
       )
       .run();
 

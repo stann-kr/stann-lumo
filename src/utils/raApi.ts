@@ -41,6 +41,7 @@ export function parseRAApiXML(xmlString: string): RAApiResponse {
       venuelink: getTextContent('venuelink'),
       hastickets: getTextContent('hastickets'),
       hasbarcode: getTextContent('hasbarcode'),
+      promoterId: getTextContent('promoterId'),
     });
   });
 
@@ -105,6 +106,19 @@ export function convertRAEventToPerformance(raEvent: RAEventXML): Performance {
     raEventLink: raEvent.eventlink || undefined,
     raEventId: raEvent.id,
     status: 'Announced',
+    // RA API 원본 부가 데이터 보존
+    raVenueId: raEvent.venueid || undefined,
+    raCountryName: raEvent.countryname || undefined,
+    raAreaName: raEvent.areaname || undefined,
+    raAreaId: raEvent.areaId || undefined,
+    raAddress: raEvent.address || undefined,
+    raCost: raEvent.cost || undefined,
+    raPromoter: raEvent.promoter || undefined,
+    raVenueLink: raEvent.venuelink || undefined,
+    raHasTickets: raEvent.hastickets === '1',
+    raHasBarcode: raEvent.hasbarcode === '1',
+    raPromoterId: raEvent.promoterId || undefined,
+    raLineupRaw: raEvent.lineup || undefined,
   };
 }
 

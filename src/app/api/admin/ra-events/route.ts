@@ -15,6 +15,7 @@ interface RaApiConfigRow {
   api_key: string | null;
   dj_id: string | null;
   option: string;
+  year: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const row = await db
-      .prepare('SELECT user_id, api_key, dj_id, option FROM ra_api_config WHERE id = 1')
+      .prepare('SELECT user_id, api_key, dj_id, option, year FROM ra_api_config WHERE id = 1')
       .first<RaApiConfigRow>();
 
     if (!row?.user_id || !row?.api_key || !row?.dj_id) {
@@ -41,10 +42,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const option = row.option ?? '1';
     const params = new URLSearchParams({
-      AccessKey: `${row.user_id}|${row.api_key}`,
+      AccessKey: row.api_key,
+      UserID: row.user_id,
       DJID: row.dj_id,
-      Option: row.option ?? '1',
+      Option: option,
+      VenueID: '',
+      CountryID: '',
+      AreaID: '',
+      PromoterID: '',
+      Year: row.year || (option === '4' ? new Date().getFullYear().toString() : ''),
     });
 
     const raResponse = await fetch(

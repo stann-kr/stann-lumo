@@ -2,23 +2,48 @@
 
 ---
 
+## [Unreleased] — 2026-03-23 (RA API Year 파라미터 및 원본 데이터 보존 추가)
+
+### RA API Config Year 파라미터 추가
+
+- `migrations/0009_ra_api_config_year.sql` (신규) — `ra_api_config` 테이블에 `year` 컬럼 추가
+- `src/types/content.ts` — `RAApiConfig` 인터페이스에 `year?: string` 추가
+- `src/app/api/admin/ra-api-config/route.ts` — 데이터베이스 SELECT, UPDATE 시 `year` 컬럼 취급 로직 추가
+- `src/app/api/admin/ra-events/route.ts` — RA API 프록시 요청 시 `Year` 파라미터 연동, Option 4(최근 100개)일 경우 기본값 현재 연도 자동 삽입
+- `src/app/admin/(dashboard)/events/page.tsx` — RA API Settings 섹션 내 YEAR 선택 폼 인풋 추가
+
+### Performance 모델 RA 원본 데이터 보존 확장
+
+- `migrations/0010_ra_extra_fields.sql` (신규) — `performances` 테이블에 RA 부가 정보용 컬럼 12개 추가 (`ra_venue_id`, `ra_address`, `ra_lineup_raw` 등)
+- `src/types/ra-api.ts` — `RAEventXML` 인터페이스에 `promoterId` 맵핑 추가
+- `src/types/content.ts` — `Performance` 인터페이스에 원본 보존용 선택적 필드 12개 추가 (`raVenueId`, `raLineupRaw` 등)
+- `src/utils/raApi.ts` — `convertRAEventToPerformance` 함수에서 원본 부가 정보 12개 필드를 매핑하도록 확장 (기존의 HTML 태그가 제거된 텍스트용 `lineup`과 별도로 `raLineupRaw`도 보존하여 향후 아티스트 프로필 링크 연동 대비)
+- `src/app/api/admin/performances/route.ts` — 12개 신규 필드의 DB 조회 및 INSERT 로직 추가 (총 24개 바인딩 파라미터)
+- `src/app/api/content/[lang]/route.ts` — 공개 GET API 호출 시 신규 12개 필드를 결과셋에 통합 응답
+
+---
+
 ## [Unreleased] — 2026-03-20 (iOS 모바일 개선 + 갤러리 힌트 라벨 수정)
 
 ### iOS 안전영역 배경색 수정
+
 - `app/globals.css` — `body { background-color: var(--color-bg) }` 추가 → 노치/홈 인디케이터 영역이 앱 배경색과 일치
 - `app/layout.tsx` — `<meta name="viewport" content="...viewport-fit=cover">` 추가, `<meta name="theme-color">` DB 테마값으로 동적 주입
 - `components/feature/TerminalLayout.tsx` — 모바일 헤더에 `padding-top: env(safe-area-inset-top)` 적용
 - `app/globals.css` — `.mobile-header-offset` 클래스 추가: 모바일 `calc(4rem + env(safe-area-inset-top))`, 데스크톱(lg) `0`
 
 ### 페이지 타이틀 상단 여백 축소
+
 - `components/feature/PageLayout.tsx` — `py-8` → `pt-4 pb-8 md:pt-8` (모바일 상단 여백 절반 축소)
 
 ### 로고 클릭 → Home 이동
+
 - `components/feature/TerminalLayout.tsx`
   - 데스크톱 사이드바 `<h1>` → `<Link href="/">` 전환
   - 모바일 헤더 `<h1>` → `<Link href="/">` 전환
 
 ### 갤러리 상세 키보드 힌트 라벨 수정
+
 - `(public)/gallery/[id]/page.tsx`
   - `t('gallery_navigate')` / `t('gallery_back')` — 키 미존재 시 키 문자열 그대로 반환(truthy) → `||` 폴백 미동작 문제 수정
   - `t('back')` 동일 문제 수정
@@ -29,12 +54,14 @@
 ## [Unreleased] — 2026-03-20 (Link 어드민 아이콘 선택 UI + 갤러리 상세 페이지 수정)
 
 ### Link 어드민 아이콘 선택 UI
+
 - `admin/link/page.tsx`
   - ICON CLASS 텍스트 입력 → 아이콘 선택 팝업으로 교체 (Contact 페이지와 동일한 UX 패턴)
   - `AVAILABLE_ICONS` 31종 정의: SoundCloud·Spotify·YouTube·Instagram·X·TikTok·Bandcamp·Mixcloud·Discord·RA 등 플랫폼 특화
   - 현재 선택 아이콘 미리보기 + 이름 표시, 6열 그리드 팝업, 선택 시 팝업 자동 닫힘
 
 ### 갤러리 상세 페이지 수정 3건
+
 - `(public)/gallery/[id]/page.tsx`
   - 키보드 힌트 하단 i18n 키 노출(`gallery_navigate`, `gallery_back`) → 하드코딩 문자열로 교체
   - 페이지 타이틀에 파일명(IMG_5392.PNG 등) 노출 → `caption > altText > GALLERY N` 폴백으로 변경
@@ -45,6 +72,7 @@
 ## [Unreleased] — 2026-03-20 (크리티컬 버그 3건 + Events-Gallery 개선 + 갤러리 상세 페이지)
 
 ### 갤러리 상세 페이지 신규 구현
+
 - `(public)/gallery/[id]/page.tsx` (신규)
   - `/api/gallery` 전체 목록 조회로 이전/다음 사진 네비게이션 지원
   - 키보드 단축키: `←` 이전, `→` 다음, `ESC` 목록으로
@@ -56,6 +84,7 @@
   - `selectedPhoto`, `closeLightbox`, ESC 핸들러 등 Lightbox 관련 로직 전체 제거
 
 ### Events 어드민 수정
+
 - `admin/events/page.tsx`
   - TITLE `FormInput` 누락 → 추가 (미입력 시 "New Performance"로만 표시되던 버그 수정)
   - 이벤트 카드 좌측에 포스터 썸네일(`w-20 h-20`) 표시 추가
@@ -64,16 +93,19 @@
   - DB 구 값(`Confirmed`/`Pending`) 로드 시 자동 정규화 처리
 
 ### Events 공개 페이지 포스터 표시
+
 - `(public)/events/page.tsx`
   - 이벤트 카드 좌측에 포스터 썸네일(`w-12 h-12`) 추가 (posterImageId 있을 때만 표시)
   - 카드 레이아웃 `flex items-center gap-4` 구조로 변경
 
 ### 이벤트 상세 → 사이드바 활성 상태 유지
+
 - `components/feature/TerminalLayout.tsx`
   - 네비게이션 활성 판정: `pathname === item.path` → `pathname.startsWith(item.path + '/')` 확장
   - `/events/[id]` 방문 시 사이드바 EVENTS 항목 하이라이트 유지
 
 ### Performance Status 네이밍 변경
+
 - `types/content.ts` — `'Confirmed' | 'Pending' | 'Cancelled'` → `'Announced' | 'TBA' | 'Cancelled'`
 - `utils/raApi.ts` — `convertRAEventsToPerformances`: `status: 'Confirmed'` → `status: 'Announced'`
 - `contexts/ContentContext.tsx` — 기본값 performances 4건 status `"Confirmed"` → `"Announced"` 변경
@@ -83,6 +115,7 @@
   - status 컬럼 `TEXT NOT NULL DEFAULT 'Announced'` (CHECK 제약 없음 — 향후 값 추가 시 마이그레이션 불필요)
 
 ### 테마 색상 플래시 방지 (첫 방문 포함)
+
 - `app/layout.tsx`
   - async 서버 컴포넌트로 전환
   - D1 `theme_colors` 직접 조회 → `<style>` 태그로 CSS 변수 SSR 주입 (JS 실행 전 적용)
@@ -92,6 +125,7 @@
   - 다음 방문 시 layout.tsx 인라인 스크립트가 즉시 테마 덮어쓰기 가능하도록
 
 ### 홈 방문 시 로딩 플래시 방지
+
 - `contexts/ContentContext.tsx`
   - `setAllContent(next)` + `setIsLoading(false)` 동일 `.then()` 내 배치 처리 → 기본 데이터 중간 렌더 차단
 - `components/feature/TerminalLayout.tsx`
@@ -99,12 +133,14 @@
   - 모바일 헤더 아티스트명: isLoading 중 빈 문자열 처리
 
 ### Contact 게스트북 섹션 비표시
+
 - `(public)/contact/page.tsx`
   - 게스트북 폼 전체 JSX 주석(`{/* */}`)으로 비표시 처리
   - 폼 로직(handleSubmit, state, imports)은 `//` 주석으로 보존
   - Direct Contact 섹션이 첫 번째 visible 섹션으로 승격
 
 ### 빌드 오류 수정
+
 - `(public)/events/[id]/page.tsx` — `setIsLoading(true)` useEffect 동기 호출 제거 (`react-hooks/set-state-in-effect`)
 - `admin/events/page.tsx` — `setPerformances((prev) => ...)` functional updater → 직접 참조 `performances.map(...)` (useListEditor 타입 불일치)
 - `utils/raApi.ts` — `status: 'Confirmed'` → `'Announced'` (Performance type union 변경 반영 누락)
@@ -114,12 +150,14 @@
 ## [Unreleased] — 2026-03-20 (추가 개선: 갤러리 이벤트 연결 완성 + Contact 섹션 정리)
 
 ### Contact 게스트북 섹션 비표시 처리
+
 - `(public)/contact/page.tsx`
   - 게스트북 폼 및 COMING SOON 플레이스홀더 전체를 JSX 주석(`{/* */}`)으로 감싸 비표시 처리
   - 폼 로직(`handleSubmit`, state, JSX)은 코드 주석으로 보존 → 메일링 서비스 연결 시 주석 해제만으로 즉시 활성화 가능
   - Direct Contact 섹션이 첫 번째 visible 섹션이 되어 `border-t` / `pt-8` 제거, 게스트북 활성화 시 재추가 안내 TODO 주석 포함
 
 ### Events 포스터 선택 사항 표시
+
 - `admin/events/page.tsx` — POSTER IMAGE 라벨에 "(선택)" 표시 추가
 
 ---
@@ -127,11 +165,13 @@
 ## [Unreleased] — 2026-03-20 (갤러리-이벤트 연결 누락 사항 수정)
 
 ### API 수정
+
 - `api/admin/gallery/route.ts` — GET: `linked_event_id` 응답 포함 / PUT: `linked_event_id` DB 저장 추가
 - `api/admin/gallery/youtube/route.ts` — 요청 바디에 `linkedEventId?` 추가, INSERT + 응답 반영
 - `api/content/[lang]/route.ts` — PerformanceRow에 `poster_image_id` 추가, performances 매핑에 `posterImageId` 포함
 
 ### 어드민 UI
+
 - `admin/gallery/page.tsx`
   - `Performance[]` state + fetch 추가 (`/api/admin/performances`)
   - `EventSelect` 공통 컴포넌트 추가 (이벤트 선택 드롭다운)
@@ -143,22 +183,26 @@
 ## [Unreleased] — 2026-03-20 (Terminal Info 커스텀 강화)
 
 ### DB 마이그레이션
+
 - `migrations/0007_terminal_info_extended.sql`
   - `terminal_custom_fields` 테이블 신규 생성 (id/field_key/field_value/field_type/sort_order)
   - `site_config`에 터미널 스타일 5개 컬럼 추가 (font_size/animation_speed/prompt_text/show_embed/embed_height)
 
 ### 타입 확장
+
 - `types/content.ts`
   - `TerminalCustomField` 인터페이스 추가
   - `TerminalStyleConfig` 인터페이스 추가
   - `TerminalInfo`에 `customFields?`, `style?` 필드 추가
 
 ### API 추가/확장
+
 - `api/admin/terminal-config/route.ts` (신규) — GET/PUT 터미널 통합 설정
 - `api/content/[lang]/route.ts` — `terminal_custom_fields` 배치 쿼리 + 스타일 컬럼 포함
 - `services/adminService.ts` — `fetchTerminalConfig()`, `updateTerminalConfig()` 추가
 
 ### 어드민 UI
+
 - `admin/home/page.tsx` — TERMINAL INFO 섹션 확장:
   1. 기존 URL/Description 유지
   2. STYLE OPTIONS — 폰트 크기, 애니메이션 속도, 프롬프트 텍스트, 임베드 토글 + 높이
@@ -167,6 +211,7 @@
   5. saveChanges → `updateTerminalConfig` API 통합 호출
 
 ### 공개 페이지
+
 - `(public)/page.tsx` — Terminal Info 섹션 확장:
   - 커스텀 필드 그리드 표시 (text/url/badge 타입별 렌더링)
   - `showEmbed: true` 시 iframe 임베드 렌더링
@@ -176,35 +221,42 @@
 ## [Unreleased] — 2026-03-20 (버그 수정 3건 + Events-Gallery 연결 + 이벤트 상세 페이지)
 
 ### Bug 1: 어드민 Artist Name 입력 불가 수정
+
 - `admin/home/page.tsx` — `setArtistName()`: DB 빈 상태(Name 키 항목 없음)에서 새 항목 append 처리 추가
 
 ### Bug 2: Gallery Lightbox 뷰포트 초과 수정
+
 - `(public)/gallery/page.tsx`
   - 닫기 버튼 `absolute -top-10` → flex 행 내부 배치 (뷰포트 내부 보장)
   - 미디어+캡션 래퍼에 `flex-1 min-h-0 overflow-y-auto` 추가
   - 이미지 `max-h-[80vh]` → `max-h-[70vh]` 축소
 
 ### Bug 3: 모바일 스크롤 잘림 수정
+
 - `components/feature/TerminalLayout.tsx`
   - `min-h-screen` → `min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh]` (모바일 동적 주소창 대응)
 
 ### DB 마이그레이션 추가
+
 - `migrations/0006_event_gallery_link.sql`
   - `performances.poster_image_id` 컬럼 추가
   - `gallery_photos.linked_event_id` 컬럼 추가 + 인덱스 생성
 
 ### 타입 확장
+
 - `types/content.ts`
   - `Performance.posterImageId?: string` 추가
   - `GalleryPhoto.linkedEventId?: string` 추가
 
 ### API 추가/확장
+
 - `api/events/[id]/route.ts` (신규) — 공개 이벤트 상세 GET (포스터 이미지 포함)
 - `api/admin/events/[id]/poster/route.ts` (신규) — 포스터 POST/DELETE (R2 + D1)
 - `api/admin/performances/route.ts` — `poster_image_id` 컬럼 처리 추가
 - `api/gallery/route.ts` — `linked_event_id` 조회 및 응답 포함
 
 ### 프론트엔드
+
 - `(public)/events/[id]/page.tsx` (신규) — 이벤트 상세 페이지 (포스터/날짜/장소/라인업/RA 링크)
 - `(public)/events/page.tsx` — 이벤트 카드 `<Link href=/events/{id}>` 래핑
 - `admin/(dashboard)/events/page.tsx` — 포스터 업로드/미리보기/삭제 UI 추가
@@ -216,6 +268,7 @@
 ## [Unreleased] — 2026-03-20 (어드민 Home 아티스트명 편집 기능 추가)
 
 ### `admin/home/page.tsx` — ARTIST INFO 섹션 추가
+
 - `artistInfo` 상태 관리 추가 (`useState`, `useEffect` 동기화)
 - `getArtistName()` / `setArtistName()` 헬퍼 — `Name` / `이름` 키 자동 매핑 (언어별)
 - Save Changes 시 `updateArtistInfo` API 호출 포함 → About 페이지 Artist Info Name 연동
@@ -226,26 +279,32 @@
 ## [Unreleased] — 2026-03-20 (ESLint react-hooks 코드 패턴 근본 수정)
 
 ### `crypto.randomUUID()` 전환 (react-hooks/purity)
+
 - `admin/about/page.tsx`, `admin/events/page.tsx`, `admin/link/page.tsx`, `admin/music/page.tsx`
   - `Date.now().toString()` → `crypto.randomUUID()` (렌더 중 impure 함수 호출 제거)
 
 ### `TerminalLayout.tsx` — `isTransitioning` 상태 제거 (react-hooks/set-state-in-effect)
+
 - `useState(isTransitioning)` + `useEffect([pathname])` 패턴 제거
 - `key={pathname}` 자연 재마운트로 `animate-fadeIn` 항상 적용 (동일 효과)
 
 ### `TypingText.tsx` — useEffect 내 동기 setState 제거 (react-hooks/set-state-in-effect)
+
 - `setDisplayed('')` + `setDone(false)` 는 `started: false→true` 단방향 전환 시 dead code — 제거
 
 ### `LanguageContext.tsx` — `useSyncExternalStore` 재작성 (react-hooks/set-state-in-effect)
+
 - `useState + useEffect(setLanguageState)` → `useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)`
 - localStorage를 외부 스토어로 취급 — SSR 안전 + setState-in-effect 패턴 완전 제거
 - `storage` 이벤트 수동 dispatch로 같은 탭 내 스토어 업데이트 트리거
 
 ### `ProtectedRoute.tsx` — setState 비동기 분리 (react-hooks/set-state-in-effect)
+
 - `verifySession()` 내 `setAuthenticated` + `setChecked` 제거 → `boolean` 반환으로 변경
 - 호출 측 useEffect에서 `.then(isAuth => { setState })` 패턴으로 이동
 
 ### `eslint.config.ts` — override 제거 (0 errors 달성)
+
 - `react-hooks/purity: 'off'` + `react-hooks/set-state-in-effect: 'off'` 제거
 - 코드 패턴 수정으로 근본 해결 완료
 
@@ -254,12 +313,14 @@
 ## [2026-03-19] — Cloudflare 빌드 오류 근본 수정
 
 ### TypeScript 타입 충돌 해소 (`src/lib/db.ts`)
+
 - `export interface CloudflareEnv` → `declare global { interface CloudflareEnv }` 전환
   - `@opennextjs/cloudflare`가 선언한 전역 `CloudflareEnv`를 확장하는 방식으로 변경
   - 모듈 레벨 인터페이스와 전역 인터페이스 간 타입 불일치 해소
   - `getCloudflareContext()` 반환 타입에 `DB`/`MEDIA`/`ADMIN_PASSWORD` 자동 포함 — 캐스트 불필요
 
 ### ESLint `react-hooks` 중복 플러그인 등록 + 엄격 규칙 (`eslint.config.ts`)
+
 - `import reactHooks` 및 `plugins: { 'react-hooks': reactHooks }` 제거
   - `eslint-config-next` v16+ 배열이 이미 `react-hooks` 플러그인 포함
   - 중복 등록 → "Cannot redefine plugin" 빌드 오류 발생
@@ -271,6 +332,7 @@
 ## [Unreleased] — 2026-03-19 (Cloudflare 배포 버그 수정 + UX 개선)
 
 ### 언어 초기화 버그 수정
+
 - `src/i18n/index.ts`:
   - `i18next-browser-languagedetector` 제거 — 브라우저 언어(`navigator.language`, 한국어)가 자동 감지되어 초기 언어가 한국어로 고정되던 문제 해결
   - `lng: 'en'` 고정으로 초기화, `LanguageContext` hydration 후 `changeLanguage()` 호출로 전환
@@ -280,6 +342,7 @@
   - `LanguageContext`가 단일 언어 소스로 동작
 
 ### 사이드바 네비게이션 수정
+
 - `src/components/feature/TerminalLayout.tsx`:
   - `<button onClick={() => router.push()}>` → `<Link href>` 전환 (데스크톱/모바일 모두)
   - `<Link>`는 `<a>` 태그로 렌더링되어 JS 하이드레이션 없이도 클릭 시 이동 가능 — CF Workers 정적 자산 로딩 전 네비게이션 불가 문제 해결
@@ -289,23 +352,27 @@
 - 페이지 전환 애니메이션: `isTransitioning` 상태 + `animate-fadeOut`/`animate-fadeIn` 클래스 + `key={pathname}` 적용
 
 ### Cloudflare CF 환경변수 바인딩 수정
+
 - `src/lib/db.ts`:
   - `require('@opennextjs/cloudflare')` dynamic require → `import { getCloudflareContext }` 정적 import 전환
   - 기존 dynamic require가 CF Workers 번들에서 실패 시 `null` 반환 → `ADMIN_PASSWORD = ''` 폴백 → 어드민 로그인 불가 원인 제거
   - `@opennextjs/cloudflare` v1.17.1 실제 export명: `getCloudflareContext` (이전 코드의 `getRequestContext`는 미존재)
 
 ### ESLint 빌드 오류 수정
+
 - `eslint.config.ts`:
   - `eslint-config-next` v16+가 flat config에서 배열 반환 → 직접 포함 시 ESLint "Unexpected array" 오류 발생
   - `Array.isArray` 체크 후 스프레드 처리로 해결
 
 ### Cloudflare 배포 연동 수정
+
 - `wrangler.json`:
   - `"vars": { "ADMIN_PASSWORD": "" }` → `"vars": {}` — 빈 값 vars가 Cloudflare Dashboard Variable을 덮어쓰던 문제 제거
   - `"main": ".open-next/worker.js"` 추가 — `wrangler versions upload` 진입점 지정
   - `"assets": { "directory": ".open-next/assets" }` 추가 — 정적 자산(`_next/static/`) 404 해결
 
 ### 갤러리 + 레이아웃 통일
+
 - `src/app/(public)/gallery/page.tsx`: 커스텀 헤더 → `PageLayout` 래퍼로 교체 (다른 페이지와 동일 구조)
 - `src/components/feature/PageLayout.tsx`: `mx-auto` 제거 → 좌측 정렬 적용
 
@@ -409,6 +476,7 @@
 ## [Unreleased] — 2026-03-18 (갤러리 기능 구현 — Phase 4-f)
 
 ### 갤러리 페이지 신규 구현
+
 - `migrations/0003_gallery.sql`: `gallery_photos` 테이블 (id·filename·mime_type·size_bytes·alt_text·caption·sort_order·created_at)
 - `src/types/content.ts`: `GalleryPhoto` 인터페이스 추가
 - **API 라우트 5개 신규:**
@@ -433,6 +501,7 @@
 ## [Unreleased] — 2026-03-18 (raApiConfig D1 연동)
 
 ### raApiConfig D1 영속화
+
 - `src/app/api/admin/ra-api-config/route.ts` 신규 생성 (`GET` / `PUT`)
   - `ra_api_config` 테이블 단일 행(id=1) 조회·업데이트
 - `src/services/adminService.ts`: `fetchRaApiConfig`, `updateRaApiConfig` 함수 추가
@@ -444,11 +513,13 @@
 ## [Unreleased] — 2026-03-18 (기타 개선: i18n + 세션 만료 처리)
 
 ### events/page.tsx i18n 전환
+
 - `개의 이벤트를 가져왔습니다` → `t('events_sync_success') + 카운트`
 - `RA API 호출 중 오류가 발생했습니다` → `t('events_sync_error')`
 - `공연 일정 및 이벤트 관리` → `t('admin_events_subtitle')`
 
 ### 어드민 세션 만료 처리
+
 - `ProtectedRoute.tsx`: 5분 주기 세션 재검증 (`setInterval`)
   - 초기 마운트: 세션 유효성 확인 (기존 동작 유지)
   - 이후 5분마다: `/api/auth/session` 재검증 → 만료/실패 시 `/admin` 리다이렉트
@@ -458,11 +529,13 @@
 ## [Unreleased] — 2026-03-18 (Phase 4-e + 어드민 페이지 D1 API 연동)
 
 ### Phase 4-e: 데이터 마이그레이션 라우트
+
 - `src/app/api/admin/migrate/route.ts` — `POST /api/admin/migrate`
   - `MultiLanguageContent` JSON 수신 → 전체 테이블 초기화 + D1 재삽입
   - batch 90개 청크 분할 실행 (D1 100개 제한 대응)
 
 ### 어드민 페이지 D1 API 연동
+
 - 6개 어드민 페이지 `saveChanges` / `handleSave`: `adminService` 호출 + `Promise.allSettled` 패턴
   - home: `updateHomeSections` + `updatePageMeta` + `updateTerminalInfo`
   - about: `updateArtistInfo` + `updateAboutSections` (useAdminForm `handleSave` 교체)
@@ -480,10 +553,12 @@
 ### D1 콘텐츠 API 구현 (Phase 4-b)
 
 #### 공개 API
+
 - `src/app/api/content/[lang]/route.ts` — `GET`: D1 16테이블 batch 조회 → `ContentData` 반환
   - DB 미사용 환경: 503 반환 (ContentContext 기본값 폴백)
 
 #### 어드민 CRUD API (모두 `requireAdminSession()` 적용)
+
 - `src/app/api/admin/artist-info/route.ts` — `GET` / `PUT`
 - `src/app/api/admin/about-sections/route.ts` — `GET` / `PUT` (3테이블 batch)
 - `src/app/api/admin/page-meta/route.ts` — `GET` / `PUT`
@@ -497,12 +572,14 @@
 - `src/app/api/admin/site-config/route.ts` — `GET` / `PUT` (단일행 UPDATE)
 
 ### 서비스 계층 구현 (Phase 4-c)
+
 - `src/services/apiClient.ts` — fetch 래퍼 (`apiGet` / `apiPut` / `apiPost`)
 - `src/services/contentService.ts` — `fetchContent(lang)`
 - `src/services/adminService.ts` — 어드민 API 전체 CRUD 함수
 - `src/services/authService.ts` — `login` / `logout` / `checkSession`
 
 ### ContentContext API 전환 (Phase 4-d)
+
 - `src/contexts/ContentContext.tsx`: localStorage 제거 → `contentService.fetchContent()` 호출
   - 마운트 시 en/ko 병렬 fetch → 성공 시 D1 데이터 적용, 실패 시 기본값 유지
   - `migrateContent()` / `loadFromStorage()` 제거
@@ -515,17 +592,20 @@
 ### 동적 섹션 시스템 및 페이지 메타 커스텀 구현
 
 #### 타입 변경 (`src/types/content.ts`)
+
 - `Biography`, `DesignPhilosophy` 인터페이스 제거
 - `DynamicSectionType`, `DynamicSection` 타입 추가 — About 섹션 동적 관리
 - `HomePageMeta`, `MusicPageMeta`, `EventsPageMeta`, `ContactPageMeta`, `LinkPageMeta`, `PageMeta` 타입 추가
 - `ContentData`: `biography`/`musicalPhilosophy`/`designPhilosophy` 제거 → `aboutSections: DynamicSection[]`, `pageMeta: PageMeta` 추가
 
 #### 콘텍스트 변경 (`src/contexts/ContentContext.tsx`)
+
 - EN/KO 기본값: `aboutSections` 3개 (bio/musical-phil/design-phil) + `pageMeta` 전체 추가
 - `migrateContent`: 구형 biography/musicalPhilosophy/designPhilosophy → `aboutSections` 자동 변환
 - `pageMeta` 누락 키 deep merge 처리
 
 #### 공개 페이지
+
 - `about/page.tsx`: `order` 기준 정렬 후 `DynamicSection` 동적 렌더링 (paragraphs / philosophy-items)
 - `page.tsx`: `pageMeta.home.navTitle` 적용 (i18n fallback 유지)
 - `music/page.tsx`: `pageMeta.music.title/subtitle` 적용
@@ -534,6 +614,7 @@
 - `link/page.tsx`: `pageMeta.link.title/subtitle/terminalTitle` 적용
 
 #### 어드민 페이지
+
 - `admin/about/page.tsx`: 완전 재작성 — ADD SECTION 드롭다운, 섹션 타입/타이틀 변경, ↑↓ 순서 변경, DELETE (최소 1개 유지)
 - `admin/home/page.tsx`: PAGE SETTINGS 카드 (navTitle)
 - `admin/music/page.tsx`: PAGE SETTINGS 카드 (title, subtitle)
@@ -542,6 +623,7 @@
 - `admin/link/page.tsx`: PAGE SETTINGS 카드 (title, subtitle, terminalTitle)
 
 #### D1 마이그레이션
+
 - `migrations/0002_dynamic_content.sql`: `about_sections`, `about_section_paragraphs`, `about_section_philosophy_items`, `page_meta` 테이블 신규
 
 ---
@@ -633,10 +715,10 @@
 
 - `package.json`: next@15 추가, vite/react-router-dom/unplugin-auto-import/eslint-plugin-react-refresh 제거
 - `tsconfig.json`: jsx: preserve, plugins: next, app/ include — Next.js 호환 tsconfig로 대체
-- `docker-compose.yml`: .next 익명 볼륨 추가, 환경변수 VITE_ → NEXT_PUBLIC_ 전환
-- `.env.example`: VITE_ 접두사 제거, ADMIN_PASSWORD 서버사이드 전용
+- `docker-compose.yml`: .next 익명 볼륨 추가, 환경변수 VITE* → NEXT_PUBLIC* 전환
+- `.env.example`: VITE\_ 접두사 제거, ADMIN_PASSWORD 서버사이드 전용
 - `.gitignore`: .next/ 추가
-- `tailwind.config.ts`: app/**/*.{ts,tsx} content 경로 추가
+- `tailwind.config.ts`: app/\*_/_.{ts,tsx} content 경로 추가
 - `eslint.config.ts`: autoImportGlobals, react-refresh, route-element-jsx 제거
 - `src/i18n/local/index.ts`: import.meta.glob → 정적 import (en, ko)
 - `src/constants/site.ts`: VITE_TERMINAL_URL → NEXT_PUBLIC_TERMINAL_URL
