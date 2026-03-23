@@ -51,11 +51,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 현재 최대 sort_order 조회
-    const maxOrderRow = await db
-      .prepare('SELECT MAX(sort_order) as max_order FROM gallery_photos')
-      .first<{ max_order: number | null }>();
-    let nextOrder = (maxOrderRow?.max_order ?? -1) + 1;
+    // 현재 최소 sort_order 조회하여 그보다 작은 값 부여 (최신 항목이 앞으로 오도록)
+    const minOrderRow = await db
+      .prepare('SELECT MIN(sort_order) as min_order FROM gallery_photos')
+      .first<{ min_order: number | null }>();
+    let nextOrder = (minOrderRow?.min_order ?? 1) - 1;
 
     const uploaded: GalleryPhoto[] = [];
 

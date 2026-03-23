@@ -56,7 +56,7 @@ export async function GET() {
 
   try {
     const [photosResult, settingsResult] = await db.batch([
-      db.prepare('SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at ASC'),
+      db.prepare('SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at DESC'),
       db.prepare('SELECT * FROM gallery_settings WHERE id = 1'),
     ]);
 
