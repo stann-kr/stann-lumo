@@ -31,7 +31,7 @@ const LinkPage = () => {
             href={terminalInfo.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`group relative flex items-center justify-between w-full border hover:bg-[var(--color-secondary)]/5 transition-all duration-300 ${cardPaddingClass} overflow-hidden cursor-pointer`}
+            className={`group relative flex items-center justify-between w-full border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 ${cardPaddingClass} overflow-hidden cursor-pointer`}
             style={borderMid}
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -71,7 +71,7 @@ const LinkPage = () => {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`group relative overflow-hidden border ${cardPaddingClass} hover:bg-[var(--color-secondary)]/3 transition-all duration-300 cursor-pointer`}
+              className={`group relative overflow-hidden border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer ${cardPaddingClass}`}
               style={borderFaint}
             >
               <div className="relative space-y-4">

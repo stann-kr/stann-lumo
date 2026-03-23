@@ -25,7 +25,7 @@ const AboutPage = () => {
       {artistInfoItems.length > 0 && (
         <div className={`grid grid-cols-2 ${infoColsClass} ${infoGapClass}`}>
           {artistInfoItems.map((info) => (
-            <div key={info.id} className="p-4 border" style={borderFaint}>
+            <div key={info.id} className="p-4 border bg-surface" style={borderFaint}>
               <p className="text-sm text-[var(--color-accent)] mb-2 tracking-widest">{info.key}</p>
               <p className="text-base text-[var(--color-secondary)] font-medium">{info.value}</p>
             </div>

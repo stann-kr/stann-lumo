@@ -56,7 +56,8 @@ body {
 @layer components {
   /* HUD Panels */
   .hud-panel {
-    @apply border border-[var(--color-muted)] bg-transparent relative;
+    @apply border border-[var(--color-muted)] relative;
+    background-color: color-mix(in srgb, var(--color-bg) 80%, transparent);
   }
   
   /* Corner Crosshairs */
