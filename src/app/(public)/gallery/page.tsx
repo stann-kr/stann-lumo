@@ -154,13 +154,14 @@ const GalleryPage = () => {
     const fetchGallery = async () => {
       try {
         const res = await fetch('/api/gallery');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as { success: boolean; data: GalleryData };
         if (json.success) {
           setPhotos(json.data.photos);
           setSettings(json.data.settings);
         }
       } catch {
-        // 조용히 실패 — 빈 갤러리 표시
+        // 네트워크 오류 시 빈 갤러리 표시
       } finally {
         setIsLoading(false);
       }

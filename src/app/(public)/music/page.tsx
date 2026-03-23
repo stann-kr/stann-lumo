@@ -20,12 +20,12 @@ const MusicPage = () => {
       <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
         {/* Header Row */}
         <div className="hidden md:flex items-center px-4 py-2 bg-surface font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase">
-          <div className="w-16">ID</div>
-          <div className="flex-1">TRACK_TITLE</div>
-          <div className="w-24">TYPE</div>
-          <div className="w-20">DUR</div>
-          <div className="w-16">YR</div>
-          <div className="w-32 text-right">ACTION</div>
+          <div className="w-16">{t('music_col_id')}</div>
+          <div className="flex-1">{t('music_col_title')}</div>
+          <div className="w-24">{t('music_col_type')}</div>
+          <div className="w-20">{t('music_col_dur')}</div>
+          <div className="w-16">{t('music_col_yr')}</div>
+          <div className="w-32 text-right">{t('music_col_action')}</div>
         </div>
 
         {musicContent.tracks.map((track, idx) => {

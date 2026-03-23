@@ -2,6 +2,51 @@
 
 ---
 
+## [Unreleased] — 2026-03-23 (3D 씬 개선 및 홈 UI 개편)
+
+### 3D 배경 우주선 DB 연동 수정
+
+- `src/components/feature/Scene3D.tsx` — `VESSEL_ORBITAL_SLOTS` 고정 10슬롯 → `VESSEL_ORBITAL_POOL` 최대 20슬롯으로 확장
+- 트랙이 없는 슬롯("OBJ-XX")을 표시하지 않도록 변경 — DB 트랙 수만큼만 vessel 렌더링
+- 비ASCII 타입명(한국어 등) 처리: `replace(/[^\x20-\x7E]/g, '')` 후 빈 문자열이면 'TRK' 폴백
+- 비ASCII 제목 처리: ASCII 정제 후 빈 문자열이면 플랫폼명, 그것도 없으면 인덱스 폴백
+- 궤도 파라미터 모듈 레벨 `Math.random()` 복원 — 페이지 로드마다 랜덤 시작 위치
+
+### 홈 네비게이션 UI 개편
+
+- `src/app/(public)/page.tsx` — 네비게이션 그리드 카드(solid bg) → 컴팩트 리스트(투명 bg)로 교체
+- `PageSection` 래퍼 제거, 배경 없는 단순 border 리스트 구조 적용
+- 각 항목: `[01] SECTION_TITLE` 한 줄 형태, 설명은 md+ 호버 시 표시
+- 3D 배경 그래픽 노출 범위 확대
+
+---
+
+## [Unreleased] — 2026-03-23 (4개 버그 수정)
+
+### Bug 1: KO 언어 설정 시 영문 텍스트 노출 수정
+
+- `src/components/feature/TerminalLayout.tsx` — `NAV_ITEMS` 모듈 레벨 상수를 컴포넌트 내부로 이동, `useTranslation()` 적용하여 네비게이션 레이블 다국어 처리
+- `src/app/(public)/music/page.tsx` — 테이블 헤더(ID, TRACK_TITLE, TYPE, DUR, YR, ACTION) `t()` 함수 처리
+- `src/i18n/local/ko/index.ts` + `src/i18n/local/en/index.ts` — `music_col_*` 키 6개, `nav_open_menu`/`nav_close_menu` 키 추가
+
+### Bug 2: 콘텐츠 카드 상하 마진 불일치 수정
+
+- `src/components/base/PageSection.tsx` — `mb-16` 하드코딩 제거, 부모 `PageLayout`의 `space-y-*` spacing에 위임
+- `src/app/(public)/page.tsx` — 내부 `space-y-12` → `space-y-10` 통일
+
+### Bug 3: 갤러리 상세 페이지 에러 처리 강화
+
+- `src/app/(public)/gallery/[id]/page.tsx` — `fetchError` state 추가, `res.ok` 체크 추가, API 실패 시 NOT FOUND 대신 에러 메시지 렌더링
+- `src/app/(public)/gallery/page.tsx` — `res.ok` 체크 추가
+- `src/i18n/local/ko/index.ts` + `src/i18n/local/en/index.ts` — `gallery_back`, `gallery_load_error` 키 추가
+
+### Bug 4: 기타 버그 수정
+
+- `src/app/api/gallery/route.ts` — `ORDER BY sort_order DESC` → `ASC` 수정, 관리자 정렬 순서 반영
+- `src/components/feature/TerminalLayout.tsx` — 모바일 햄버거 버튼에 `aria-label`, `aria-expanded` 접근성 속성 추가
+
+---
+
 ## [Unreleased] — 2026-03-23 (디자인 시스템 전면 점검 및 버그 수정)
 
 ### Phase 1: 버그 및 잔재 코드 제거

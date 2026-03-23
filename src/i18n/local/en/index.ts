@@ -8,6 +8,8 @@ export default {
   nav_contact: 'Contact',
   nav_link: 'Link',
   nav_admin: 'Admin',
+  nav_open_menu: 'Open menu',
+  nav_close_menu: 'Close menu',
   
   // Page titles
   page_home_title: 'Artist Terminal',
@@ -60,6 +62,12 @@ export default {
   music_title: 'MUSIC',
   music_subtitle: 'TRACKS & MIXES',
   music_note: 'All tracks are available for streaming on SoundCloud and Mixcloud. For licensing inquiries, please visit the Booking section.',
+  music_col_id: 'ID',
+  music_col_title: 'TRACK_TITLE',
+  music_col_type: 'TYPE',
+  music_col_dur: 'DUR',
+  music_col_yr: 'YR',
+  music_col_action: 'ACTION',
   
   // Events page
   events_title: 'EVENTS',
@@ -192,4 +200,6 @@ export default {
   gallery_subtitle: 'A visual archive',
   gallery_empty: 'No photos yet',
   gallery_lightbox_close: 'to close',
+  gallery_back: 'BACK TO GALLERY',
+  gallery_load_error: 'Failed to load gallery. Please try again.',
 };

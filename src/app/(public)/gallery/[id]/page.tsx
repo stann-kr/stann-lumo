@@ -16,14 +16,18 @@ const GalleryPhotoPage = () => {
 
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     fetch('/api/gallery')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((json: { success: boolean; data: GalleryData }) => {
         if (json.success) setPhotos(json.data.photos);
       })
-      .catch(() => {})
+      .catch(() => setFetchError(true))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -56,6 +60,25 @@ const GalleryPhotoPage = () => {
     );
   }
 
+  if (fetchError) {
+    return (
+      <PageLayout title="ERROR">
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--color-secondary)]/60 tracking-widest">
+            {t('gallery_load_error')}
+          </p>
+          <Link
+            href="/gallery"
+            className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
+          >
+            <i className="ri-arrow-left-line"></i>
+            {t('gallery_back')}
+          </Link>
+        </div>
+      </PageLayout>
+    );
+  }
+
   if (!photo) {
     return (
       <PageLayout title="NOT FOUND">
@@ -64,7 +87,7 @@ const GalleryPhotoPage = () => {
           className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
         >
           <i className="ri-arrow-left-line"></i>
-          BACK TO GALLERY
+          {t('gallery_back')}
         </Link>
       </PageLayout>
     );

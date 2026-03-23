@@ -8,6 +8,8 @@ export default {
   nav_contact: '연락',
   nav_link: '링크',
   nav_admin: '관리자',
+  nav_open_menu: '메뉴 열기',
+  nav_close_menu: '메뉴 닫기',
   
   // Page titles
   page_home_title: '아티스트 터미널',
@@ -60,6 +62,12 @@ export default {
   music_title: '음악',
   music_subtitle: '트랙 & 믹스',
   music_note: '모든 트랙은 SoundCloud 및 Mixcloud에서 스트리밍할 수 있습니다. 라이선스 문의는 Booking 섹션을 방문해주세요.',
+  music_col_id: 'ID',
+  music_col_title: '트랙명',
+  music_col_type: '유형',
+  music_col_dur: '길이',
+  music_col_yr: '연도',
+  music_col_action: '링크',
   
   // Events page
   events_title: '이벤트',
@@ -192,4 +200,6 @@ export default {
   gallery_subtitle: '비주얼 아카이브',
   gallery_empty: '업로드된 사진이 없습니다',
   gallery_lightbox_close: '닫기',
+  gallery_back: '갤러리로 돌아가기',
+  gallery_load_error: '갤러리를 불러오지 못했습니다. 다시 시도해주세요.',
 };

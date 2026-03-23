@@ -75,10 +75,11 @@ function createAsteroidData(count: number): AsteroidData[] {
   }));
 }
 
-/** 라벨 없는 기본 궤도 슬롯 (최대 10기) */
-const VESSEL_ORBITAL_SLOTS = Array.from({ length: 10 }, () => ({
+/** 궤도 슬롯 풀 — 최대 20기 (트랙 수만큼 사용)
+ *  모듈 레벨 Math.random(): 페이지 로드마다 다른 랜덤값, 동일 렌더 내 안정적 */
+const VESSEL_ORBITAL_POOL = Array.from({ length: 20 }, () => ({
   radius: 15 + Math.random() * 16,
-  speed: 0.0012 + Math.random() * 0.002,  // 느린 우주선 공전
+  speed: 0.0012 + Math.random() * 0.002,
   phase: Math.random() * Math.PI * 2,
   inclination: (Math.random() - 0.5) * 1.0,
   node: Math.random() * Math.PI * 2,
@@ -334,20 +335,18 @@ export default function Scene3D() {
 
   const chromaticOffset = useMemo(() => new THREE.Vector2(0.004, 0.004), []);
 
-  // 트랙 데이터를 우주선 슬롯에 매핑
-  // — 분류 코드: track.type 앞 3자(대문자) + 인덱스 2자리
-  // — 부제목: track.title 앞 11자(대문자) 절삭
+  // DB 트랙 수에 맞춰 vessel 생성 — 트랙이 없는 슬롯은 표시하지 않음
+  // — 분류 코드: track.type 앞 ASCII 3자(대문자) + 인덱스, 비ASCII 타입은 'TRK' 사용
+  // — 부제목: track.title 앞 11자(ASCII 정제 후), 비ASCII는 플랫폼명 사용
   const vesselData = useMemo<VesselData[]>(() => {
-    const tracks = musicContent.tracks.slice(0, VESSEL_ORBITAL_SLOTS.length);
-    return VESSEL_ORBITAL_SLOTS.map((slot, i) => {
-      const track = tracks[i];
-      const prefix = track
-        ? track.type.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3) || 'OBJ'
-        : 'OBJ';
+    const tracks = musicContent.tracks.slice(0, VESSEL_ORBITAL_POOL.length);
+    return tracks.map((track, i) => {
+      const slot = VESSEL_ORBITAL_POOL[i];
+      const asciiType = track.type.replace(/[^\x20-\x7E]/g, '').trim();
+      const prefix = asciiType.replace(/\s+/g, '').toUpperCase().slice(0, 3) || 'TRK';
       const idx = String(i + 1).padStart(2, '0');
-      const sublabel = track
-        ? track.title.toUpperCase().slice(0, 11)
-        : `UNKNOWN-${idx}`;
+      const asciiTitle = track.title.replace(/[^\x20-\x7E]/g, '').trim();
+      const sublabel = (asciiTitle.toUpperCase().slice(0, 11) || track.platform?.toUpperCase().slice(0, 11) || `TRACK-${idx}`);
       return {
         ...slot,
         label: `${prefix}-${idx}`,

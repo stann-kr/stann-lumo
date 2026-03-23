@@ -37,7 +37,7 @@ export default function PageSection({
   className = '',
 }: PageSectionProps) {
   return (
-    <section className={`mb-16 relative ${className}`}>
+    <section className={`relative ${className}`}>
       <div className="flex items-center gap-3 mb-6 relative">
         <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-4 h-px bg-[var(--color-muted)] hidden md:block"></div>
         {icon && (

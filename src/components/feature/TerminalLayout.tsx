@@ -3,6 +3,7 @@ import { useState, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useContent } from '../../contexts/ContentContext';
 import { SITE_NAME, SITE_VERSION, TERMINAL_URL } from '../../constants/site';
@@ -14,22 +15,23 @@ interface TerminalLayoutProps {
   children: ReactNode;
 }
 
-const NAV_ITEMS = [
-  { label: 'Home', path: '/' },
-  { label: 'About', path: '/about' },
-  { label: 'Music', path: '/music' },
-  { label: 'Events', path: '/events' },
-  { label: 'Gallery', path: '/gallery' },
-  { label: 'Contact', path: '/contact' },
-  { label: 'Link', path: '/link' },
-  { label: 'TERMINAL', path: TERMINAL_URL, external: true },
-];
-
 const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { t } = useTranslation();
   const { language, toggleLanguage } = useLanguage();
   const { content, isLoading } = useContent();
+
+  const NAV_ITEMS = [
+    { label: t('nav_home'), path: '/' },
+    { label: t('nav_about'), path: '/about' },
+    { label: t('nav_music'), path: '/music' },
+    { label: t('nav_events'), path: '/events' },
+    { label: t('nav_gallery'), path: '/gallery' },
+    { label: t('nav_contact'), path: '/contact' },
+    { label: t('nav_link'), path: '/link' },
+    { label: 'TERMINAL', path: TERMINAL_URL, external: true },
+  ];
 
   const artistName = (() => {
     if (!Array.isArray(content.artistInfo)) return SITE_NAME;
@@ -163,6 +165,8 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="w-10 h-10 flex flex-col items-center justify-center gap-[4px] cursor-pointer"
+            aria-label={mobileMenuOpen ? t('nav_close_menu') : t('nav_open_menu')}
+            aria-expanded={mobileMenuOpen}
           >
             <span className={`w-5 h-[1px] bg-[var(--color-primary)] transition-transform duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[5px]' : ''}`}></span>
             <span className={`w-5 h-[1px] bg-[var(--color-primary)] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>

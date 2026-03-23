@@ -3,15 +3,11 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
-import PageSection from '@/components/base/PageSection';
-import { PADDING_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 export default function HomePage() {
   const { t } = useTranslation();
   const { content, displaySettings } = useContent();
   const settings = displaySettings.home;
-  const navColsClass = MD_GRID_COLS_MAP[settings.navGridColumns];
-  const navPaddingClass = PADDING_MAP[settings.navCardPadding];
 
   const artistName = Array.isArray(content.artistInfo)
     ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
@@ -25,45 +21,37 @@ export default function HomePage() {
       title={nameParts[0] ?? artistName}
       titleExtra={nameParts.slice(1)}
     >
-      <div className="space-y-12">
-        {/* Navigation Grid */}
-        <PageSection title={content.pageMeta?.home?.navTitle || t('home_nav_title') || 'NAVIGATION'} icon="ri-compass-3-line">
-          <div className={`grid grid-cols-1 ${navColsClass} gap-px bg-[var(--color-muted)] border border-[var(--color-muted)] p-[1px]`}>
+      <div className="space-y-10">
+        {/* Navigation — 컴팩트 리스트 (배경 최소화로 3D 백그라운드 노출) */}
+        <div>
+          <p className="font-mono text-xs text-[var(--color-accent)] tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-1 h-1 bg-[var(--color-accent)] animate-pulse"></span>
+            {content.pageMeta?.home?.navTitle || t('home_nav_title')}
+          </p>
+          <div className="border border-[var(--color-muted)]/30">
             {content.homeSections.map((section, index) => {
               const numStr = (index + 1).toString().padStart(2, '0');
               return (
                 <Link
                   key={index}
                   href={section.path}
-                  className={`group bg-surface relative overflow-hidden transition-all duration-300 cursor-pointer ${navPaddingClass}`}
+                  className="group flex items-center gap-4 px-4 py-3 border-b border-[var(--color-muted)]/20 last:border-b-0 hover:bg-[var(--color-accent)]/5 transition-all duration-200 relative"
                 >
-                  {/* Hover Scanline Effect */}
-                  <div className="absolute inset-0 bg-[var(--color-accent)] opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"></div>
-                  
-                  <div className="flex items-start justify-between relative z-10">
-                    <div className="space-y-4 flex-1">
-                      <div className="flex items-center gap-4">
-                        <div className="font-mono text-[10px] text-[var(--color-muted)] tracking-widest group-hover:text-[var(--color-accent)] transition-colors">
-                          [{numStr}]
-                        </div>
-                        <h2 className="text-base font-mono uppercase tracking-[0.2em] text-[var(--color-primary)]">
-                          {section.title}
-                        </h2>
-                      </div>
-                      <p className="font-mono text-sm leading-relaxed text-[var(--color-secondary)] opacity-50 group-hover:opacity-80 transition-opacity">
-                        {section.description}
-                      </p>
-                    </div>
-                    
-                    <div className="w-8 h-8 flex items-center justify-center border border-[var(--color-muted)] group-hover:border-[var(--color-accent)] group-hover:bg-[var(--color-accent)]/10 transition-all duration-300">
-                      <i className="ri-arrow-right-line text-sm text-[var(--color-muted)] group-hover:text-[var(--color-accent)]" />
-                    </div>
-                  </div>
+                  <span className="font-mono text-[9px] text-[var(--color-muted)] tracking-widest group-hover:text-[var(--color-accent)] transition-colors shrink-0">
+                    [{numStr}]
+                  </span>
+                  <h2 className="font-mono text-sm uppercase tracking-[0.2em] text-[var(--color-primary)] shrink-0">
+                    {section.title}
+                  </h2>
+                  <p className="font-mono text-xs text-[var(--color-secondary)]/30 group-hover:text-[var(--color-secondary)]/60 transition-all flex-1 truncate hidden md:block">
+                    {section.description}
+                  </p>
+                  <i className="ri-arrow-right-line text-xs text-[var(--color-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-0.5 transition-all shrink-0" />
                 </Link>
               );
             })}
           </div>
-        </PageSection>
+        </div>
 
         {/* Terminal Info */}
         {settings.showTerminalInfo && content.terminalInfo.url && (
