@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import type { GalleryPhoto, GalleryData } from '@/types/content';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { createBorderFaint, createBorderMid, createBorderAccent } from '@/utils/colorMix';
 import PageLayout from '@/components/feature/PageLayout';
 
 const GalleryPhotoPage = () => {
@@ -13,6 +13,7 @@ const GalleryPhotoPage = () => {
   const { t } = useTranslation();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
+  const borderAccent = createBorderAccent();
 
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,8 +123,8 @@ const GalleryPhotoPage = () => {
         </Link>
         <div className="flex items-center gap-4">
           {/* 카테고리 뱃지 */}
-          <span className="inline-flex items-center gap-1.5 text-[10px] tracking-widest px-2 py-1 border"
-            style={{ borderColor: 'color-mix(in srgb, var(--color-accent) 30%, transparent)', color: 'var(--color-accent)', opacity: 0.7 }}>
+          <span className="inline-flex items-center gap-1.5 text-[10px] tracking-widest px-2 py-1 border text-[var(--color-accent)] opacity-70"
+            style={borderAccent}>
             <i className={`${categoryIcon} text-xs`}></i>
             {categoryLabel}
           </span>

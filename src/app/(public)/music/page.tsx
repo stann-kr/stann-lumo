@@ -65,7 +65,8 @@ const MusicPage = () => {
                   href={track.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 border border-[var(--color-muted)] px-3 py-1 font-mono text-xs tracking-widest text-[var(--color-muted)] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-all duration-300"
+                  className="inline-flex items-center gap-2 border px-3 py-1 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-50 hover:opacity-100 hover:bg-[var(--color-accent)]/10 transition-all duration-300"
+                  style={borderFaint}
                 >
                   <i className="ri-play-fill text-xs"></i>
                   {track.platform.toUpperCase()}

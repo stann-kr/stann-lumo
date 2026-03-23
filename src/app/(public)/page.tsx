@@ -3,11 +3,13 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
+import { createBorderFaint } from '@/utils/colorMix';
 
 export default function HomePage() {
   const { t } = useTranslation();
   const { content, displaySettings } = useContent();
   const settings = displaySettings.home;
+  const borderFaint = createBorderFaint();
 
   const artistName = Array.isArray(content.artistInfo)
     ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
@@ -28,14 +30,15 @@ export default function HomePage() {
             <span className="w-1 h-1 bg-[var(--color-accent)] animate-pulse"></span>
             {content.pageMeta?.home?.navTitle || t('home_nav_title')}
           </p>
-          <div className="border border-[var(--color-muted)]/30">
+          <div className="border" style={borderFaint}>
             {content.homeSections.map((section, index) => {
               const numStr = (index + 1).toString().padStart(2, '0');
               return (
                 <Link
                   key={index}
                   href={section.path}
-                  className="group flex items-center gap-4 px-4 py-3 border-b border-[var(--color-muted)]/20 last:border-b-0 hover:bg-[var(--color-accent)]/5 transition-all duration-200 relative"
+                  className="group flex items-center gap-4 px-4 py-3 border-b last:border-b-0 hover:bg-[var(--color-accent)]/5 transition-all duration-200 relative"
+                  style={borderFaint}
                 >
                   <span className="font-mono text-[9px] text-[var(--color-muted)] tracking-widest group-hover:text-[var(--color-accent)] transition-colors shrink-0">
                     [{numStr}]
