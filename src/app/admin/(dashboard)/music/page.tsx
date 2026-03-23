@@ -86,7 +86,7 @@ const AdminMusicPage = () => {
       platform: 'SoundCloud',
       link: 'https://',
     };
-    addTrack(newTrack);
+    setTracks([newTrack, ...tracks]);
   };
 
   const updateTrackField = (index: number, field: keyof Track, value: string) => {

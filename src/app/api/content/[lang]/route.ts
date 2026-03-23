@@ -178,26 +178,7 @@ export async function GET(
   }
 
   try {
-    const [
-      artistInfoRes,
-      aboutSectionsRes,
-      aboutParaRes,
-      aboutPhilRes,
-      pageMetaRes,
-      homeSectionsRes,
-      tracksRes,
-      performancesRes,
-      eventsInfoRes,
-      setDurationsRes,
-      techReqRes,
-      linkPlatformsRes,
-      contactInfoRes,
-      themeColorsRes,
-      raApiConfigRes,
-      siteConfigRes,
-      displaySettingsRes,
-      terminalCustomFieldsRes,
-    ] = await db.batch([
+    const queries = [
       db.prepare('SELECT * FROM artist_info WHERE lang = ? ORDER BY sort_order').bind(lang),
       db.prepare('SELECT * FROM about_sections WHERE lang = ? ORDER BY section_order').bind(lang),
       db.prepare('SELECT * FROM about_section_paragraphs WHERE lang = ? ORDER BY item_order').bind(lang),
@@ -216,26 +197,64 @@ export async function GET(
       db.prepare('SELECT * FROM site_config WHERE id = 1'),
       db.prepare('SELECT * FROM display_settings'),
       db.prepare('SELECT * FROM terminal_custom_fields ORDER BY sort_order ASC'),
-    ]);
+    ];
 
-    const artistInfoRows    = (artistInfoRes.results   as ArtistInfoRow[]);
-    const aboutSectionRows  = (aboutSectionsRes.results as AboutSectionRow[]);
-    const aboutParaRows     = (aboutParaRes.results     as AboutSectionParagraphRow[]);
-    const aboutPhilRows     = (aboutPhilRes.results     as AboutSectionPhilosophyItemRow[]);
-    const pageMetaRows      = (pageMetaRes.results      as PageMetaRow[]);
-    const homeSectionRows   = (homeSectionsRes.results  as HomeSectionRow[]);
-    const trackRows         = (tracksRes.results        as TrackRow[]);
-    const performanceRows   = (performancesRes.results  as PerformanceRow[]);
-    const eventsInfoRow     = (eventsInfoRes.results[0] as EventsInfoRow | undefined);
-    const setDurationRows   = (setDurationsRes.results  as EventsListRow[]);
-    const techReqRows       = (techReqRes.results       as EventsListRow[]);
-    const linkPlatformRows  = (linkPlatformsRes.results as LinkPlatformRow[]);
-    const contactInfoRows   = (contactInfoRes.results   as ContactInfoRow[]);
-    const themeRow              = (themeColorsRes.results[0]   as ThemeColorsRow | undefined);
-    const raRow                 = (raApiConfigRes.results[0]   as RAApiConfigRow | undefined);
-    const siteRow               = (siteConfigRes.results[0]    as SiteConfigRow | undefined);
-    const displaySettingsRows   = (displaySettingsRes.results  as DisplaySettingsRow[]);
-    const terminalFieldRows     = (terminalCustomFieldsRes.results as TerminalCustomFieldRow[]);
+    if (lang === 'ko') {
+      queries.push(
+        db.prepare('SELECT * FROM artist_info WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM about_sections WHERE lang = "en" ORDER BY section_order'),
+        db.prepare('SELECT * FROM about_section_paragraphs WHERE lang = "en" ORDER BY item_order'),
+        db.prepare('SELECT * FROM about_section_philosophy_items WHERE lang = "en" ORDER BY item_order'),
+        db.prepare('SELECT * FROM page_meta WHERE lang = "en"'),
+        db.prepare('SELECT * FROM home_sections WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM tracks WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM events_set_durations WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM events_tech_requirements WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM link_platforms WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM contact_info WHERE lang = "en" ORDER BY sort_order'),
+      );
+    }
+
+    const res = await db.batch(queries);
+
+    // 헬퍼: KO 결과가 없으면 EN 결과를 반환
+    const getRows = <T>(idx: number, fallbackIdx?: number): T[] => {
+      const primary = (res[idx].results as T[]);
+      if (lang === 'ko' && primary.length === 0 && fallbackIdx !== undefined) {
+        return (res[fallbackIdx].results as T[]);
+      }
+      return primary;
+    };
+
+    const artistInfoRows    = getRows<ArtistInfoRow>(0, 18);
+    const aboutSectionRows  = getRows<AboutSectionRow>(1, 19);
+    const aboutParaRows     = getRows<AboutSectionParagraphRow>(2, 20);
+    const aboutPhilRows     = getRows<AboutSectionPhilosophyItemRow>(3, 21);
+    
+    // PageMeta는 병합 처리
+    let pageMetaRows: PageMetaRow[] = (res[4].results as PageMetaRow[]);
+    if (lang === 'ko') {
+      const enMetaRows = (res[22].results as PageMetaRow[]);
+      const metaMap = new Map<string, PageMetaRow>();
+      enMetaRows.forEach(r => metaMap.set(`${r.page}:${r.key}`, r));
+      pageMetaRows.forEach(r => metaMap.set(`${r.page}:${r.key}`, r));
+      pageMetaRows = Array.from(metaMap.values());
+    }
+
+    const homeSectionRows   = getRows<HomeSectionRow>(5, 23);
+    const trackRows         = getRows<TrackRow>(6, 24);
+    const performanceRows   = (res[7].results as PerformanceRow[]);
+    const eventsInfoRow     = (res[8].results[0] as EventsInfoRow | undefined);
+    const setDurationRows   = getRows<EventsListRow>(9, 25);
+    const techReqRows       = getRows<EventsListRow>(10, 26);
+    const linkPlatformRows  = getRows<LinkPlatformRow>(11, 27);
+    const contactInfoRows   = getRows<ContactInfoRow>(12, 28);
+    
+    const themeRow              = (res[13].results[0] as ThemeColorsRow | undefined);
+    const raRow                 = (res[14].results[0] as RAApiConfigRow | undefined);
+    const siteRow               = (res[15].results[0] as SiteConfigRow | undefined);
+    const displaySettingsRows   = (res[16].results as DisplaySettingsRow[]);
+    const terminalFieldRows     = (res[17].results as TerminalCustomFieldRow[]);
 
     // ArtistInfo
     const artistInfo: ArtistInfoItem[] = artistInfoRows.map((r) => ({

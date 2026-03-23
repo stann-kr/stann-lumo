@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await db
-      .prepare('SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at ASC')
+      .prepare('SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at DESC')
       .all<GalleryPhotoRow>();
 
     const data: GalleryPhoto[] = result.results.map((r) => ({

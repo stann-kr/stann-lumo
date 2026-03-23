@@ -74,7 +74,8 @@ const AdminEventsPage = () => {
              : p.status === ('Pending'   as string) ? 'TBA'
              : p.status) as Performance['status'],
     }));
-    setPerformances(normalized);
+    // 초기 로드 시에도 최신순 정렬 보장
+    setPerformances(sortEventsByDate(normalized, false));
     setRaApiConfig(
       allContent[currentEditLanguage].raApiConfig || { userId: '', apiKey: '', djId: '', option: '1', year: '' }
     );
@@ -127,8 +128,8 @@ const AdminEventsPage = () => {
       );
       const skipped = raPerformances.length - newPerformances.length;
 
-      // 기존 이벤트 + 새 RA 이벤트 병합 후 날짜순 정렬
-      const merged = sortEventsByDate([...performances, ...newPerformances], true);
+      // 기존 이벤트 + 새 RA 이벤트 병합 후 날짜순 정렬 (최신순: ascending = false)
+      const merged = sortEventsByDate([...performances, ...newPerformances], false);
       setPerformances(merged);
 
       setFetchSuccess(
@@ -142,7 +143,7 @@ const AdminEventsPage = () => {
   };
 
   const addNewPerformance = () => {
-    addPerformance({
+    const newPerf: Performance = {
       id: crypto.randomUUID(),
       date: new Date().toISOString().split('T')[0],
       venue: 'New Venue',
@@ -150,7 +151,8 @@ const AdminEventsPage = () => {
       location: 'Seoul',
       time: '23:00',
       status: 'TBA',
-    });
+    };
+    setPerformances([newPerf, ...performances]);
   };
 
   const updatePerformanceField = (index: number, field: keyof Performance, value: string) => {
