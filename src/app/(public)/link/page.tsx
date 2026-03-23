@@ -2,13 +2,13 @@
 import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import PageSection from '@/components/base/PageSection';
+import { createBorderMid } from '@/utils/colorMix';
 
 const LinkPage = () => {
   const { t } = useTranslation();
   const { content } = useContent();
   const { linkPlatforms, terminalInfo } = content;
-  const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
 
   return (
@@ -55,17 +55,15 @@ const LinkPage = () => {
       )}
 
       {/* Links Grid */}
-      <div>
-        <p className="text-xs text-[var(--color-secondary)] opacity-35 tracking-widest mb-3">{t('link_platforms')}</p>
-        <div className="grid md:grid-cols-3 gap-2">
+      <PageSection title={t('link_platforms') || 'PLATFORMS'} icon="ri-links-line" noPadding>
+        <div className="grid md:grid-cols-3 gap-[1px] bg-[var(--color-muted)]">
           {linkPlatforms?.map((link) => (
             <a
               key={link.id}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative overflow-hidden border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer p-7"
-              style={borderFaint}
+              className="group relative overflow-hidden bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer p-6"
             >
               <div className="relative space-y-4">
                 <div className="w-10 h-10 flex items-center justify-center">
@@ -85,10 +83,10 @@ const LinkPage = () => {
             </a>
           ))}
         </div>
-      </div>
+      </PageSection>
 
       {/* Footer Note */}
-      <div className="pt-6 border-t" style={borderFaint}>
+      <div className="pt-6 border-t border-[var(--color-muted)]/30">
         <p className="text-xs text-[var(--color-secondary)] opacity-35 text-center">
           {t('link_footer_note')}{' '}
           <a href="/contact" className="text-[var(--color-secondary)] opacity-60 hover:opacity-100 transition-colors cursor-pointer underline underline-offset-4">

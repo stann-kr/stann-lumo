@@ -25,6 +25,7 @@ interface ContentContextType {
   setCurrentEditLanguage: (lang: "en" | "ko") => void;
   allContent: MultiLanguageContent;
   isLoading: boolean;
+  isError: boolean;
 }
 
 const defaultEnContent: ContentData = {
@@ -437,6 +438,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     defaultMultiLanguageContent,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   useEffect(() => {
     // hydration 완료 후 D1 API에서 양 언어 콘텐츠 로드
@@ -472,7 +474,8 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
         } catch { /* 스토리지 제한 등 무시 */ }
       })
       .catch(() => {
-        // 네트워크 오류 등 — 기본값 유지
+        // DB 연결 오류 — 오류 상태로 전환 (폴백 컨텐츠 대신 에러 UI 표시)
+        setIsError(true);
         setIsLoading(false);
       });
   }, []);
@@ -480,7 +483,9 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
   const content = allContent[language];
 
   useEffect(() => {
-    // CSS 변수 적용
+    // SSR에서 layout.tsx가 이미 DB 테마를 <style>로 주입 — 로딩 중에는 덮어쓰지 않음
+    // isLoading=false가 되는 시점에 content.themeColors는 이미 DB 값으로 갱신됨
+    if (isLoading) return;
     const root = document.documentElement;
     root.style.setProperty("--color-primary", content.themeColors.primary);
     root.style.setProperty("--color-secondary", content.themeColors.secondary);
@@ -491,7 +496,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
       "--color-bg-sidebar",
       content.themeColors.bgSidebar ?? content.themeColors.bg,
     );
-  }, [content.themeColors]);
+  }, [content.themeColors, isLoading]);
 
   /**
    * 인메모리 콘텐츠 업데이트 — 어드민 페이지 편집 시 즉시 UI 반영용.
@@ -525,6 +530,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
         setCurrentEditLanguage,
         allContent,
         isLoading,
+        isError,
       }}
     >
       {children}

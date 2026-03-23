@@ -20,7 +20,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
-  const { content, isLoading } = useContent();
+  const { content, isLoading, isError } = useContent();
 
   const NAV_ITEMS = [
     { label: t('nav_home'), path: '/' },
@@ -247,6 +247,25 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
             <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] flex flex-col items-center gap-2">
               <div className="w-4 h-4 border border-[var(--color-accent)] border-t-transparent animate-spin"></div>
               <span className="animate-pulse">FETCHING DATA...</span>
+            </div>
+          </div>
+        ) : isError ? (
+          <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
+            <div className="font-mono flex flex-col items-center gap-4 text-center px-8">
+              <div className="text-[10px] tracking-[0.2em] text-[var(--color-muted)] uppercase">
+                SYS.ERR — CONNECTION FAILED
+              </div>
+              <div className="w-8 h-[1px] bg-[var(--color-muted)]"></div>
+              <p className="text-xs text-[var(--color-muted)] tracking-widest max-w-xs leading-relaxed">
+                일시적인 서버 오류가 발생했습니다.<br />
+                잠시 후 다시 시도해 주세요.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-2 border border-[var(--color-muted)] px-6 py-2 text-[10px] font-mono tracking-[0.2em] text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors cursor-pointer"
+              >
+                RETRY
+              </button>
             </div>
           </div>
         ) : (

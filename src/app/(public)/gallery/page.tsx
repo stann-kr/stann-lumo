@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import type { GalleryPhoto, GallerySettings, GalleryData } from '@/types/content';
-import { createBorderFaint } from '@/utils/colorMix';
+
 import PageLayout from '@/components/feature/PageLayout';
 
 // ─── 설정 → CSS 클래스 매핑 ──────────────────────────────────────────────────
@@ -170,7 +170,6 @@ const GalleryPage = () => {
     fetchGallery();
   }, []);
 
-  const borderStyle = createBorderFaint();
   const containerClasses = buildContainerClasses(GALLERY_SETTINGS);
 
   return (
@@ -180,14 +179,14 @@ const GalleryPage = () => {
     >
       {/* 사진 그리드 */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-24">
-          <div className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
+        <div className="hud-panel flex items-center justify-center py-24">
+          <div className="text-[var(--color-secondary)]/40 text-sm font-mono tracking-widest animate-pulse">
             LOADING...
           </div>
         </div>
       ) : photos.length === 0 ? (
-        <div className="flex items-center justify-center py-24 border" style={borderStyle}>
-          <p className="text-[var(--color-secondary)]/30 text-sm tracking-widest">
+        <div className="hud-panel flex items-center justify-center py-24">
+          <p className="text-[var(--color-secondary)]/30 text-sm font-mono tracking-widest">
             {t('gallery_empty')}
           </p>
         </div>
