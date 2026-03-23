@@ -1,5 +1,5 @@
 import type { RAEventXML, RAApiResponse, RAApiError } from '../types/ra-api';
-import type { Performance } from '../types/content';
+import type { Performance, RAApiConfig } from '../types/content';
 
 /**
  * XML 문자열을 파싱하여 RAApiResponse 객체로 변환
@@ -53,13 +53,15 @@ export function parseRAApiXML(xmlString: string): RAApiResponse {
  */
 export function formatRADate(isoDate: string): string {
   if (!isoDate) return '';
-  
+  const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) return match[0];
+
   try {
     const date = new Date(isoDate);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}.${month}.${day}`;
+    return `${year}-${month}-${day}`;
   } catch {
     return '';
   }
@@ -102,6 +104,7 @@ export function convertRAEventToPerformance(raEvent: RAEventXML): Performance {
     venue: raEvent.venue || 'TBA',
     title: raEvent.title || raEvent.venue || 'TBA',
     location: raEvent.areaname || raEvent.countryname || '',
+    time: raEvent.time && raEvent.time.match(/\d{2}:\d{2}/) ? raEvent.time.match(/\d{2}:\d{2}/)![0] : undefined,
     lineup: cleanRALineup(raEvent.lineup),
     raEventLink: raEvent.eventlink || undefined,
     raEventId: raEvent.id,
@@ -126,10 +129,13 @@ export function convertRAEventToPerformance(raEvent: RAEventXML): Performance {
  * RA 이벤트 조회 — 서버 사이드 프록시(/api/admin/ra-events)를 통해 호출
  * 브라우저에서 RA API 직접 호출 시 CORS 차단됨
  */
-export async function fetchRAEvents(): Promise<RAApiResponse> {
+export async function fetchRAEvents(config?: Pick<RAApiConfig, 'option' | 'year'>): Promise<RAApiResponse> {
   try {
-    // 서버 프록시: DB에 저장된 설정을 사용하여 CF Workers에서 RA API 호출
-    const response = await fetch('/api/admin/ra-events', { method: 'GET' });
+    const url = new URL(window.location.origin + '/api/admin/ra-events');
+    if (config?.option) url.searchParams.set('option', config.option);
+    if (config?.year) url.searchParams.set('year', config.year);
+
+    const response = await fetch(url.toString(), { method: 'GET' });
 
     if (!response.ok) {
       const data = await response.json() as { error?: { message?: string } };
@@ -173,8 +179,8 @@ export function categorizeEventsByDate(performances: Performance[]): {
     }
 
     try {
-      // YYYY.MM.DD 형식을 Date로 변환
-      const [year, month, day] = perf.date.split('.').map(Number);
+      const dateStr = perf.date.replace(/\./g, '-');
+      const [year, month, day] = dateStr.split('-').map(Number);
       const perfDate = new Date(year, month - 1, day);
       perfDate.setHours(0, 0, 0, 0);
 
@@ -217,8 +223,10 @@ export function sortEventsByDate(performances: Performance[], ascending = true):
     if (!a.date) return 1;
     if (!b.date) return -1;
 
-    const [yearA, monthA, dayA] = a.date.split('.').map(Number);
-    const [yearB, monthB, dayB] = b.date.split('.').map(Number);
+    const dateAStr = a.date.replace(/\./g, '-');
+    const dateBStr = b.date.replace(/\./g, '-');
+    const [yearA, monthA, dayA] = dateAStr.split('-').map(Number);
+    const [yearB, monthB, dayB] = dateBStr.split('-').map(Number);
 
     const dateA = new Date(yearA, monthA - 1, dayA).getTime();
     const dateB = new Date(yearB, monthB - 1, dayB).getTime();
