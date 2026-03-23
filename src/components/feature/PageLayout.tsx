@@ -82,7 +82,7 @@ const PageLayout = ({
       <div
         className={`relative ${global.animationEnabled ? 'space-y-4 gsap-stagger-item opacity-0' : 'space-y-4'}`}
       >
-        <div className="font-mono text-[10px] text-[var(--color-accent)] tracking-widest flex items-center gap-2">
+        <div className="font-mono text-xs text-[var(--color-accent)] tracking-widest flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-[var(--color-accent)] animate-pulse"></span>
           ACCESS_GRANTED // PAGE_INIT
         </div>
@@ -102,7 +102,7 @@ const PageLayout = ({
         <div className="flex items-center gap-4 pt-4">
           <div className="flex-1 h-px bg-[var(--color-muted)] opacity-50"></div>
           {subtitle && (
-            <p className="font-mono text-[10px] text-[var(--color-accent)] tracking-[0.2em] uppercase shrink-0">
+            <p className="font-mono text-xs text-[var(--color-accent)] tracking-[0.2em] uppercase shrink-0">
               [{subtitle}]
             </p>
           )}

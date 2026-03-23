@@ -35,7 +35,7 @@ export default function HomePage() {
                 <Link
                   key={index}
                   href={section.path}
-                  className={`group bg-[var(--color-bg)] relative overflow-hidden transition-all duration-300 cursor-pointer ${navPaddingClass}`}
+                  className={`group bg-surface relative overflow-hidden transition-all duration-300 cursor-pointer ${navPaddingClass}`}
                 >
                   {/* Hover Scanline Effect */}
                   <div className="absolute inset-0 bg-[var(--color-accent)] opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"></div>
@@ -50,7 +50,7 @@ export default function HomePage() {
                           {section.title}
                         </h2>
                       </div>
-                      <p className="font-mono text-xs leading-relaxed text-[var(--color-secondary)] opacity-50 group-hover:opacity-80 transition-opacity">
+                      <p className="font-mono text-sm leading-relaxed text-[var(--color-secondary)] opacity-50 group-hover:opacity-80 transition-opacity">
                         {section.description}
                       </p>
                     </div>
@@ -74,7 +74,7 @@ export default function HomePage() {
                   <span className="w-1.5 h-1.5 bg-[var(--color-accent)]"></span>
                   {t('home_terminal_side_project')}
                 </div>
-                <p className="font-mono text-sm leading-relaxed text-[var(--color-secondary)] opacity-60 max-w-2xl">
+                <p className="font-mono text-base leading-relaxed text-[var(--color-secondary)] opacity-60 max-w-2xl">
                   {content.terminalInfo.description}
                 </p>
               </div>
@@ -82,7 +82,7 @@ export default function HomePage() {
                 href={content.terminalInfo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative px-6 py-3 border border-[var(--color-accent)] text-xs font-mono tracking-widest text-[var(--color-accent)] whitespace-nowrap overflow-hidden transition-colors hover:text-white hover:bg-[var(--color-accent)]"
+                className="group relative px-6 py-3 border border-[var(--color-accent)] text-sm font-mono tracking-widest text-[var(--color-accent)] whitespace-nowrap overflow-hidden transition-colors hover:text-white hover:bg-[var(--color-accent)]"
               >
                 <div className="absolute inset-0 bg-[var(--color-accent)]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 <span className="relative z-10 flex items-center gap-2">
@@ -95,11 +95,11 @@ export default function HomePage() {
             {content.terminalInfo.customFields && content.terminalInfo.customFields.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-[1px] bg-[var(--color-muted)] border border-[var(--color-muted)] p-[1px]">
                 {content.terminalInfo.customFields.map((field) => (
-                  <div key={field.id} className="bg-[var(--color-bg)] p-4 flex flex-col justify-between space-y-2">
-                    <p className="font-mono text-[9px] tracking-widest text-[var(--color-accent)] opacity-80 uppercase">
+                  <div key={field.id} className="bg-surface p-4 flex flex-col justify-between space-y-2">
+                    <p className="font-mono text-[10px] tracking-widest text-[var(--color-accent)] opacity-80 uppercase">
                       {field.fieldKey}
                     </p>
-                    <div className="font-mono text-xs tracking-wider text-[var(--color-primary)] truncate">
+                    <div className="font-mono text-sm tracking-wider text-[var(--color-primary)] truncate">
                       {field.fieldType === 'url' ? (
                         <a href={field.fieldValue} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-accent)] hover:underline transition-colors">
                           {field.fieldValue}

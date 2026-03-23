@@ -15,6 +15,11 @@
   --color-bg-sidebar: #050505;
 }
 
+html {
+  /* 기본 16px → 17px: rem 기반 텍스트 전체 소폭 확대 */
+  font-size: 17px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -100,6 +105,14 @@ body {
 }
 
 @layer utilities {
+  /**
+   * 반투명 패널 표면 — 3D 백그라운드가 비쳐보이도록 80% 불투명도 적용
+   * bg-[var(--color-bg)] 대신 사용하여 전 페이지 일관된 반투명 처리
+   */
+  .bg-surface {
+    background-color: color-mix(in srgb, var(--color-bg) 80%, transparent);
+  }
+
   .animate-fadeIn {
     animation: fadeIn 0.4s ease-in-out;
   }
