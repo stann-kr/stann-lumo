@@ -115,7 +115,7 @@ const AdminEventsPage = () => {
     setFetchError('');
     setFetchSuccess('');
     try {
-      const response = await fetchRAEvents();
+      const response = await fetchRAEvents({ option: raApiConfig.option, year: raApiConfig.year });
       const raPerformances = convertRAEventsToPerformances(response.events);
 
       // 이미 저장된 RA 이벤트 ID 집합 (raEventId 기준 중복 제외)
