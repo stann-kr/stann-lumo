@@ -446,9 +446,25 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     // API 미사용 환경(dev, DB 없음) → 기본값 유지
     Promise.all([fetchContent("en"), fetchContent("ko")])
       .then(([enData, koData]) => {
+        const finalEn = enData ?? defaultEnContent;
+        const initialKo = koData ?? defaultKoContent;
+
+        // 별도의 Ko 컨텐츠가 없다면 EN 컨텐츠를 바로 보여주도록 병합
+        const finalKo: ContentData = {
+          ...initialKo,
+          tracks: initialKo.tracks?.length ? initialKo.tracks : finalEn.tracks,
+          performances: initialKo.performances?.length ? initialKo.performances : finalEn.performances,
+          aboutSections: initialKo.aboutSections?.length ? initialKo.aboutSections : finalEn.aboutSections,
+          homeSections: initialKo.homeSections?.length ? initialKo.homeSections : finalEn.homeSections,
+          linkPlatforms: initialKo.linkPlatforms?.length ? initialKo.linkPlatforms : finalEn.linkPlatforms,
+          contactInfo: initialKo.contactInfo?.length ? initialKo.contactInfo : finalEn.contactInfo,
+          artistInfo: initialKo.artistInfo?.length ? initialKo.artistInfo : finalEn.artistInfo,
+          // 객체 타입의 경우 값 유무나 키 개수 등으로 판단할 수도 있으나, 주요 리스트형 먼저 적용
+        };
+
         const next: MultiLanguageContent = {
-          en: enData ?? defaultEnContent,
-          ko: koData ?? defaultKoContent,
+          en: finalEn,
+          ko: finalKo,
         };
         // setAllContent + setIsLoading(false)를 동일 배치로 처리 — 중간 렌더링 방지
         setAllContent(next);

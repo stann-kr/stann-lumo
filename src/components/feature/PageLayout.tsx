@@ -76,20 +76,25 @@ const PageLayout = ({
   });
 
   return (
-    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pt-4 pb-8 md:pt-8`}>
-      {/* Page Header */}
+    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pt-4 pb-8 md:pt-12 relative`}>
+      {/* Sci-Fi Page Header */}
       <div
-        className={global.animationEnabled ? 'space-y-3 animate-slideUp' : 'space-y-3'}
+        className={`relative ${global.animationEnabled ? 'space-y-4 animate-slideUp' : 'space-y-4'}`}
         style={
           global.animationEnabled
             ? { animationDelay: '0ms', animationFillMode: 'both', opacity: 0 }
             : undefined
         }
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-primary)] tracking-tight leading-tight">
+        <div className="font-mono text-[10px] text-[var(--color-accent)] tracking-widest flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-[var(--color-accent)] animate-pulse"></span>
+          ACCESS_GRANTED // PAGE_INIT
+        </div>
+        
+        <h1 className="text-6xl md:text-8xl font-black uppercase tracking-[0.1em] text-[var(--color-primary)] leading-none break-words">
           <TypingText text={title} speed={resolvedTypingSpeed} delay={typingDelay} />
           {titleExtra && titleExtra.map((part, i) => (
-            <span key={i} className="block">
+            <span key={i} className="block mt-2">
               <TypingText
                 text={part}
                 speed={resolvedTypingSpeed}
@@ -98,16 +103,21 @@ const PageLayout = ({
             </span>
           ))}
         </h1>
-        <div className="w-12 h-px" style={borderMid} />
-        {subtitle && (
-          <p className="text-[var(--color-secondary)] opacity-50 text-xs tracking-widest">
-            {subtitle}
-          </p>
-        )}
+        
+        <div className="flex items-center gap-4 pt-4">
+          <div className="flex-1 h-px bg-[var(--color-muted)] opacity-50"></div>
+          {subtitle && (
+            <p className="font-mono text-[10px] text-[var(--color-accent)] tracking-[0.2em] uppercase shrink-0">
+              [{subtitle}]
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Page Content */}
-      {animatedChildren}
+      <div className="relative z-10 pt-4">
+        {animatedChildren}
+      </div>
     </div>
   );
 };

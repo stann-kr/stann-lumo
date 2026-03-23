@@ -5,7 +5,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        mono: ['IBM Plex Mono', 'monospace'],
+        sans: ['Orbit', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
         terminal: {

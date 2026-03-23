@@ -132,8 +132,8 @@ export function convertRAEventToPerformance(raEvent: RAEventXML): Performance {
 export async function fetchRAEvents(config?: Pick<RAApiConfig, 'option' | 'year'>): Promise<RAApiResponse> {
   try {
     const url = new URL(window.location.origin + '/api/admin/ra-events');
-    if (config?.option) url.searchParams.set('option', config.option);
-    if (config?.year) url.searchParams.set('year', config.year);
+    if (config?.option !== undefined) url.searchParams.set('option', config.option);
+    if (config?.year !== undefined) url.searchParams.set('year', config.year);
 
     const response = await fetch(url.toString(), { method: 'GET' });
 

@@ -43,21 +43,20 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
     setMobileMenuOpen(false);
   };
 
-  const borderStyle = createColorMixStyle(COLOR_VARS.SECONDARY, 15);
-
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-secondary)] font-mono flex">
-      {/* 전역 커서 글로우 — 모든 페이지에 적용 */}
+    <div className="min-h-screen bg-transparent text-[var(--color-primary)] font-sans antialiased flex selection:bg-[var(--color-accent)] selection:text-white">
+      {/* 전역 커서 글로우 (Sci-Fi 스타일 유지) */}
       <CursorGlow />
 
-      {/* Desktop Sidebar */}
-      <aside
-        className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:border-r lg:bg-[var(--color-bg-sidebar)]"
-        style={borderStyle}
-      >
-        {/* Logo/Brand */}
-        <div className="p-8 border-b" style={borderStyle}>
-          <Link href="/" className="block text-2xl font-bold text-[var(--color-primary)] tracking-wider hover:opacity-80 transition-opacity">
+      {/* Desktop Sidebar (HUD Left Panel) */}
+      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:border-r lg:border-[var(--color-muted)] lg:bg-[var(--color-bg-sidebar)]/80 lg:backdrop-blur-sm z-40">
+        
+        {/* HUD Top-Left Branding Container */}
+        <div className="hud-crosshair p-8 border-b border-[var(--color-muted)] relative">
+          <div className="absolute top-2 left-2 text-[8px] font-mono text-[var(--color-muted)] tracking-widest">
+            SYS.ID: SL-01
+          </div>
+          <Link href="/" className="block mt-4 text-2xl font-bold tracking-[0.2em] text-[var(--color-primary)] hover:text-[var(--color-accent)] transition-colors">
             {isLoading ? (
               <span className="opacity-0 select-none">—</span>
             ) : (
@@ -66,17 +65,23 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
               ))
             )}
           </Link>
+          <div className="mt-2 text-[10px] font-mono text-[var(--color-muted)] uppercase tracking-widest">
+            <span className="w-2 h-2 inline-block bg-[var(--color-accent)] mr-2 animate-pulse"></span>
+            STATUS: ACTIVE
+          </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-6">
-          <ul className="space-y-1">
-            {NAV_ITEMS.map((item) => {
+        {/* HUD Navigation */}
+        <nav className="flex-1 p-6 overflow-y-auto">
+          <ul className="space-y-2">
+            {NAV_ITEMS.map((item, index) => {
               const isActive = !item.external && (
                 item.path === '/'
                   ? pathname === '/'
                   : pathname === item.path || pathname.startsWith(item.path + '/')
               );
+              const numStr = (index + 1).toString().padStart(2, '0');
+
               return (
                 <li key={item.path}>
                   {item.external ? (
@@ -84,27 +89,27 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
                       href={item.path}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full text-left px-4 py-3 cursor-pointer whitespace-nowrap relative group flex items-center justify-between text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5"
-                      style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
+                      className="w-full flex items-center gap-3 px-3 py-2 cursor-pointer group text-[var(--color-muted)] hover:text-[var(--color-primary)] transition-colors"
                     >
-                      <span className="text-sm tracking-widest uppercase">{item.label}</span>
-                      <i className="ri-external-link-line text-xs opacity-50 group-hover:opacity-100" style={{ transition: `opacity ${TRANSITION.DURATION.DEFAULT}` }}></i>
+                      <span className="font-mono text-[9px] opacity-50">[{numStr}]</span>
+                      <span className="font-mono text-xs tracking-widest uppercase">{item.label}</span>
+                      <i className="ri-external-link-line text-[10px] opacity-0 group-hover:opacity-100 ml-auto transition-opacity"></i>
                     </a>
                   ) : (
                     <Link
                       href={item.path}
                       onClick={() => handleNavClick(item.path)}
-                      className={`block px-4 py-3 cursor-pointer whitespace-nowrap relative group ${
+                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer relative transition-colors ${
                         isActive
-                          ? 'text-[var(--color-primary)] bg-[var(--color-secondary)]/10'
-                          : 'text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5'
+                          ? 'text-[var(--color-accent)]'
+                          : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
                       }`}
-                      style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
                     >
                       {isActive && (
-                        <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--color-secondary)]"></span>
+                        <span className="absolute left-0 top-0 bottom-0 w-[2px] bg-[var(--color-accent)]"></span>
                       )}
-                      <span className="text-sm tracking-widest uppercase">{item.label}</span>
+                      <span className="font-mono text-[9px] opacity-50">[{numStr}]</span>
+                      <span className="font-mono text-xs tracking-widest uppercase">{item.label}</span>
                     </Link>
                   )}
                 </li>
@@ -113,36 +118,35 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
           </ul>
         </nav>
 
-        {/* Footer Info — 시계 + 언어 전환 */}
-        <div className="p-6 border-t space-y-3" style={borderStyle}>
-          {/* ONLINE + 시계 */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-xs text-[var(--color-muted)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-muted)] animate-pulse"></span>
-              <span className="tracking-widest">ONLINE</span>
-            </div>
-            <LiveClock className="text-xs font-mono text-[var(--color-secondary)]/50 tracking-widest tabular-nums" />
+        {/* HUD Footer (Time & Version) */}
+        <div className="p-6 border-t border-[var(--color-muted)] space-y-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-mono text-[var(--color-muted)] uppercase tracking-widest">LOCAL TIME</span>
+            <LiveClock className="text-xs font-mono text-[var(--color-primary)] tracking-widest tabular-nums font-bold" />
           </div>
-          {/* 버전 + 언어 전환 */}
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-[var(--color-secondary)]/25">{SITE_VERSION}</p>
-            <div className="flex items-center gap-1 rounded px-2 py-1" style={borderStyle}>
+
+          <div className="flex items-end justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-mono text-[var(--color-muted)] uppercase tracking-widest">VERSION</span>
+              <span className="text-[10px] font-mono text-[var(--color-primary)]">{SITE_VERSION}</span>
+            </div>
+            
+            {/* Language Toggle HUD */}
+            <div className="flex items-center gap-1 border border-[var(--color-muted)] px-2 py-1 bg-black">
               <button
                 onClick={toggleLanguage}
-                className={`text-xs tracking-widest cursor-pointer px-1 ${
-                  language === 'en' ? 'text-[var(--color-primary)]' : 'text-[var(--color-secondary)]/30'
+                className={`text-[10px] font-mono tracking-widest px-1 transition-colors ${
+                  language === 'en' ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
                 }`}
-                style={{ transition: `color ${TRANSITION.DURATION.DEFAULT}` }}
               >
                 EN
               </button>
-              <span className="text-xs text-[var(--color-secondary)]/30">|</span>
+              <span className="text-[10px] font-mono text-[var(--color-muted)]">|</span>
               <button
                 onClick={toggleLanguage}
-                className={`text-xs tracking-widest cursor-pointer px-1 ${
-                  language === 'ko' ? 'text-[var(--color-primary)]' : 'text-[var(--color-secondary)]/30'
+                className={`text-[10px] font-mono tracking-widest px-1 transition-colors ${
+                  language === 'ko' ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
                 }`}
-                style={{ transition: `color ${TRANSITION.DURATION.DEFAULT}` }}
               >
                 KO
               </button>
@@ -151,116 +155,98 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         </div>
       </aside>
 
-      {/* Mobile Header */}
-      <header
-        className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg-sidebar)]/95 backdrop-blur-sm border-b"
-        style={{ ...borderStyle, paddingTop: 'env(safe-area-inset-top)' }}
-      >
-        <div className="flex items-center justify-between px-6 h-16">
-          <Link href="/" className="text-xl font-bold text-[var(--color-primary)] tracking-wider hover:opacity-80 transition-opacity">
+      {/* Mobile Top HUD Header */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg)]/90 backdrop-blur-md border-b border-[var(--color-muted)]">
+        <div className="flex items-center justify-between px-6 h-16 pt-[env(safe-area-inset-top)]">
+          <Link href="/" className="text-lg font-bold font-sans tracking-[0.2em] text-[var(--color-primary)]">
             {isLoading ? '' : artistName}
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
-            aria-label="Toggle menu"
+            className="w-10 h-10 flex flex-col items-center justify-center gap-[4px] cursor-pointer"
           >
-            <span className={`w-6 h-0.5 bg-[var(--color-secondary)] ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}></span>
-            <span className={`w-6 h-0.5 bg-[var(--color-secondary)] ${mobileMenuOpen ? 'opacity-0' : ''}`} style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}></span>
-            <span className={`w-6 h-0.5 bg-[var(--color-secondary)] ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}></span>
+            <span className={`w-5 h-[1px] bg-[var(--color-primary)] transition-transform duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-[5px]' : ''}`}></span>
+            <span className={`w-5 h-[1px] bg-[var(--color-primary)] transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-0' : ''}`}></span>
+            <span className={`w-5 h-[1px] bg-[var(--color-primary)] transition-transform duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-[5px]' : ''}`}></span>
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Nav Menu */}
         <nav
-          className={`absolute top-full left-0 right-0 bg-[var(--color-bg-sidebar)] border-b ${
-            mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+          className={`absolute top-full left-0 right-0 bg-[var(--color-bg)] border-b border-[var(--color-muted)] overflow-hidden transition-all duration-300 ease-in-out ${
+            mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
           }`}
-          style={{ ...borderStyle, transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
         >
-          <ul className="py-4">
-            {NAV_ITEMS.map((item) => {
+          <ul className="py-4 px-6 space-y-2">
+            {NAV_ITEMS.map((item, index) => {
               const isActive = !item.external && (
                 item.path === '/'
                   ? pathname === '/'
                   : pathname === item.path || pathname.startsWith(item.path + '/')
               );
+              const numStr = (index + 1).toString().padStart(2, '0');
+
               return (
                 <li key={item.path}>
                   {item.external ? (
-                    <a
-                      href={item.path}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full text-left px-6 py-4 cursor-pointer flex items-center justify-between text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5"
-                      style={{ transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-                    >
-                      <span className="text-sm tracking-widest uppercase">{item.label}</span>
-                      <i className="ri-external-link-line text-xs opacity-50"></i>
-                    </a>
+                     <a
+                     href={item.path}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="flex items-center gap-3 py-3 text-[var(--color-muted)] hover:text-[var(--color-primary)]"
+                   >
+                     <span className="font-mono text-[10px] opacity-50">[{numStr}]</span>
+                     <span className="font-mono text-sm tracking-widest uppercase">{item.label}</span>
+                     <i className="ri-external-link-line text-xs ml-auto"></i>
+                   </a>
                   ) : (
                     <Link
                       href={item.path}
                       onClick={() => handleNavClick(item.path)}
-                      className={`block px-6 py-4 cursor-pointer ${
-                        isActive
-                          ? 'text-[var(--color-primary)] bg-[var(--color-secondary)]/10'
-                          : 'text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5'
+                      className={`flex items-center gap-3 py-3 relative ${
+                        isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)]'
                       }`}
-                      style={{
-                        ...(isActive ? { borderLeft: '2px solid var(--color-secondary)' } : {}),
-                        transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}`
-                      }}
                     >
-                      <span className="text-sm tracking-widest uppercase">{item.label}</span>
+                      {isActive && <span className="absolute left-[-24px] w-1 h-full bg-[var(--color-accent)]"></span>}
+                      <span className="font-mono text-[10px] opacity-50">[{numStr}]</span>
+                      <span className="font-mono text-sm tracking-widest uppercase">{item.label}</span>
                     </Link>
                   )}
                 </li>
               );
             })}
           </ul>
-          {/* 모바일 언어 전환 */}
-          <div className="px-6 py-4 border-t" style={borderStyle}>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-[var(--color-secondary)]/50 tracking-widest">LANGUAGE</span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={toggleLanguage}
-                  className={`text-xs tracking-widest cursor-pointer ${
-                    language === 'en' ? 'text-[var(--color-primary)]' : 'text-[var(--color-secondary)]/30'
-                  }`}
-                  style={{ transition: `color ${TRANSITION.DURATION.DEFAULT}` }}
-                >
-                  EN
-                </button>
-                <span className="text-xs text-[var(--color-secondary)]/30">/</span>
-                <button
-                  onClick={toggleLanguage}
-                  className={`text-xs tracking-widest cursor-pointer ${
-                    language === 'ko' ? 'text-[var(--color-primary)]' : 'text-[var(--color-secondary)]/30'
-                  }`}
-                  style={{ transition: `color ${TRANSITION.DURATION.DEFAULT}` }}
-                >
-                  KO
-                </button>
-              </div>
+          
+          <div className="px-6 py-4 border-t border-[var(--color-muted)] flex justify-between items-center">
+            <span className="font-mono text-[10px] text-[var(--color-muted)] tracking-widest">LANG</span>
+            <div className="flex gap-2">
+              <button onClick={toggleLanguage} className={`font-mono text-xs ${language==='en'?'text-[var(--color-accent)]':'text-[var(--color-muted)]'}`}>EN</button>
+              <span className="font-mono text-[10px] text-[var(--color-muted)]">|</span>
+              <button onClick={toggleLanguage} className={`font-mono text-xs ${language==='ko'?'text-[var(--color-accent)]':'text-[var(--color-muted)]'}`}>KO</button>
             </div>
           </div>
         </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-64 mobile-header-offset">
+      {/* Main Content (HUD Viewport) */}
+      <main className="flex-1 lg:ml-64 relative mobile-header-offset">
+        {/* HUD Viewport Brackets at the corners of Main space */}
+        <div className="hidden lg:block absolute top-8 left-8 w-4 h-4 border-t border-l border-[var(--color-muted)] pointer-events-none"></div>
+        <div className="hidden lg:block absolute top-8 right-8 w-4 h-4 border-t border-r border-[var(--color-muted)] pointer-events-none"></div>
+        <div className="hidden lg:block absolute bottom-8 left-8 w-4 h-4 border-b border-l border-[var(--color-muted)] pointer-events-none"></div>
+        <div className="hidden lg:block absolute bottom-8 right-8 w-4 h-4 border-b border-r border-[var(--color-muted)] pointer-events-none"></div>
+
         {isLoading ? (
           <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
-            <span className="text-xs tracking-widest text-[var(--color-secondary)]/30 animate-pulse">
-              LOADING...
-            </span>
+            <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] animate-pulse flex flex-col items-center gap-2">
+              <div className="w-4 h-4 border border-[var(--color-accent)] rounded-full border-t-transparent animate-spin"></div>
+              <span>FETCHING DATA...</span>
+            </div>
           </div>
         ) : (
           <div
             key={pathname}
-            className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-6 md:p-12 lg:p-16 animate-fadeIn"
+            className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-6 md:p-12 lg:p-16 animate-fadeIn relative z-10"
           >
             {children}
           </div>

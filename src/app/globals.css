@@ -1,30 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbit&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-primary: #e8d5b0;
-  --color-secondary: #c8b89a;
-  --color-accent: #8a7560;
-  --color-muted: #a89070;
-  --color-bg: #0a0a0a;
-  --color-bg-sidebar: #0a0a0a;
+  /* Sci-Fi Defaults - can be overridden by theme_colors DB */
+  --color-primary: #ffffff;
+  --color-secondary: #00ff00; 
+  --color-accent: #ff0033;
+  --color-muted: #333333;
+  --color-bg: #000000;
+  --color-bg-sidebar: #050505;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Disable rounded corners globally for Brutal/Sci-fi tech look */
+  border-radius: 0 !important;
 }
 
 body {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Orbit', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;
   background-color: var(--color-bg);
+  color: var(--color-primary);
+  /* Precision Grid Background */
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-attachment: fixed;
 }
 
 /* iOS 안전영역 대응 — 모바일 헤더(4rem) + safe-area-inset-top, 데스크톱(lg)은 0 */
@@ -34,6 +45,57 @@ body {
 @media (min-width: 1024px) {
   .mobile-header-offset {
     padding-top: 0;
+  }
+}
+
+@layer components {
+  /* HUD Panels */
+  .hud-panel {
+    @apply border border-[var(--color-muted)] bg-transparent relative;
+  }
+  
+  /* Corner Crosshairs */
+  .hud-crosshair {
+    @apply relative;
+  }
+  .hud-crosshair::before, .hud-crosshair::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border: 1px solid var(--color-muted);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hud-crosshair::before {
+    top: -1px; left: -1px;
+    border-right: none; border-bottom: none;
+  }
+  .hud-crosshair::after {
+    bottom: -1px; right: -1px;
+    border-left: none; border-top: none;
+  }
+
+  /* Sci-Fi Brackets [ Content ] */
+  .hud-bracket {
+    @apply relative overflow-visible;
+  }
+  .hud-bracket::before, .hud-bracket::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    border: 1px solid var(--color-muted);
+    pointer-events: none;
+  }
+  .hud-bracket::before {
+    left: -6px;
+    border-right: none;
+  }
+  .hud-bracket::after {
+    right: -6px;
+    border-left: none;
   }
 }
 
