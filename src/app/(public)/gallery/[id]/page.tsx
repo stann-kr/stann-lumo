@@ -53,7 +53,7 @@ const GalleryPhotoPage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title="...">
+      <PageLayout key="loading" title="...">
         <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
           LOADING...
         </p>
@@ -63,7 +63,7 @@ const GalleryPhotoPage = () => {
 
   if (fetchError) {
     return (
-      <PageLayout title="ERROR">
+      <PageLayout key="error" title="ERROR">
         <div className="space-y-4">
           <p className="text-sm text-[var(--color-secondary)]/60 tracking-widest">
             {t('gallery_load_error')}
@@ -82,7 +82,7 @@ const GalleryPhotoPage = () => {
 
   if (!photo) {
     return (
-      <PageLayout title="NOT FOUND">
+      <PageLayout key="not-found" title="NOT FOUND">
         <Link
           href="/gallery"
           className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
@@ -111,7 +111,7 @@ const GalleryPhotoPage = () => {
     : 'ri-image-line';
 
   return (
-    <PageLayout title={pageTitle}>
+    <PageLayout key={photo.id} title={pageTitle}>
       {/* 상단 — 뒤로가기 + 카테고리 + 인덱스 */}
       <div className="flex items-center justify-between">
         <Link

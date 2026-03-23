@@ -45,7 +45,7 @@ const EventDetailPage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title="...">
+      <PageLayout key="loading" title="...">
         <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
           LOADING...
         </p>
@@ -55,7 +55,7 @@ const EventDetailPage = () => {
 
   if (error || !data) {
     return (
-      <PageLayout title="EVENT NOT FOUND">
+      <PageLayout key="error" title="EVENT NOT FOUND">
         <p className="text-[var(--color-secondary)]/60 text-sm tracking-wider">{error}</p>
         <Link
           href="/events"
@@ -71,7 +71,7 @@ const EventDetailPage = () => {
   const { event, posterPhoto } = data;
 
   return (
-    <PageLayout title={event.title} subtitle={`${event.venue}${event.location ? ` · ${event.location}` : ''}`}>
+    <PageLayout key={data.event.id} title={event.title} subtitle={`${event.venue}${event.location ? ` · ${event.location}` : ''}`}>
       {/* 뒤로가기 */}
       <Link
         href="/events"
