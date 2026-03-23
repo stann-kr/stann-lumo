@@ -8,11 +8,12 @@
 ## 개요
 
 | 항목 | 값 |
-|------|-----|
+| :--- | :--- |
 | 런타임 | Cloudflare Workers (nodejs_compat) |
 | 어댑터 | @opennextjs/cloudflare v1.17.1 |
 | DB | Cloudflare D1 (stann-lumo-db) |
 | 스토리지 | Cloudflare R2 (stann-lumo-media) |
+| 도메인 | [lumo.stann.kr](https://lumo.stann.kr) |
 | 빌드 환경 | Docker (linux/arm64) |
 
 > **주의**: 로컬 Mac에 Node.js/npm이 없으므로 모든 명령어는 Docker 컨테이너 내부에서 실행.
@@ -52,6 +53,16 @@ docker compose run --rm web sh -c "npx wrangler r2 bucket list"
 
 ```bash
 docker compose run --rm web sh -c "npx wrangler r2 bucket create stann-lumo-media"
+```
+
+### 4. 커스텀 도메인 설정 확인
+
+`wrangler.json`에 `routes` 설정이 되어 있는지 확인. 대시보드에서 수동 연결 시에도 설정을 명시하는 것을 권장.
+
+```json
+"routes": [
+  { "pattern": "lumo.stann.kr", "custom_domain": true }
+]
 ```
 
 ---

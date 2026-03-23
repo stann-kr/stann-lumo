@@ -30,7 +30,7 @@ const DeleteConfirmModal = ({
       <div className="flex gap-3">
         <button
           onClick={onConfirm}
-          className="px-4 py-2 bg-red-900/30 text-red-400 text-sm tracking-wider hover:bg-red-900/50 transition-colors whitespace-nowrap cursor-pointer"
+          className="px-4 py-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-sm tracking-wider hover:bg-[var(--color-accent)]/20 transition-colors whitespace-nowrap cursor-pointer"
         >
           {t('msg_confirm_delete_action')}
         </button>

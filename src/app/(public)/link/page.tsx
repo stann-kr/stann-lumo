@@ -3,35 +3,28 @@ import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
-import { PADDING_MAP, GAP_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 const LinkPage = () => {
   const { t } = useTranslation();
-  const { content, displaySettings } = useContent();
+  const { content } = useContent();
   const { linkPlatforms, terminalInfo } = content;
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
-
-  const settings = displaySettings.link;
-  const cardPaddingClass = PADDING_MAP[settings.cardPadding];
-  const gridGapClass = GAP_MAP[settings.gridGap];
-  const gridColsClass = MD_GRID_COLS_MAP[settings.gridColumns];
 
   return (
     <PageLayout
       title={content.pageMeta?.link?.title || t('link_title')}
       subtitle={content.pageMeta?.link?.subtitle || t('link_subtitle')}
-      spacing={settings.spacing}
     >
       {/* Terminal Featured Card */}
-      {settings.showTerminalCard && terminalInfo?.url && (
+      {terminalInfo?.url && (
         <div>
           <p className="text-xs text-[var(--color-secondary)] opacity-35 tracking-widest mb-3">{t('link_side_project')}</p>
           <a
             href={terminalInfo.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`group relative flex items-center justify-between w-full border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 ${cardPaddingClass} overflow-hidden cursor-pointer`}
+            className="group relative flex items-center justify-between w-full border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 p-7 overflow-hidden cursor-pointer"
             style={borderMid}
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -64,14 +57,14 @@ const LinkPage = () => {
       {/* Links Grid */}
       <div>
         <p className="text-xs text-[var(--color-secondary)] opacity-35 tracking-widest mb-3">{t('link_platforms')}</p>
-        <div className={`grid ${gridColsClass} ${gridGapClass}`}>
+        <div className="grid md:grid-cols-3 gap-2">
           {linkPlatforms?.map((link) => (
             <a
               key={link.id}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`group relative overflow-hidden border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer ${cardPaddingClass}`}
+              className="group relative overflow-hidden border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer p-7"
               style={borderFaint}
             >
               <div className="relative space-y-4">

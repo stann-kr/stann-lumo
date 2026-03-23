@@ -14,8 +14,6 @@ import type {
   EventsContent,
   ContactContent,
 } from "../types/content";
-import { DISPLAY_SETTINGS_DEFAULTS } from "../types/displaySettings";
-import type { AllDisplaySettings } from "../types/displaySettings";
 
 interface ContentContextType {
   content: ContentData;
@@ -26,7 +24,6 @@ interface ContentContextType {
   currentEditLanguage: "en" | "ko";
   setCurrentEditLanguage: (lang: "en" | "ko") => void;
   allContent: MultiLanguageContent;
-  displaySettings: AllDisplaySettings;
   isLoading: boolean;
 }
 
@@ -516,9 +513,6 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     contactInfo: content.contactInfo ?? [],
   };
 
-  // displaySettings: content에서 로드된 값 또는 기본값
-  const displaySettings: AllDisplaySettings = content.displaySettings ?? DISPLAY_SETTINGS_DEFAULTS;
-
   return (
     <ContentContext.Provider
       value={{
@@ -530,7 +524,6 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
         currentEditLanguage,
         setCurrentEditLanguage,
         allContent,
-        displaySettings,
         isLoading,
       }}
     >

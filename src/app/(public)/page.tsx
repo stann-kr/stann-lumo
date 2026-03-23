@@ -7,8 +7,7 @@ import { createBorderFaint } from '@/utils/colorMix';
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { content, displaySettings } = useContent();
-  const settings = displaySettings.home;
+  const { content } = useContent();
   const borderFaint = createBorderFaint();
 
   const artistName = Array.isArray(content.artistInfo)
@@ -57,7 +56,7 @@ export default function HomePage() {
         </div>
 
         {/* Terminal Info */}
-        {settings.showTerminalInfo && content.terminalInfo.url && (
+        {content.terminalInfo.url && (
           <div className="pt-8 space-y-6 relative before:absolute before:top-0 before:left-0 before:w-16 before:h-px before:bg-[var(--color-accent)]">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">

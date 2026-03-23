@@ -5,16 +5,13 @@ import PageLayout from '@/components/feature/PageLayout';
 import { createBorderFaint } from '@/utils/colorMix';
 const MusicPage = () => {
   const { t } = useTranslation();
-  const { musicContent, content, displaySettings } = useContent();
+  const { musicContent, content } = useContent();
   const borderFaint = createBorderFaint();
-
-  const settings = displaySettings.music;
 
   return (
     <PageLayout
       title={content.pageMeta?.music?.title || t('music_title')}
       subtitle={content.pageMeta?.music?.subtitle || t('music_subtitle')}
-      spacing={settings.spacing}
     >
       {/* Track List - Database Log Style */}
       <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
@@ -49,15 +46,15 @@ const MusicPage = () => {
               </div>
 
               <div className="w-24 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-60">
-                {settings.showTypeBadge && `[${track.type}]`}
+                {`[${track.type}]`}
               </div>
 
               <div className="w-20 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-40">
-                {settings.showDuration && track.duration}
+                {track.duration}
               </div>
 
               <div className="w-16 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-30">
-                {settings.showYear && track.year}
+                {track.year}
               </div>
 
               <div className="w-32 md:text-right mt-2 md:mt-0">

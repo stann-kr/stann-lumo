@@ -1,11 +1,11 @@
 /**
  * 공개 갤러리 API
- * GET /api/gallery — 전체 사진 목록 + 레이아웃 설정 (sort_order ASC)
+ * GET /api/gallery — 전체 사진 목록 (sort_order ASC)
  */
 
 import { NextResponse } from 'next/server';
 import { getDB } from '@/lib/db';
-import type { GalleryPhoto, GallerySettings, GalleryData } from '@/types/content';
+import type { GalleryPhoto, GalleryData } from '@/types/content';
 
 interface GalleryPhotoRow {
   id: string;
@@ -24,41 +24,16 @@ interface GalleryPhotoRow {
   linked_event_id: string | null;
 }
 
-interface GallerySettingsRow {
-  layout_mode: string;
-  columns_mobile: number;
-  columns_tablet: number;
-  columns_desktop: number;
-  gap_size: string;
-  aspect_ratio: string;
-  hover_effect: string;
-  caption_display: string;
-  lightbox_enabled: number;
-}
-
-const DEFAULT_SETTINGS: GallerySettings = {
-  layoutMode: 'masonry',
-  columnsMobile: 2,
-  columnsTablet: 3,
-  columnsDesktop: 4,
-  gapSize: 'md',
-  aspectRatio: 'auto',
-  hoverEffect: 'zoom',
-  captionDisplay: 'overlay',
-  lightboxEnabled: true,
-};
-
 export async function GET() {
   const db = getDB();
   if (!db) {
-    return NextResponse.json({ success: true, data: { photos: [], settings: DEFAULT_SETTINGS } });
+    return NextResponse.json({ success: true, data: { photos: [] } });
   }
 
   try {
-    const [photosResult, settingsResult] = await db.batch([
-      db.prepare('SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at DESC'),
-      db.prepare('SELECT * FROM gallery_settings WHERE id = 1'),
-    ]);
+    const photosResult = await db
+      .prepare('SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at DESC')
+      .all();
 
     const photos: GalleryPhoto[] = (photosResult.results as GalleryPhotoRow[]).map((r) => ({
       id: r.id,
@@ -77,22 +52,7 @@ export async function GET() {
       linkedEventId: r.linked_event_id ?? undefined,
     }));
 
-    const settingsRow = (settingsResult.results as GallerySettingsRow[])[0];
-    const settings: GallerySettings = settingsRow
-      ? {
-          layoutMode: (settingsRow.layout_mode as GallerySettings['layoutMode']) ?? 'masonry',
-          columnsMobile: (settingsRow.columns_mobile as GallerySettings['columnsMobile']) ?? 2,
-          columnsTablet: (settingsRow.columns_tablet as GallerySettings['columnsTablet']) ?? 3,
-          columnsDesktop: (settingsRow.columns_desktop as GallerySettings['columnsDesktop']) ?? 4,
-          gapSize: (settingsRow.gap_size as GallerySettings['gapSize']) ?? 'md',
-          aspectRatio: (settingsRow.aspect_ratio as GallerySettings['aspectRatio']) ?? 'auto',
-          hoverEffect: (settingsRow.hover_effect as GallerySettings['hoverEffect']) ?? 'zoom',
-          captionDisplay: (settingsRow.caption_display as GallerySettings['captionDisplay']) ?? 'overlay',
-          lightboxEnabled: settingsRow.lightbox_enabled === 1,
-        }
-      : DEFAULT_SETTINGS;
-
-    const data: GalleryData = { photos, settings };
+    const data: GalleryData = { photos };
     return NextResponse.json({ success: true, data });
   } catch {
     return NextResponse.json(

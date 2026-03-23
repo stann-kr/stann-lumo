@@ -5,7 +5,6 @@ import AdminSectionHeader from '@/components/base/AdminSectionHeader';
 import FormInput from '@/components/base/FormInput';
 import SuccessMessage from '@/components/base/SuccessMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
-import RadioGroup from '@/components/base/RadioGroup';
 import { useListEditor } from '@/hooks/useListEditor';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useItemReorder } from '@/hooks/useItemReorder';
@@ -15,12 +14,8 @@ import { createBorderFaint } from '@/utils/colorMix';
 import {
   updateTracks as apiUpdateTracks,
   updatePageMeta as apiUpdatePageMeta,
-  fetchDisplaySettings,
-  updateDisplaySettings,
 } from '@/services/adminService';
 import type { PageMeta } from '@/types/content';
-import type { MusicDisplaySettings } from '@/types/displaySettings';
-import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
 interface Track {
   id: string;
@@ -55,21 +50,10 @@ const AdminMusicPage = () => {
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
   const [isSaving, setIsSaving] = useState(false);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
-  const [displaySettings, setDisplaySettings] = useState<MusicDisplaySettings>(
-    DISPLAY_SETTINGS_DEFAULTS.music
-  );
 
   useEffect(() => {
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
-
-  useEffect(() => {
-    fetchDisplaySettings('music').then((res) => {
-      if (res.success && res.data) {
-        setDisplaySettings(res.data as MusicDisplaySettings);
-      }
-    });
-  }, []);
 
   const updatePageMetaField = (field: keyof PageMeta['music'], value: string) => {
     setPageMeta(prev => ({ ...prev, music: { ...prev.music, [field]: value } }));
@@ -97,7 +81,6 @@ const AdminMusicPage = () => {
     await Promise.allSettled([
       apiUpdateTracks(currentEditLanguage, tracks),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
-      updateDisplaySettings('music', displaySettings),
     ]);
     updateContent({ tracks, pageMeta });
     showNotification();
@@ -123,76 +106,6 @@ const AdminMusicPage = () => {
         />
 
         <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
-
-        {/* DISPLAY SETTINGS */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            DISPLAY SETTINGS
-          </h2>
-          <AdminCard>
-            <div className="space-y-6">
-              <RadioGroup
-                label="SECTION SPACING"
-                value={displaySettings.spacing}
-                options={[
-                  { value: 'sm', label: 'SM' },
-                  { value: 'md', label: 'MD' },
-                  { value: 'lg', label: 'LG' },
-                ]}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, spacing: v }))}
-              />
-              <RadioGroup
-                label="CARD PADDING"
-                value={displaySettings.cardPadding}
-                options={[
-                  { value: 'sm', label: 'SM' },
-                  { value: 'md', label: 'MD' },
-                  { value: 'lg', label: 'LG' },
-                ]}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, cardPadding: v }))}
-              />
-              <RadioGroup
-                label="TRACK GAP"
-                value={displaySettings.trackGap}
-                options={[
-                  { value: 'sm', label: 'SM' },
-                  { value: 'md', label: 'MD' },
-                  { value: 'lg', label: 'LG' },
-                ]}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, trackGap: v }))}
-              />
-              <div className="flex flex-wrap gap-8">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={displaySettings.showDuration}
-                    onChange={(e) => setDisplaySettings((prev) => ({ ...prev, showDuration: e.target.checked }))}
-                    className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
-                  />
-                  <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW DURATION</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={displaySettings.showYear}
-                    onChange={(e) => setDisplaySettings((prev) => ({ ...prev, showYear: e.target.checked }))}
-                    className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
-                  />
-                  <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW YEAR</span>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={displaySettings.showTypeBadge}
-                    onChange={(e) => setDisplaySettings((prev) => ({ ...prev, showTypeBadge: e.target.checked }))}
-                    className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
-                  />
-                  <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW TYPE BADGE</span>
-                </label>
-              </div>
-            </div>
-          </AdminCard>
-        </div>
 
         {/* PAGE SETTINGS */}
         <div>

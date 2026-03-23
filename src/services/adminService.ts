@@ -22,7 +22,6 @@ import type {
   TerminalStyleConfig,
 } from '@/types/content';
 import type { SiteConfigData } from '@/app/api/admin/site-config/route';
-import type { AllDisplaySettings } from '@/types/displaySettings';
 
 // ---------- 아티스트 정보 ----------
 
@@ -163,24 +162,6 @@ export function fetchSiteConfig() {
 }
 export function updateSiteConfig(siteConfig: SiteConfigData) {
   return apiPut<void>('/api/admin/site-config', { siteConfig });
-}
-
-// ---------- Display Settings ----------
-
-export function fetchDisplaySettings(): ReturnType<typeof apiGet<AllDisplaySettings>>;
-export function fetchDisplaySettings(page: keyof AllDisplaySettings): ReturnType<typeof apiGet<AllDisplaySettings[keyof AllDisplaySettings]>>;
-export function fetchDisplaySettings(page?: keyof AllDisplaySettings) {
-  if (page) {
-    return apiGet<AllDisplaySettings[keyof AllDisplaySettings]>(`/api/admin/display-settings?page=${page}`);
-  }
-  return apiGet<AllDisplaySettings>('/api/admin/display-settings');
-}
-
-export function updateDisplaySettings(
-  page: keyof AllDisplaySettings,
-  settings: AllDisplaySettings[keyof AllDisplaySettings],
-) {
-  return apiPut<void>('/api/admin/display-settings', { page, settings: settings as unknown as Record<string, unknown> });
 }
 
 // ---------- 터미널 통합 설정 ----------

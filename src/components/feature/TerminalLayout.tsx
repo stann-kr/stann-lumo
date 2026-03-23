@@ -19,7 +19,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { t } = useTranslation();
-  const { language, toggleLanguage } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const { content, isLoading } = useContent();
 
   const NAV_ITEMS = [
@@ -135,7 +135,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
             {/* Language Toggle HUD */}
             <div className="flex items-center gap-1 border border-[var(--color-muted)] px-2 py-1 bg-black">
               <button
-                onClick={toggleLanguage}
+                onClick={() => setLanguage('en')}
                 className={`text-[10px] font-mono tracking-widest px-1 transition-colors ${
                   language === 'en' ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
                 }`}
@@ -144,7 +144,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
               </button>
               <span className="text-[10px] font-mono text-[var(--color-muted)]">|</span>
               <button
-                onClick={toggleLanguage}
+                onClick={() => setLanguage('ko')}
                 className={`text-[10px] font-mono tracking-widest px-1 transition-colors ${
                   language === 'ko' ? 'text-[var(--color-accent)]' : 'text-[var(--color-muted)] hover:text-[var(--color-primary)]'
                 }`}
@@ -223,9 +223,9 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
           <div className="px-6 py-4 border-t border-[var(--color-muted)] flex justify-between items-center">
             <span className="font-mono text-[10px] text-[var(--color-muted)] tracking-widest">LANG</span>
             <div className="flex gap-2">
-              <button onClick={toggleLanguage} className={`font-mono text-xs ${language==='en'?'text-[var(--color-accent)]':'text-[var(--color-muted)]'}`}>EN</button>
+              <button onClick={() => setLanguage('en')} className={`font-mono text-xs ${language==='en'?'text-[var(--color-accent)]':'text-[var(--color-muted)]'}`}>EN</button>
               <span className="font-mono text-[10px] text-[var(--color-muted)]">|</span>
-              <button onClick={toggleLanguage} className={`font-mono text-xs ${language==='ko'?'text-[var(--color-accent)]':'text-[var(--color-muted)]'}`}>KO</button>
+              <button onClick={() => setLanguage('ko')} className={`font-mono text-xs ${language==='ko'?'text-[var(--color-accent)]':'text-[var(--color-muted)]'}`}>KO</button>
             </div>
           </div>
         </nav>

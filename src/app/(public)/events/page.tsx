@@ -8,11 +8,10 @@ import { createBorderMid } from "@/utils/colorMix";
 
 const EventsPage = () => {
   const { t } = useTranslation();
-  const { eventsContent, content, displaySettings } = useContent();
+  const { eventsContent, content } = useContent();
   const borderMid = createBorderMid();
-  const settings = displaySettings.events;
 
-  const [visiblePastCount, setVisiblePastCount] = useState(settings.initialPastCount);
+  const [visiblePastCount, setVisiblePastCount] = useState(10);
 
   // YYYY.MM.DD (RA) / YYYY-MM-DD (수동) 양쪽 형식 지원
   const parseEventDate = (dateStr: string): Date => {
@@ -37,20 +36,17 @@ const EventsPage = () => {
   const hasMorePastEvents = pastEvents.length > visiblePastCount;
 
   const handleLoadMore = () => {
-    setVisiblePastCount((prev) => prev + settings.loadMoreCount);
+    setVisiblePastCount((prev) => prev + 10);
   };
-
-  const pastOpacity = settings.pastEventOpacity / 100;
 
   return (
     <PageLayout
       title={content.pageMeta?.events?.title || t("events_title")}
       subtitle={content.pageMeta?.events?.subtitle || t("events_subtitle")}
-      spacing={settings.spacing}
     >
       {/* Upcoming Events */}
       <div className="space-y-6">
-        <h2 className="text-sm font-semibold text-[var(--color-accent)] tracking-widest">
+        <h2 className="text-sm font-mono font-semibold text-[var(--color-accent)] tracking-widest">
           {content.pageMeta?.events?.upcomingTitle || t("events_upcoming")}
         </h2>
 
@@ -117,7 +113,7 @@ const EventsPage = () => {
 
       {/* Past Events */}
       <div className="space-y-6 pt-8 relative before:absolute before:top-0 before:left-0 before:w-16 before:h-px before:bg-[var(--color-accent)]">
-        <h2 className="text-sm font-semibold text-[var(--color-secondary)] opacity-50 tracking-widest">
+        <h2 className="text-sm font-mono font-semibold text-[var(--color-secondary)] opacity-50 tracking-widest">
           {content.pageMeta?.events?.pastTitle || t("events_past")}
         </h2>
 
@@ -127,14 +123,14 @@ const EventsPage = () => {
           </p>
         ) : (
           <>
-            <div className="border border-[var(--color-muted)]/50 bg-[var(--color-muted)]/50 p-[1px] flex flex-col gap-[1px]">
+            <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
               {visiblePastEvents.map((event, idx) => {
                 const idStr = (idx + 1).toString().padStart(3, '0');
                 return (
                   <Link
                     key={event.id}
                     href={`/events/${event.id}`}
-                    style={{ opacity: pastOpacity }}
+                    style={{ opacity: 0.5 }}
                     className="bg-surface group relative overflow-hidden transition-colors hover:bg-[var(--color-muted)] flex flex-col md:flex-row md:items-center p-4 gap-4"
                   >
                     <div className="w-8 font-mono text-[10px] text-[var(--color-secondary)] opacity-50 hidden md:block">

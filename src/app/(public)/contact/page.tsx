@@ -6,17 +6,12 @@ import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import { createBorderFaint } from '@/utils/colorMix';
 // import { createBorderMid } from '@/utils/colorMix'; // TODO: 폼 활성화 시 주석 해제
-import { MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 const ContactPage = () => {
   const { t } = useTranslation();
-  const { contactContent, eventsContent, content, displaySettings } = useContent();
+  const { contactContent, eventsContent, content } = useContent();
   const borderFaint = createBorderFaint();
   // const borderMid = createBorderMid(); // TODO: 폼 활성화 시 주석 해제
-
-  const settings = displaySettings.contact;
-  const contactColsClass = MD_GRID_COLS_MAP[settings.contactInfoColumns];
-  const bookingColsClass = MD_GRID_COLS_MAP[settings.bookingColumns];
 
   // TODO: 메일링 서비스(NEXT_PUBLIC_FORM_ENDPOINT) 연결 후 아래 블록 전체 주석 해제
   // const [formData, setFormData] = useState({ callsign: '', email: '', message: '' });
@@ -59,7 +54,6 @@ const ContactPage = () => {
     <PageLayout
       title={content.pageMeta?.contact?.title || t('contact_title')}
       subtitle={content.pageMeta?.contact?.subtitle || t('contact_subtitle')}
-      spacing={settings.spacing}
     >
       {/* Guestbook Form — 메일링 서비스 연결 후 활성화 예정 */}
       {/* TODO: NEXT_PUBLIC_FORM_ENDPOINT 환경변수 설정 후 아래 주석 블록 전체 해제 */}
@@ -132,7 +126,7 @@ const ContactPage = () => {
           {content.pageMeta?.contact?.directTitle || t('contact_direct')}
         </h2>
 
-        <div className={`grid ${contactColsClass} gap-6`}>
+        <div className="grid md:grid-cols-3 gap-6">
           {contactContent.contactInfo.map((item, index) => (
             <div key={index} className="space-y-2">
               <div className="w-8 h-8 flex items-center justify-center">
@@ -160,7 +154,7 @@ const ContactPage = () => {
           {content.pageMeta?.contact?.bookingTitle || t('contact_booking_info')}
         </h2>
 
-        <div className={`grid ${bookingColsClass} gap-8`}>
+        <div className="grid md:grid-cols-3 gap-8">
           {/* Set Duration */}
           <div className="space-y-4">
             <div className="w-8 h-8 flex items-center justify-center">

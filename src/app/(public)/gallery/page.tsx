@@ -67,7 +67,7 @@ const GridItem = ({ photo, settings, onClick }: GridItemProps) => {
           loading="lazy"
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-[var(--color-accent)]/80 rounded-full flex items-center justify-center">
             <i className="ri-play-fill text-white text-xl ml-0.5"></i>
           </div>
         </div>
@@ -132,22 +132,24 @@ const GridItem = ({ photo, settings, onClick }: GridItemProps) => {
   );
 };
 
+// ─── 고정 갤러리 레이아웃 설정 ───────────────────────────────────────────────
+const GALLERY_SETTINGS: GallerySettings = {
+  layoutMode: 'masonry',
+  columnsMobile: 2,
+  columnsTablet: 3,
+  columnsDesktop: 4,
+  gapSize: 'md',
+  aspectRatio: 'auto',
+  hoverEffect: 'zoom',
+  captionDisplay: 'overlay',
+  lightboxEnabled: true,
+};
+
 // ─── 메인 갤러리 페이지 ──────────────────────────────────────────────────────
 const GalleryPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [settings, setSettings] = useState<GallerySettings>({
-    layoutMode: 'masonry',
-    columnsMobile: 2,
-    columnsTablet: 3,
-    columnsDesktop: 4,
-    gapSize: 'md',
-    aspectRatio: 'auto',
-    hoverEffect: 'zoom',
-    captionDisplay: 'overlay',
-    lightboxEnabled: true,
-  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -158,7 +160,6 @@ const GalleryPage = () => {
         const json = (await res.json()) as { success: boolean; data: GalleryData };
         if (json.success) {
           setPhotos(json.data.photos);
-          setSettings(json.data.settings);
         }
       } catch {
         // 네트워크 오류 시 빈 갤러리 표시
@@ -170,7 +171,7 @@ const GalleryPage = () => {
   }, []);
 
   const borderStyle = createBorderFaint();
-  const containerClasses = buildContainerClasses(settings);
+  const containerClasses = buildContainerClasses(GALLERY_SETTINGS);
 
   return (
     <PageLayout
@@ -196,7 +197,7 @@ const GalleryPage = () => {
             <GridItem
               key={photo.id}
               photo={photo}
-              settings={settings}
+              settings={GALLERY_SETTINGS}
               onClick={() => router.push(`/gallery/${photo.id}`)}
             />
           ))}

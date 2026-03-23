@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createBorderMid, createBorderAccent } from '../../utils/colorMix';
 
 /**
@@ -45,6 +46,8 @@ const FormInput = ({
   placeholder,
   readOnly = false,
 }: FormInputProps) => {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <div>
       <label className="block text-xs text-[var(--color-accent)] tracking-widest mb-2">
@@ -57,9 +60,9 @@ const FormInput = ({
         placeholder={placeholder}
         readOnly={readOnly}
         className="w-full bg-transparent border-b text-[var(--color-secondary)] text-sm tracking-wider py-2 focus:outline-none transition-colors"
-        style={createBorderMid()}
-        onFocus={(e) => Object.assign(e.target.style, createBorderAccent())}
-        onBlur={(e) => Object.assign(e.target.style, createBorderMid())}
+        style={isFocused ? createBorderAccent() : createBorderMid()}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
     </div>
   );

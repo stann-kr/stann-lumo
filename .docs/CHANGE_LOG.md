@@ -2,6 +2,33 @@
 
 ---
 
+## [Unreleased] — 2026-03-24 (UI 일관성·버그 수정·어드민 연결성 개선)
+
+### Bug 1: TerminalLayout 모바일 언어 토글 역방향 동작 수정
+
+- `src/components/feature/TerminalLayout.tsx` — 모바일/데스크탑 EN·KO 버튼 모두 `toggleLanguage()` → `setLanguage('en'/'ko')` 명시적 전환으로 수정
+- 동일 언어 버튼 클릭 시 반대 언어로 전환되던 버그 해소
+
+### Bug 2: FormInput / FormTextarea React 안티패턴 수정
+
+- `src/components/base/FormInput.tsx` — `Object.assign(e.target.style, ...)` DOM 직접 변조 → `useState(isFocused)` 기반 조건부 style prop 적용
+- `src/components/base/FormTextarea.tsx` — 동일 패턴 수정
+
+### Bug 3: SuccessMessage 테두리 불투명도 통일
+
+- `src/components/base/SuccessMessage.tsx` — `{borderColor: 'var(--color-accent)'}` (100% 불투명) → `createBorderAccent()` (50% color-mix) 교체, 전체 컴포넌트와 일관성 확보
+
+### Bug 4: DeleteConfirmModal 하드코딩 red 색상 제거
+
+- `src/components/base/DeleteConfirmModal.tsx` — `bg-red-900/30 text-red-400 hover:bg-red-900/50` → `bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20`으로 교체, 테마 변경 시 자동 반영
+
+### Bug 5-6: Music·Events 공개 페이지 cardPadding 어드민 설정 연결
+
+- `src/app/(public)/music/page.tsx` — 트랙 행 패딩 하드코딩(`px-4 py-4 md:py-3`) → `PADDING_MAP[settings.cardPadding]` 적용
+- `src/app/(public)/events/page.tsx` — 이벤트 카드 패딩 하드코딩(`p-4`) → `PADDING_MAP[settings.cardPadding]` 적용 (예정·과거 이벤트 모두)
+
+---
+
 ## [Unreleased] — 2026-03-23 (3D 씬 개선 및 홈 UI 개편)
 
 ### 3D 배경 우주선 DB 연동 수정

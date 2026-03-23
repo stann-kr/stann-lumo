@@ -13,9 +13,9 @@ interface EventDetailData {
 }
 
 const STATUS_CLASSES: Record<Performance['status'], string> = {
-  Announced: 'text-green-400',
-  TBA:       'text-yellow-400',
-  Cancelled: 'text-red-400',
+  Announced: 'text-[var(--color-accent)]',
+  TBA:       'text-[var(--color-secondary)] opacity-60',
+  Cancelled: 'text-[var(--color-muted)]',
 };
 
 const EventDetailPage = () => {
