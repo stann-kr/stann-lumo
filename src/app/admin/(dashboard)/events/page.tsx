@@ -40,7 +40,6 @@ const AdminEventsPage = () => {
     setItems: setPerformances,
     updateItem: updatePerformance,
     deleteItem: deletePerformance,
-    addItem: addPerformance,
   } = useListEditor<Performance>(content.performances);
 
   const [raApiConfig, setRaApiConfig] = useState<RAApiConfig>(

@@ -41,7 +41,6 @@ const AdminMusicPage = () => {
     setItems: setTracks,
     updateItem: updateTrack,
     deleteItem: deleteTrack,
-    addItem: addTrack,
   } = useListEditor<Track>(content.tracks);
 
   const {

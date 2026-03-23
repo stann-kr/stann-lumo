@@ -12,6 +12,7 @@ export const COLOR_VARS = {
   ACCENT: '--color-accent',
   MUTED: '--color-muted',
   BG: '--color-bg',
+  BG_SIDEBAR: '--color-bg-sidebar',
 } as const;
 
 /**
@@ -47,12 +48,14 @@ export const setAllColorVars = (colors: {
   accent: string;
   muted: string;
   bg: string;
+  bgSidebar?: string;
 }): void => {
   setCSSVar(COLOR_VARS.PRIMARY, colors.primary);
   setCSSVar(COLOR_VARS.SECONDARY, colors.secondary);
   setCSSVar(COLOR_VARS.ACCENT, colors.accent);
   setCSSVar(COLOR_VARS.MUTED, colors.muted);
   setCSSVar(COLOR_VARS.BG, colors.bg);
+  setCSSVar(COLOR_VARS.BG_SIDEBAR, colors.bgSidebar ?? colors.bg);
 };
 
 /**

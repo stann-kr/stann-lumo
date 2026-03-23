@@ -4,15 +4,12 @@ import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { useContent } from "@/contexts/ContentContext";
 import PageLayout from "@/components/feature/PageLayout";
-import { createBorderFaint, createBorderMid } from "@/utils/colorMix";
-import { PADDING_MAP, SPACE_Y_MAP } from "@/utils/displaySettingsMap";
+import { createBorderMid } from "@/utils/colorMix";
 
 const EventsPage = () => {
   const { t } = useTranslation();
   const { eventsContent, content, displaySettings } = useContent();
-  const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
-
   const settings = displaySettings.events;
 
   const [visiblePastCount, setVisiblePastCount] = useState(settings.initialPastCount);
@@ -43,8 +40,6 @@ const EventsPage = () => {
     setVisiblePastCount((prev) => prev + settings.loadMoreCount);
   };
 
-  const cardPaddingClass = PADDING_MAP[settings.cardPadding];
-  const cardGapClass = SPACE_Y_MAP[settings.cardGap];
   const pastOpacity = settings.pastEventOpacity / 100;
 
   return (

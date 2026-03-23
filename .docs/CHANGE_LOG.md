@@ -2,6 +2,47 @@
 
 ---
 
+## [Unreleased] — 2026-03-23 (디자인 시스템 전면 점검 및 버그 수정)
+
+### Phase 1: 버그 및 잔재 코드 제거
+
+- `src/components/feature/TerminalLayout.tsx` — AI 편집 메모 잔류 주석 2줄 제거
+- `src/components/feature/TerminalLayout.tsx` — 로딩 스피너를 FUI 직각 테두리 회전 스피너로 교체 (`rounded-full` → 직각 `animate-spin`)
+- `src/components/home/CursorGlow.tsx` — `rounded-full` Tailwind 클래스 제거, 글로벌 `border-radius: 0 !important` 충돌 방지를 위해 인라인 스타일로 전환
+- `src/index.css` — 어디서도 import되지 않던 레거시 CSS 파일 삭제
+
+### Phase 2: 디자인 토큰 일관성 확보
+
+- `tailwind.config.ts` — 하드코딩된 `terminal.*` 색상 제거, CSS 변수 기반 `theme.*` 색상 시스템으로 통합
+- `src/constants/colors.ts` — `COLOR_VARS`에 누락된 `BG_SIDEBAR` 추가, `setAllColorVars`에 `bgSidebar` 파라미터 추가
+- `src/constants/styles.ts` — `BORDER.RADIUS` 사용 불가 값(SM/MD/LG/XL/FULL) 제거, `NONE`만 유지 (FUI 철학 반영)
+
+### Phase 3: Scene3D 성능 최적화 및 타입 수정
+
+- `src/components/feature/Scene3D.tsx` — `null as any` → `undefined` 타입 수정
+- `src/components/feature/Scene3D.tsx` — `ChromaticAberration offset` `useMemo`로 메모이제이션 (매 렌더 객체 생성 방지)
+- `src/components/feature/Scene3D.tsx` — deprecated `Vignette eskil` prop 제거
+- `src/components/feature/Scene3D.tsx` — `Particles` 기본값 300→250으로 사용처와 통일
+- `src/components/feature/Scene3D.tsx` — Canvas 내부를 `<Suspense>` 바운더리로 래핑
+- `src/components/feature/Scene3D.tsx` — `EffectComposer disableNormalPass` → `enableNormalPass={false}` (올바른 API)
+- `src/components/feature/Scene3D.tsx` — 파티클 초기화를 모듈 레벨 `createParticleData` 함수로 분리 (`react-hooks/purity` 규칙 준수)
+- `src/components/feature/Scene3D.tsx` — `CameraRig` 미사용 `t` 변수 제거
+
+### Phase 4: 애니메이션 코드 안정화
+
+- `src/components/home/CipherDecodeText.tsx` — `gsap.context()`로 모든 트윈 묶어 cleanup 시 일괄 kill 보장
+- `src/components/home/TypingText.tsx` — `onComplete`를 `useRef`로 최신 참조 유지, deps에서 제거하여 부모 리렌더 시 타이핑 재시작 방지
+
+### Phase 5: 코드 정리
+
+- `src/utils/colorMix.ts` — 미사용 함수 제거: `createMultiColorMixStyle`, `createBorderStyle`, `createBorderStrong`, `createBorderMuted` + `BORDER` import 정리
+- `src/components/feature/TerminalLayout.tsx`, `PageLayout.tsx` — 미사용 import 제거
+- `src/components/base/PageSection.tsx` — 미사용 `createBorderFaint` import 제거
+- `src/app/(public)/page.tsx`, `events/page.tsx`, `music/page.tsx` — 선언 후 미사용 변수/import 제거
+- `src/app/admin/(dashboard)/events/page.tsx`, `music/page.tsx` — useListEditor 미사용 destructure 제거
+
+---
+
 ## [Unreleased] — 2026-03-23 (RA API Year 파라미터 및 원본 데이터 보존 추가)
 
 ### RA API Config Year 파라미터 추가

@@ -5,17 +5,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useContent } from '../../contexts/ContentContext';
-import { createColorMixStyle } from '../../utils/colorMix';
-import { COLOR_VARS } from '../../constants/colors';
-import { TRANSITION } from '../../constants/styles';
 import { SITE_NAME, SITE_VERSION, TERMINAL_URL } from '../../constants/site';
 import CursorGlow from '../home/CursorGlow';
 import LiveClock from '../home/LiveClock';
 import Scene3D from './Scene3D';
-
-// ... (skipping to the JSX return)
-// I will just use multi_replace for accuracy since it's safer. Wait, I am replacing the whole file? No, my constraints: I should just replace parts.
-
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -247,9 +240,9 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
         {isLoading ? (
           <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
-            <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] animate-pulse flex flex-col items-center gap-2">
-              <div className="w-4 h-4 border border-[var(--color-accent)] rounded-full border-t-transparent animate-spin"></div>
-              <span>FETCHING DATA...</span>
+            <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] flex flex-col items-center gap-2">
+              <div className="w-4 h-4 border border-[var(--color-accent)] border-t-transparent animate-spin"></div>
+              <span className="animate-pulse">FETCHING DATA...</span>
             </div>
           </div>
         ) : (

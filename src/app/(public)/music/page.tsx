@@ -2,18 +2,13 @@
 import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
-import { PADDING_MAP, GAP_MAP } from '@/utils/displaySettingsMap';
-
+import { createBorderFaint } from '@/utils/colorMix';
 const MusicPage = () => {
   const { t } = useTranslation();
   const { musicContent, content, displaySettings } = useContent();
   const borderFaint = createBorderFaint();
-  const borderMid = createBorderMid();
 
   const settings = displaySettings.music;
-  const cardPaddingClass = PADDING_MAP[settings.cardPadding];
-  const trackGapClass = GAP_MAP[settings.trackGap];
 
   return (
     <PageLayout

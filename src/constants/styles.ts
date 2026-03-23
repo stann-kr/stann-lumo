@@ -12,14 +12,9 @@ export const BORDER = {
     MEDIUM: '2px',
     THICK: '3px',
   },
+  // FUI 디자인 철학상 border-radius는 사용하지 않음 (globals.css: border-radius: 0 !important)
   RADIUS: {
     NONE: '0',
-    SM: '0.125rem',
-    DEFAULT: '0.25rem',
-    MD: '0.375rem',
-    LG: '0.5rem',
-    XL: '0.75rem',
-    FULL: '9999px',
   },
   OPACITY: {
     LIGHT: 0.15,

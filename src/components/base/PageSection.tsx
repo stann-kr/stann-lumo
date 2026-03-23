@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { createBorderFaint } from '../../utils/colorMix';
 
 /**
  * PageSection 컴포넌트 Props

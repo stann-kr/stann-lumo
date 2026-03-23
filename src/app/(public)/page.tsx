@@ -4,18 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
 import PageSection from '@/components/base/PageSection';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
-import { PADDING_MAP, GAP_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
+import { PADDING_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 export default function HomePage() {
   const { t } = useTranslation();
   const { content, displaySettings } = useContent();
-  const borderFaint = createBorderFaint();
-  const borderMid = createBorderMid();
-
   const settings = displaySettings.home;
   const navColsClass = MD_GRID_COLS_MAP[settings.navGridColumns];
-  const navGapClass = GAP_MAP[settings.navGridGap];
   const navPaddingClass = PADDING_MAP[settings.navCardPadding];
 
   const artistName = Array.isArray(content.artistInfo)

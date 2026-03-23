@@ -1,10 +1,9 @@
 'use client';
-import type { ReactNode, ReactElement } from 'react';
+import type { ReactNode } from 'react';
 import { Children, isValidElement, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import CipherDecodeText from '../home/CipherDecodeText';
-import { createBorderMid } from '../../utils/colorMix';
 import { MAX_WIDTH_MAP } from '../../utils/displaySettingsMap';
 import { useContent } from '../../contexts/ContentContext';
 
@@ -33,7 +32,6 @@ const PageLayout = ({
   children,
   spacing,
 }: PageLayoutProps) => {
-  const borderMid = createBorderMid();
   const { displaySettings } = useContent();
   const global = displaySettings.global;
 

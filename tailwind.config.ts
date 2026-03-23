@@ -9,11 +9,14 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
-        terminal: {
-          bg: '#0a0a0a',
-          cyan: '#00d9ff',
-          magenta: '#ff6b9d',
-          green: '#00ff88',
+        // CSS 변수 기반 동적 테마 색상
+        theme: {
+          primary:    'var(--color-primary)',
+          secondary:  'var(--color-secondary)',
+          accent:     'var(--color-accent)',
+          muted:      'var(--color-muted)',
+          bg:         'var(--color-bg)',
+          'bg-sidebar': 'var(--color-bg-sidebar)',
         },
       },
     },
