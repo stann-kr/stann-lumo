@@ -1,5 +1,6 @@
 'use client';
 import { useState, ReactNode } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -252,12 +253,18 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
             </div>
           </div>
         ) : (
-          <div
-            key={pathname}
-            className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-4 md:p-8 lg:p-12 animate-fadeIn relative z-10"
-          >
-            {children}
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 10, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -10, filter: 'blur(8px)' }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-4 md:p-8 lg:p-12 relative z-10"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         )}
       </main>
     </div>

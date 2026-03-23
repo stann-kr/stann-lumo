@@ -3,7 +3,7 @@ import type { ReactNode, ReactElement } from 'react';
 import { Children, isValidElement, useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import TypingText from '../home/TypingText';
+import CipherDecodeText from '../home/CipherDecodeText';
 import { createBorderMid } from '../../utils/colorMix';
 import { MAX_WIDTH_MAP } from '../../utils/displaySettingsMap';
 import { useContent } from '../../contexts/ContentContext';
@@ -90,12 +90,11 @@ const PageLayout = ({
         </div>
         
         <h1 className="text-6xl md:text-8xl font-black uppercase tracking-[0.1em] text-[var(--color-primary)] leading-none break-words">
-          <TypingText text={title} speed={resolvedTypingSpeed} delay={typingDelay} />
+          <CipherDecodeText text={title} delay={typingDelay} />
           {titleExtra && titleExtra.map((part, i) => (
             <span key={i} className="block mt-2">
-              <TypingText
+              <CipherDecodeText
                 text={part}
-                speed={resolvedTypingSpeed}
                 delay={extraDelays[i]}
               />
             </span>

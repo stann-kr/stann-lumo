@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Icosahedron, Ring } from '@react-three/drei';
+import { Octahedron, Ring } from '@react-three/drei';
 import { EffectComposer, Bloom, Noise, ChromaticAberration, Vignette } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
@@ -52,7 +52,7 @@ const Particles = ({ count = 300, color = '#ffffff' }) => {
   return (
     <instancedMesh ref={mesh} args={[null as any, null as any, count]}>
       <octahedronGeometry args={[0.05, 0]} />
-      <meshBasicMaterial color={color} wireframe transparent opacity={0.3} />
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} wireframe transparent opacity={0.3} />
     </instancedMesh>
   );
 };
@@ -73,14 +73,14 @@ const FuiRings = ({ color = '#00ff00' }) => {
     <group ref={groupRef} position={[0, 0, -15]}>
       {/* Outer Ring */}
       <Ring args={[14, 14.05, 64]} >
-        <meshBasicMaterial color={color} transparent opacity={0.2} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1} transparent opacity={0.3} side={THREE.DoubleSide} />
       </Ring>
       {/* Inner Dashed/Segmented Ring effect using low poly */}
       <Ring args={[10, 10.1, 32, 1, 0, Math.PI * 1.5]} >
-        <meshBasicMaterial color={color} transparent opacity={0.4} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.5} transparent opacity={0.5} side={THREE.DoubleSide} />
       </Ring>
       <Ring args={[6, 6.05, 16]} >
-        <meshBasicMaterial color={color} transparent opacity={0.1} side={THREE.DoubleSide} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.5} transparent opacity={0.2} side={THREE.DoubleSide} />
       </Ring>
     </group>
   );
@@ -103,24 +103,25 @@ export default function Scene3D() {
   const mutedColor = content.themeColors.muted || '#333333';
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[-10] opacity-80">
+    <div className="fixed inset-0 pointer-events-none z-[-10] opacity-90">
       <Canvas camera={{ position: [0, 0, 5], fov: 75 }} gl={{ antialias: true, powerPreference: "high-performance" }}>
         <color attach="background" args={['#000000']} />
         <fog attach="fog" args={['#000000', 5, 25]} />
+        <ambientLight intensity={0.2} />
         
         <Particles count={250} color={mutedColor} />
         <FuiRings color={accentColor} />
         
-        {/* Core Geometry (Target / Data Core) */}
-        <Icosahedron args={[2, 1]} position={[0, 0, -10]}>
-          <meshBasicMaterial color={accentColor} wireframe transparent opacity={0.3} />
-        </Icosahedron>
+        {/* Core Geometry (Target / Octagon Data Core) */}
+        <Octahedron args={[2, 0]} position={[0, 0, -10]}>
+          <meshStandardMaterial color={accentColor} emissive={accentColor} emissiveIntensity={2.5} wireframe transparent opacity={0.6} />
+        </Octahedron>
         
         <CameraRig />
 
-        <EffectComposer>
-          <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={2.0} />
-          <Noise opacity={0.4} blendFunction={BlendFunction.OVERLAY} />
+        <EffectComposer disableNormalPass>
+          <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} intensity={2.5} mipmapBlur />
+          <Noise opacity={0.3} blendFunction={BlendFunction.OVERLAY} />
           <ChromaticAberration offset={new THREE.Vector2(0.002, 0.002)} blendFunction={BlendFunction.NORMAL} />
           <Vignette eskil={false} offset={0.1} darkness={1.1} />
         </EffectComposer>
