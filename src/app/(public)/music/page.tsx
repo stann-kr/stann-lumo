@@ -14,9 +14,9 @@ const MusicPage = () => {
       subtitle={content.pageMeta?.music?.subtitle || t('music_subtitle')}
     >
       {/* Track List - Database Log Style */}
-      <div className="hud-panel flex flex-col">
+      <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
         {/* Header Row */}
-        <div className="hidden md:flex items-center px-4 py-2 border-b border-[var(--color-muted)]/30 font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase">
+        <div className="hidden md:flex items-center px-4 py-2 bg-surface font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase">
           <div className="w-16">{t('music_col_id')}</div>
           <div className="flex-1">{t('music_col_title')}</div>
           <div className="w-24">{t('music_col_type')}</div>
@@ -30,7 +30,7 @@ const MusicPage = () => {
           return (
             <div
               key={track.id}
-              className="group relative overflow-hidden border-b border-[var(--color-muted)]/20 last:border-b-0 transition-colors hover:bg-[var(--color-accent)]/5 flex flex-col md:flex-row md:items-center px-4 py-4 md:py-3 gap-3 md:gap-0"
+              className="group bg-surface relative overflow-hidden transition-colors hover:bg-[var(--color-accent)]/5 flex flex-col md:flex-row md:items-center px-4 py-4 md:py-3 gap-3 md:gap-0"
             >
               <div className="w-16 font-mono text-xs text-[var(--color-muted)] group-hover:text-[var(--color-accent)] transition-colors hidden md:block">
                 {idStr}

@@ -55,14 +55,14 @@ const EventsPage = () => {
             {t("msg_no_items")}
           </p>
         ) : (
-          <div className="hud-panel flex flex-col">
+          <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
             {upcomingEvents.map((event, idx) => {
               const idStr = (idx + 1).toString().padStart(3, '0');
               return (
                 <Link
                   key={event.id}
                   href={`/events/${event.id}`}
-                  className="group relative overflow-hidden border-b border-[var(--color-muted)]/20 last:border-b-0 transition-colors hover:bg-[var(--color-accent)]/5 flex flex-col md:flex-row md:items-center p-4 gap-4"
+                  className="bg-surface group relative overflow-hidden transition-colors hover:bg-[var(--color-accent)]/5 flex flex-col md:flex-row md:items-center p-4 gap-4"
                 >
                   <div className="w-8 font-mono text-[10px] text-[var(--color-accent)] hidden md:block">
                     [{idStr}]
@@ -123,14 +123,15 @@ const EventsPage = () => {
           </p>
         ) : (
           <>
-            <div className="hud-panel flex flex-col opacity-50">
+            <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
               {visiblePastEvents.map((event, idx) => {
                 const idStr = (idx + 1).toString().padStart(3, '0');
                 return (
                   <Link
                     key={event.id}
                     href={`/events/${event.id}`}
-                    className="group relative overflow-hidden border-b border-[var(--color-muted)]/20 last:border-b-0 transition-opacity hover:opacity-100 flex flex-col md:flex-row md:items-center p-4 gap-4"
+                    style={{ opacity: 0.5 }}
+                    className="bg-surface group relative overflow-hidden transition-colors hover:bg-[var(--color-muted)] flex flex-col md:flex-row md:items-center p-4 gap-4"
                   >
                     <div className="w-8 font-mono text-[10px] text-[var(--color-secondary)] opacity-50 hidden md:block">
                       [{idStr}]

@@ -85,7 +85,7 @@ const PageLayout = ({
       </div>
 
       {/* Page Content */}
-      <div className="relative z-10 pt-4">
+      <div className="relative z-10 pt-4 space-y-10">
         {animatedChildren}
       </div>
     </div>

@@ -126,7 +126,7 @@ const ContactPage = () => {
       >
         <div className="grid md:grid-cols-3 gap-6">
           {contactContent.contactInfo.map((item, index) => (
-            <div key={index} className="hud-panel p-4 space-y-2">
+            <div key={index} className="space-y-3">
               <div className="w-8 h-8 flex items-center justify-center">
                 <i className={`text-lg text-[var(--color-accent)] ${item.icon}`}></i>
               </div>
