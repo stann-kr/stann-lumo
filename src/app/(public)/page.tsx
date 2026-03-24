@@ -42,7 +42,7 @@ export default function HomePage() {
                   <span className="font-mono text-[9px] text-[var(--color-muted)] tracking-widest group-hover:text-[var(--color-accent)] transition-colors shrink-0">
                     [{numStr}]
                   </span>
-                  <h2 className="font-mono text-sm uppercase tracking-[0.2em] text-[var(--color-primary)] shrink-0">
+                  <h2 className="font-mono text-sm uppercase tracking-[0.2em] text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors shrink-0">
                     {section.title}
                   </h2>
                   <p className="font-mono text-xs text-[var(--color-secondary)]/30 group-hover:text-[var(--color-secondary)]/60 transition-all flex-1 truncate hidden md:block">
