@@ -2,7 +2,8 @@
  * Cloudflare 런타임 바인딩 접근 헬퍼
  *
  * CF Workers 런타임에서는 getCloudflareContext()로 D1/R2 접근.
- * Docker 개발 환경(Node.js)에서는 getCloudflareContext()가 throw → null 반환 폴백.
+ * Docker 개발 환경(Node.js)에서는 Cloudflare D1 REST API HTTP 어댑터로 실제 DB 직접 쿼리.
+ *   필요 환경변수: CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN (docker-compose.yml에 이미 선언)
  */
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
@@ -67,6 +68,93 @@ declare global {
   }
 }
 
+// ── D1 HTTP 어댑터 (로컬 개발 환경) ──────────────────────────────────────────
+// Cloudflare D1 REST API를 통해 실제 DB를 직접 쿼리 — wrangler.json database_id 참조
+
+const D1_DATABASE_ID = '9ef2f5b5-e0f2-4bb0-98e2-b3b1ba39917e';
+
+interface D1HttpQueryResponse<T> {
+  result: Array<{ results: T[]; success: boolean; meta: Record<string, unknown> }>;
+  success: boolean;
+  errors: Array<{ message: string }>;
+}
+
+class D1HttpPreparedStatement implements D1PreparedStatement {
+  constructor(
+    private readonly db: D1HttpAdapter,
+    private readonly sql: string,
+    private readonly params: unknown[] = [],
+  ) {}
+
+  bind(...values: unknown[]): D1PreparedStatement {
+    return new D1HttpPreparedStatement(this.db, this.sql, values);
+  }
+
+  async _execute<T>(): Promise<D1Result<T>> {
+    return this.db._query<T>(this.sql, this.params);
+  }
+
+  async first<T = unknown>(colName?: string): Promise<T | null> {
+    const result = await this._execute<Record<string, unknown>>();
+    if (!result.results.length) return null;
+    if (colName !== undefined) return (result.results[0][colName] ?? null) as T | null;
+    return result.results[0] as unknown as T;
+  }
+
+  async run<T = unknown>(): Promise<D1Result<T>> {
+    return this._execute<T>();
+  }
+
+  async all<T = unknown>(): Promise<D1Result<T>> {
+    return this._execute<T>();
+  }
+
+  async raw<T = unknown[]>(): Promise<T[]> {
+    const result = await this._execute<Record<string, unknown>>();
+    return result.results.map((r) => Object.values(r)) as T[];
+  }
+}
+
+class D1HttpAdapter implements D1Database {
+  private readonly baseUrl: string;
+  private readonly headers: Record<string, string>;
+
+  constructor(accountId: string, apiToken: string) {
+    this.baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${D1_DATABASE_ID}/query`;
+    this.headers = {
+      'Authorization': `Bearer ${apiToken}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  async _query<T>(sql: string, params: unknown[] = []): Promise<D1Result<T>> {
+    const res = await fetch(this.baseUrl, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify({ sql, params }),
+    });
+    if (!res.ok) throw new Error(`D1 HTTP ${res.status}: ${await res.text()}`);
+    const data = await res.json() as D1HttpQueryResponse<T>;
+    if (!data.success) throw new Error(`D1 query failed: ${data.errors[0]?.message ?? 'unknown'}`);
+    return data.result[0] ?? { results: [], success: true, meta: {} };
+  }
+
+  prepare(query: string): D1PreparedStatement {
+    return new D1HttpPreparedStatement(this, query);
+  }
+
+  async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
+    return Promise.all(
+      statements.map((s) => (s as D1HttpPreparedStatement)._execute<T>()),
+    );
+  }
+
+  async exec(query: string): Promise<{ count: number; duration: number }> {
+    await this._query(query);
+    return { count: 0, duration: 0 };
+  }
+}
+
 // ── CF 런타임 바인딩 접근 ──────────────────────────────────────────────────────
 
 /** CF Workers 런타임 여부 확인 — Node.js 개발환경에서는 throw → null 반환 */
@@ -80,10 +168,18 @@ function getRequestCtx() {
 
 /**
  * D1 데이터베이스 바인딩 반환
- * @returns CF Workers 런타임: D1Database / Node.js 개발환경: null
+ * - CF Workers 런타임: 네이티브 D1 바인딩
+ * - Node.js 로컬 개발: Cloudflare D1 REST API HTTP 어댑터 (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN 필요)
  */
 export function getDB(): D1Database | null {
-  return getRequestCtx()?.env.DB ?? null;
+  const ctx = getRequestCtx();
+  if (ctx) return ctx.env.DB;
+
+  const accountId = typeof process !== 'undefined' ? process.env.CLOUDFLARE_ACCOUNT_ID : undefined;
+  const apiToken  = typeof process !== 'undefined' ? process.env.CLOUDFLARE_API_TOKEN  : undefined;
+  if (accountId && apiToken) return new D1HttpAdapter(accountId, apiToken);
+
+  return null;
 }
 
 /**
