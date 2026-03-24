@@ -20,7 +20,6 @@ const MusicPage = () => {
           <div className="w-16">{t("music_col_id")}</div>
           <div className="flex-1">{t("music_col_title")}</div>
           <div className="w-24">{t("music_col_type")}</div>
-          <div className="w-20">{t("music_col_dur")}</div>
           <div className="w-16">{t("music_col_yr")}</div>
           <div className="w-32 text-right">{t("music_col_action")}</div>
         </div>
@@ -49,10 +48,6 @@ const MusicPage = () => {
 
               <div className="w-24 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-60">
                 {`[${track.type}]`}
-              </div>
-
-              <div className="w-20 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-40">
-                {track.duration}
               </div>
 
               <div className="w-16 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-30">
