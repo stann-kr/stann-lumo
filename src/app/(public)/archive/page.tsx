@@ -133,7 +133,7 @@ const GridItem = ({ photo, settings, onClick }: GridItemProps) => {
 };
 
 // ─── 고정 갤러리 레이아웃 설정 ───────────────────────────────────────────────
-const GALLERY_SETTINGS: GallerySettings = {
+const ARCHIVE_SETTINGS: GallerySettings = {
   layoutMode: 'masonry',
   columnsMobile: 2,
   columnsTablet: 3,
@@ -155,7 +155,7 @@ const GalleryPage = () => {
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await fetch('/api/gallery');
+        const res = await fetch('/api/archive');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as { success: boolean; data: GalleryData };
         if (json.success) {
@@ -170,7 +170,7 @@ const GalleryPage = () => {
     fetchGallery();
   }, []);
 
-  const containerClasses = buildContainerClasses(GALLERY_SETTINGS);
+  const containerClasses = buildContainerClasses(ARCHIVE_SETTINGS);
 
   return (
     <PageLayout
@@ -196,8 +196,8 @@ const GalleryPage = () => {
             <GridItem
               key={photo.id}
               photo={photo}
-              settings={GALLERY_SETTINGS}
-              onClick={() => router.push(`/gallery/${photo.id}`)}
+              settings={ARCHIVE_SETTINGS}
+              onClick={() => router.push(`/archive/${photo.id}`)}
             />
           ))}
         </div>

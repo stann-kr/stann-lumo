@@ -32,7 +32,7 @@ export const PALETTE = {
   white: "#ffffff",
 
   // 포인트 컬러
-  neonGreen: "#00ff00",
+  neonGreen: "#999999",
   cyberRed: "#ff0033",
 } as const;
 
@@ -197,8 +197,8 @@ export const COLORS = {
     backLink: v.muted, // "← BACK" 링크
   },
 
-  /** ─ 갤러리 ─────────────────────────────────────────────── */
-  gallery: {
+  /** ─ 아카이브 ───────────────────────────────────────────── */
+  archive: {
     captionText: v.secondary, // 캡션 오버레이 텍스트
     playIcon: PALETTE.white, // YouTube 재생 아이콘 (흰색 고정)
     zoomIcon: v.secondary, // 확대 아이콘

@@ -4,7 +4,7 @@ export default {
   nav_about: 'About',
   nav_music: 'Music',
   nav_events: 'Events',
-  nav_gallery: 'Gallery',
+  nav_gallery: 'Archive',
   nav_contact: 'Contact',
   nav_link: 'Link',
   nav_admin: 'Admin',
@@ -194,12 +194,12 @@ export default {
   // Time
   time_seoul: 'Seoul Time',
 
-  // Gallery
-  gallery_label: 'GALLERY',
-  gallery_title: 'Photos',
+  // Archive
+  gallery_label: 'ARCHIVE',
+  gallery_title: 'Archive',
   gallery_subtitle: 'A visual archive',
   gallery_empty: 'No photos yet',
   gallery_lightbox_close: 'to close',
-  gallery_back: 'BACK TO GALLERY',
-  gallery_load_error: 'Failed to load gallery. Please try again.',
+  gallery_back: 'BACK TO ARCHIVE',
+  gallery_load_error: 'Failed to load archive. Please try again.',
 };

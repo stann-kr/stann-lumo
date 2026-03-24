@@ -35,7 +35,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
     { label: t("nav_about"), path: "/about" },
     { label: t("nav_music"), path: "/music" },
     { label: t("nav_events"), path: "/events" },
-    { label: t("nav_gallery"), path: "/gallery" },
+    { label: t("nav_gallery"), path: "/archive" },
     { label: t("nav_contact"), path: "/contact" },
     { label: t("nav_link"), path: "/link" },
     { label: "TERMINAL", path: TERMINAL_URL, external: true },

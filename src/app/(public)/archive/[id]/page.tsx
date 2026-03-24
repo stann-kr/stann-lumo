@@ -40,9 +40,9 @@ const GalleryPhotoPage = () => {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && prevPhoto) router.push(`/gallery/${prevPhoto.id}`);
-      if (e.key === 'ArrowRight' && nextPhoto) router.push(`/gallery/${nextPhoto.id}`);
-      if (e.key === 'Escape') router.push('/gallery');
+      if (e.key === 'ArrowLeft' && prevPhoto) router.push(`/archive/${prevPhoto.id}`);
+      if (e.key === 'ArrowRight' && nextPhoto) router.push(`/archive/${nextPhoto.id}`);
+      if (e.key === 'Escape') router.push('/archive');
     },
     [prevPhoto, nextPhoto, router],
   );
@@ -68,7 +68,7 @@ const GalleryPhotoPage = () => {
             {t('gallery_load_error')}
           </p>
           <Link
-            href="/gallery"
+            href="/archive"
             className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
           >
             <i className="ri-arrow-left-line"></i>
@@ -83,7 +83,7 @@ const GalleryPhotoPage = () => {
     return (
       <PageLayout key="not-found" title="NOT FOUND">
         <Link
-          href="/gallery"
+          href="/archive"
           className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
         >
           <i className="ri-arrow-left-line"></i>
@@ -95,7 +95,7 @@ const GalleryPhotoPage = () => {
 
   // 타이틀: 파일명 제외, caption > altText > 인덱스 순 폴백
   const pageTitle = photo.caption || photo.altText
-    || `${t('gallery_label') || 'GALLERY'} ${currentIndex + 1}`;
+    || `${t('gallery_label') || 'ARCHIVE'} ${currentIndex + 1}`;
 
   // 카테고리 뱃지
   const categoryLabel =
@@ -114,11 +114,11 @@ const GalleryPhotoPage = () => {
       {/* 상단 — 뒤로가기 + 카테고리 + 인덱스 */}
       <div className="flex items-center justify-between">
         <Link
-          href="/gallery"
+          href="/archive"
           className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] transition-colors"
         >
           <i className="ri-arrow-left-line"></i>
-          GALLERY
+          ARCHIVE
         </Link>
         <div className="flex items-center gap-4">
           {/* 카테고리 뱃지 */}
@@ -165,7 +165,7 @@ const GalleryPhotoPage = () => {
         {/* 이전 화살표 오버레이 */}
         {prevPhoto && (
           <Link
-            href={`/gallery/${prevPhoto.id}`}
+            href={`/archive/${prevPhoto.id}`}
             className="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-start pl-3 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-r from-[var(--color-bg)]/60 to-transparent"
             aria-label="Previous photo"
           >
@@ -176,7 +176,7 @@ const GalleryPhotoPage = () => {
         {/* 다음 화살표 오버레이 */}
         {nextPhoto && (
           <Link
-            href={`/gallery/${nextPhoto.id}`}
+            href={`/archive/${nextPhoto.id}`}
             className="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-end pr-3 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-l from-[var(--color-bg)]/60 to-transparent"
             aria-label="Next photo"
           >
@@ -207,7 +207,7 @@ const GalleryPhotoPage = () => {
         {/* 이전/다음 버튼 */}
         <div className="flex items-center gap-2 shrink-0">
           <Link
-            href={prevPhoto ? `/gallery/${prevPhoto.id}` : '/gallery'}
+            href={prevPhoto ? `/archive/${prevPhoto.id}` : '/archive'}
             className={`w-10 h-10 border flex items-center justify-center transition-colors ${
               prevPhoto
                 ? 'text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 cursor-pointer'
@@ -219,7 +219,7 @@ const GalleryPhotoPage = () => {
             <i className="ri-arrow-left-line text-sm"></i>
           </Link>
           <Link
-            href={nextPhoto ? `/gallery/${nextPhoto.id}` : '/gallery'}
+            href={nextPhoto ? `/archive/${nextPhoto.id}` : '/archive'}
             className={`w-10 h-10 border flex items-center justify-center transition-colors ${
               nextPhoto
                 ? 'text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 cursor-pointer'

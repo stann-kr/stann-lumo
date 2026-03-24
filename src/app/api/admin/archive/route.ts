@@ -1,7 +1,7 @@
 /**
  * 어드민 갤러리 API
- * GET /api/admin/gallery — 전체 목록 조회
- * PUT /api/admin/gallery — 사진 메타(caption/altText/sortOrder/focalX/focalY) 일괄 업데이트
+ * GET /api/admin/archive — 전체 목록 조회
+ * PUT /api/admin/archive — 사진 메타(caption/altText/sortOrder/focalX/focalY) 일괄 업데이트
  */
 
 import { NextRequest, NextResponse } from 'next/server';

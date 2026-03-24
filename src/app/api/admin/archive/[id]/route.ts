@@ -1,6 +1,6 @@
 /**
  * 갤러리 사진 삭제
- * DELETE /api/admin/gallery/[id] — D1 + R2 동시 삭제
+ * DELETE /api/admin/archive/[id] — D1 + R2 동시 삭제
  */
 
 import { NextRequest, NextResponse } from 'next/server';

@@ -123,7 +123,7 @@ const AdminGalleryPage = () => {
   const fetchData = async () => {
     try {
       const [photosRes, perfsRes] = await Promise.all([
-        fetch('/api/admin/gallery'),
+        fetch('/api/admin/archive'),
         fetch('/api/admin/performances'),
       ]);
       const photosJson = (await photosRes.json()) as { success: boolean; data: GalleryPhoto[] };
@@ -168,7 +168,7 @@ const AdminGalleryPage = () => {
   const saveChanges = async () => {
     setIsSaving(true);
     try {
-      await fetch('/api/admin/gallery', {
+      await fetch('/api/admin/archive', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ photos }),
@@ -189,7 +189,7 @@ const AdminGalleryPage = () => {
     const formData = new FormData();
     Array.from(files).forEach((file) => formData.append('files', file));
     try {
-      const res = await fetch('/api/admin/gallery/upload', { method: 'POST', body: formData });
+      const res = await fetch('/api/admin/archive/upload', { method: 'POST', body: formData });
       const json = (await res.json()) as { success: boolean; data: GalleryPhoto[]; error?: { message: string } };
       if (json.success && json.data.length > 0) {
         setPhotos((prev) => [...prev, ...json.data]);
@@ -220,7 +220,7 @@ const AdminGalleryPage = () => {
     setIsAddingYoutube(true);
     setYoutubeError('');
     try {
-      const res = await fetch('/api/admin/gallery/youtube', {
+      const res = await fetch('/api/admin/archive/youtube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -249,7 +249,7 @@ const AdminGalleryPage = () => {
     const photo = photos[index];
     if (!photo) return;
     try {
-      await fetch(`/api/admin/gallery/${photo.id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/archive/${photo.id}`, { method: 'DELETE' });
       setPhotos((prev) => prev.filter((_, i) => i !== index));
     } catch {
       // 조용히 실패
@@ -259,7 +259,7 @@ const AdminGalleryPage = () => {
   return (
     <div className="space-y-8">
       <AdminSectionHeader
-        title="GALLERY"
+        title="ARCHIVE"
         description="사진 업로드 및 레이아웃 관리"
         onSave={saveChanges}
         isSaving={isSaving}

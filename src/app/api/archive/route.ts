@@ -1,6 +1,6 @@
 /**
  * 공개 갤러리 API
- * GET /api/gallery — 전체 사진 목록 (sort_order ASC)
+ * GET /api/archive — 전체 사진 목록 (sort_order ASC)
  */
 
 import { NextResponse } from 'next/server';
@@ -56,7 +56,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch {
     return NextResponse.json(
-      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch gallery' } },
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch archive' } },
       { status: 500 },
     );
   }
