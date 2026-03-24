@@ -90,9 +90,10 @@ const VESSEL_ORBITAL_POOL = Array.from({ length: 20 }, () => ({
 
 const ASTEROID_DATA = createAsteroidData(55);
 
-/** 팔각형 코어 초기 회전 오프셋 — 페이지 로드마다 랜덤 시작 각도 */
+/** 팔각형 코어 초기 회전 오프셋 — 페이지 로드마다 랜덤 시작 각도 (전 축) */
+const OCTAGON_INIT_X = Math.random() * Math.PI * 2;
 const OCTAGON_INIT_Y = Math.random() * Math.PI * 2;
-const OCTAGON_INIT_X = (Math.random() - 0.5) * 0.6;
+const OCTAGON_INIT_Z = Math.random() * Math.PI * 2;
 
 // ─── 소행성대 (Points — 55개 작은 점) ───────────────────────────────────────
 
@@ -293,8 +294,9 @@ const OctagonCore = ({ color = '#00ff00' }) => {
   useFrame((state) => {
     if (meshRef.current) {
       const t = state.clock.getElapsedTime();
-      meshRef.current.rotation.y = OCTAGON_INIT_Y + t * 0.2;
-      meshRef.current.rotation.x = OCTAGON_INIT_X + Math.sin(t * 0.1) * 0.3;
+      meshRef.current.rotation.x = OCTAGON_INIT_X + t * 0.07;
+      meshRef.current.rotation.y = OCTAGON_INIT_Y + t * 0.17;
+      meshRef.current.rotation.z = OCTAGON_INIT_Z + t * 0.11;
     }
   });
 
