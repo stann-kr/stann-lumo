@@ -21,7 +21,7 @@ const GalleryPhotoPage = () => {
   const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
-    fetch('/api/gallery')
+    fetch('/api/archive')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
