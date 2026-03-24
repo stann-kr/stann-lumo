@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState } from "react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ const EventsPage = () => {
 
   // YYYY.MM.DD (RA) / YYYY-MM-DD (수동) 양쪽 형식 지원
   const parseEventDate = (dateStr: string): Date => {
-    const normalized = dateStr.replace(/\./g, '-');
+    const normalized = dateStr.replace(/\./g, "-");
     return new Date(normalized);
   };
 
@@ -55,9 +55,9 @@ const EventsPage = () => {
             {t("msg_no_items")}
           </p>
         ) : (
-          <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
+          <div className="border border-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
             {upcomingEvents.map((event, idx) => {
-              const idStr = (idx + 1).toString().padStart(3, '0');
+              const idStr = (idx + 1).toString().padStart(3, "0");
               return (
                 <Link
                   key={event.id}
@@ -67,7 +67,7 @@ const EventsPage = () => {
                   <div className="w-8 font-mono text-[10px] text-[var(--color-accent)] hidden md:block">
                     [{idStr}]
                   </div>
-                  
+
                   {event.posterImageId && (
                     <div className="w-12 h-12 bg-black border border-[var(--color-muted)] shrink-0 overflow-hidden relative">
                       <div className="absolute inset-0 bg-[var(--color-accent)] opacity-20 mix-blend-overlay"></div>
@@ -123,9 +123,9 @@ const EventsPage = () => {
           </p>
         ) : (
           <>
-            <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
+            <div className="border border-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
               {visiblePastEvents.map((event, idx) => {
-                const idStr = (idx + 1).toString().padStart(3, '0');
+                const idStr = (idx + 1).toString().padStart(3, "0");
                 return (
                   <Link
                     key={event.id}
@@ -136,7 +136,7 @@ const EventsPage = () => {
                     <div className="w-8 font-mono text-[10px] text-[var(--color-secondary)] opacity-50 hidden md:block">
                       [{idStr}]
                     </div>
-                    
+
                     {event.posterImageId && (
                       <div className="w-10 h-10 bg-black border border-[var(--color-muted)]/50 shrink-0 overflow-hidden">
                         <img

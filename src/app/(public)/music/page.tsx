@@ -1,8 +1,8 @@
-'use client';
-import { useTranslation } from 'react-i18next';
-import { useContent } from '@/contexts/ContentContext';
-import PageLayout from '@/components/feature/PageLayout';
-import { createBorderFaint } from '@/utils/colorMix';
+"use client";
+import { useTranslation } from "react-i18next";
+import { useContent } from "@/contexts/ContentContext";
+import PageLayout from "@/components/feature/PageLayout";
+import { createBorderFaint } from "@/utils/colorMix";
 const MusicPage = () => {
   const { t } = useTranslation();
   const { musicContent, content } = useContent();
@@ -10,23 +10,23 @@ const MusicPage = () => {
 
   return (
     <PageLayout
-      title={content.pageMeta?.music?.title || t('music_title')}
-      subtitle={content.pageMeta?.music?.subtitle || t('music_subtitle')}
+      title={content.pageMeta?.music?.title || t("music_title")}
+      subtitle={content.pageMeta?.music?.subtitle || t("music_subtitle")}
     >
       {/* Track List - Database Log Style */}
-      <div className="border border-[var(--color-muted)] bg-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
+      <div className="border border-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
         {/* Header Row */}
         <div className="hidden md:flex items-center px-4 py-2 bg-surface font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase">
-          <div className="w-16">{t('music_col_id')}</div>
-          <div className="flex-1">{t('music_col_title')}</div>
-          <div className="w-24">{t('music_col_type')}</div>
-          <div className="w-20">{t('music_col_dur')}</div>
-          <div className="w-16">{t('music_col_yr')}</div>
-          <div className="w-32 text-right">{t('music_col_action')}</div>
+          <div className="w-16">{t("music_col_id")}</div>
+          <div className="flex-1">{t("music_col_title")}</div>
+          <div className="w-24">{t("music_col_type")}</div>
+          <div className="w-20">{t("music_col_dur")}</div>
+          <div className="w-16">{t("music_col_yr")}</div>
+          <div className="w-32 text-right">{t("music_col_action")}</div>
         </div>
 
         {musicContent.tracks.map((track, idx) => {
-          const idStr = (idx + 1).toString().padStart(3, '0');
+          const idStr = (idx + 1).toString().padStart(3, "0");
           return (
             <div
               key={track.id}
@@ -38,7 +38,9 @@ const MusicPage = () => {
 
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 md:hidden mb-2">
-                  <span className="font-mono text-[10px] text-[var(--color-accent)]">[{idStr}]</span>
+                  <span className="font-mono text-[10px] text-[var(--color-accent)]">
+                    [{idStr}]
+                  </span>
                 </div>
                 <h3 className="font-mono text-base tracking-widest text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors uppercase truncate">
                   {track.title}
@@ -77,7 +79,7 @@ const MusicPage = () => {
       {/* Note */}
       <div className="pt-6 border-t" style={borderFaint}>
         <p className="text-sm text-[var(--color-secondary)] opacity-35 leading-relaxed">
-          {t('music_note')}
+          {t("music_note")}
         </p>
       </div>
     </PageLayout>

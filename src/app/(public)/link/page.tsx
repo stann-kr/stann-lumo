@@ -1,9 +1,9 @@
-'use client';
-import { useTranslation } from 'react-i18next';
-import { useContent } from '@/contexts/ContentContext';
-import PageLayout from '@/components/feature/PageLayout';
-import PageSection from '@/components/base/PageSection';
-import { createBorderMid } from '@/utils/colorMix';
+"use client";
+import { useTranslation } from "react-i18next";
+import { useContent } from "@/contexts/ContentContext";
+import PageLayout from "@/components/feature/PageLayout";
+import PageSection from "@/components/base/PageSection";
+import { createBorderMid } from "@/utils/colorMix";
 
 const LinkPage = () => {
   const { t } = useTranslation();
@@ -13,18 +13,20 @@ const LinkPage = () => {
 
   return (
     <PageLayout
-      title={content.pageMeta?.link?.title || t('link_title')}
-      subtitle={content.pageMeta?.link?.subtitle || t('link_subtitle')}
+      title={content.pageMeta?.link?.title || t("link_title")}
+      subtitle={content.pageMeta?.link?.subtitle || t("link_subtitle")}
     >
       {/* Terminal Featured Card */}
       {terminalInfo?.url && (
         <div>
-          <p className="text-xs text-[var(--color-secondary)] opacity-35 tracking-widest mb-3">{t('link_side_project')}</p>
+          <p className="text-xs text-[var(--color-secondary)] opacity-35 tracking-widest mb-3">
+            {t("link_side_project")}
+          </p>
           <a
             href={terminalInfo.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative flex items-center justify-between w-full border bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 p-7 overflow-hidden cursor-pointer"
+            className="group relative flex items-center justify-between w-full border hover:bg-[var(--color-accent)]/5 transition-all duration-300 p-7 overflow-hidden cursor-pointer"
             style={borderMid}
           >
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -33,12 +35,15 @@ const LinkPage = () => {
             </div>
 
             <div className="flex items-center gap-6">
-              <div className="w-12 h-12 flex items-center justify-center border transition-colors duration-300 shrink-0" style={borderMid}>
+              <div
+                className="w-12 h-12 flex items-center justify-center border transition-colors duration-300 shrink-0"
+                style={borderMid}
+              >
                 <i className="ri-terminal-box-line text-2xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300"></i>
               </div>
               <div>
                 <h3 className="text-sm font-bold text-[var(--color-secondary)] tracking-widest group-hover:text-[var(--color-primary)] transition-colors duration-300">
-                  {content.pageMeta?.link?.terminalTitle || 'TERMINAL.STANN.KR'}
+                  {content.pageMeta?.link?.terminalTitle || "TERMINAL.STANN.KR"}
                 </h3>
                 <p className="text-xs text-[var(--color-secondary)] opacity-40 mt-1.5 group-hover:opacity-60 transition-all duration-300 leading-relaxed">
                   {terminalInfo.description}
@@ -47,7 +52,9 @@ const LinkPage = () => {
             </div>
 
             <div className="flex items-center gap-2 text-[var(--color-secondary)] opacity-30 group-hover:opacity-70 transition-all duration-300 shrink-0 ml-4">
-              <span className="text-xs tracking-widest hidden sm:block">{t('link_enter')}</span>
+              <span className="text-xs tracking-widest hidden sm:block">
+                {t("link_enter")}
+              </span>
               <i className="ri-arrow-right-up-line text-base group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300"></i>
             </div>
           </a>
@@ -55,19 +62,25 @@ const LinkPage = () => {
       )}
 
       {/* Links Grid */}
-      <PageSection title={t('link_platforms') || 'PLATFORMS'} icon="ri-links-line" noPadding>
-        <div className="grid md:grid-cols-3 gap-[1px] bg-[var(--color-muted)]">
+      <PageSection
+        title={t("link_platforms") || "PLATFORMS"}
+        icon="ri-links-line"
+        noPadding
+      >
+        <div className="grid md:grid-cols-3 gap-[1px]">
           {linkPlatforms?.map((link) => (
             <a
               key={link.id}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative overflow-hidden bg-surface hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer p-6"
+              className="group relative overflow-hidden hover:bg-[var(--color-accent)]/5 transition-all duration-300 cursor-pointer p-6"
             >
               <div className="relative space-y-4">
                 <div className="w-10 h-10 flex items-center justify-center">
-                  <i className={`${link.icon} text-2xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300`}></i>
+                  <i
+                    className={`${link.icon} text-2xl text-[var(--color-accent)] group-hover:text-[var(--color-secondary)] transition-colors duration-300`}
+                  ></i>
                 </div>
                 <h3 className="text-sm font-semibold text-[var(--color-secondary)] tracking-widest group-hover:text-[var(--color-primary)] transition-colors duration-300">
                   {link.platform}
@@ -76,7 +89,9 @@ const LinkPage = () => {
                   {link.description}
                 </p>
                 <div className="flex items-center gap-2 text-[var(--color-secondary)] opacity-25 group-hover:opacity-60 transition-all duration-300">
-                  <span className="text-xs tracking-widest">{t('link_visit')}</span>
+                  <span className="text-xs tracking-widest">
+                    {t("link_visit")}
+                  </span>
                   <i className="ri-arrow-right-line text-xs group-hover:translate-x-1 transition-transform duration-300"></i>
                 </div>
               </div>
@@ -88,9 +103,12 @@ const LinkPage = () => {
       {/* Footer Note */}
       <div className="pt-6 border-t border-[var(--color-muted)]/30">
         <p className="text-xs text-[var(--color-secondary)] opacity-35 text-center">
-          {t('link_footer_note')}{' '}
-          <a href="/contact" className="text-[var(--color-secondary)] opacity-60 hover:opacity-100 transition-colors cursor-pointer underline underline-offset-4">
-            {t('link_footer_contact')}
+          {t("link_footer_note")}{" "}
+          <a
+            href="/contact"
+            className="text-[var(--color-secondary)] opacity-60 hover:opacity-100 transition-colors cursor-pointer underline underline-offset-4"
+          >
+            {t("link_footer_contact")}
           </a>
           .
         </p>

@@ -1,9 +1,9 @@
-'use client';
-import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
-import { useContent } from '@/contexts/ContentContext';
-import PageLayout from '@/components/feature/PageLayout';
-import { createBorderFaint } from '@/utils/colorMix';
+"use client";
+import Link from "next/link";
+import { useTranslation } from "react-i18next";
+import { useContent } from "@/contexts/ContentContext";
+import PageLayout from "@/components/feature/PageLayout";
+import { createBorderFaint } from "@/utils/colorMix";
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -11,11 +11,16 @@ export default function HomePage() {
   const borderFaint = createBorderFaint();
 
   const artistName = Array.isArray(content.artistInfo)
-    ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
-    : '';
-  const nameParts = artistName.includes('&')
-    ? artistName.split('&').map((s) => s.trim())
-    : artistName.split(' ').map((s) => s.trim()).filter(Boolean);
+    ? (content.artistInfo.find(
+        (item) => item.key === "Name" || item.key === "이름",
+      )?.value ?? "")
+    : "";
+  const nameParts = artistName.includes("&")
+    ? artistName.split("&").map((s) => s.trim())
+    : artistName
+        .split(" ")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
   return (
     <PageLayout
@@ -27,11 +32,11 @@ export default function HomePage() {
         <div>
           <p className="font-mono text-xs text-[var(--color-accent)] tracking-widest mb-3 flex items-center gap-2">
             <span className="w-1 h-1 bg-[var(--color-accent)] animate-pulse"></span>
-            {content.pageMeta?.home?.navTitle || t('home_nav_title')}
+            {content.pageMeta?.home?.navTitle || t("home_nav_title")}
           </p>
           <div className="border" style={borderFaint}>
             {content.homeSections.map((section, index) => {
-              const numStr = (index + 1).toString().padStart(2, '0');
+              const numStr = (index + 1).toString().padStart(2, "0");
               return (
                 <Link
                   key={index}
@@ -62,7 +67,7 @@ export default function HomePage() {
               <div className="space-y-2">
                 <div className="font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-[var(--color-accent)]"></span>
-                  {t('home_terminal_side_project')}
+                  {t("home_terminal_side_project")}
                 </div>
                 <p className="font-mono text-base leading-relaxed text-[var(--color-secondary)] opacity-60 max-w-2xl">
                   {content.terminalInfo.description}
@@ -76,43 +81,57 @@ export default function HomePage() {
               >
                 <div className="absolute inset-0 bg-[var(--color-accent)]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 <span className="relative z-10 flex items-center gap-2">
-                  {t('home_terminal_enter')} <i className="ri-arrow-right-up-line"></i>
+                  {t("home_terminal_enter")}{" "}
+                  <i className="ri-arrow-right-up-line"></i>
                 </span>
               </a>
             </div>
 
             {/* Custom Fields */}
-            {content.terminalInfo.customFields && content.terminalInfo.customFields.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-[1px] bg-[var(--color-muted)] border border-[var(--color-muted)] p-[1px]">
-                {content.terminalInfo.customFields.map((field) => (
-                  <div key={field.id} className="bg-surface p-4 flex flex-col justify-between space-y-2">
-                    <p className="font-mono text-[10px] tracking-widest text-[var(--color-accent)] opacity-80 uppercase">
-                      {field.fieldKey}
-                    </p>
-                    <div className="font-mono text-sm tracking-wider text-[var(--color-primary)] truncate">
-                      {field.fieldType === 'url' ? (
-                        <a href={field.fieldValue} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-accent)] hover:underline transition-colors">
-                          {field.fieldValue}
-                        </a>
-                      ) : field.fieldType === 'badge' ? (
-                        <span className="inline-block border border-[var(--color-accent)] px-2 py-0.5 text-[var(--color-accent)]">
-                          {field.fieldValue}
-                        </span>
-                      ) : (
-                        <span>{field.fieldValue}</span>
-                      )}
+            {content.terminalInfo.customFields &&
+              content.terminalInfo.customFields.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-[1px] bg-[var(--color-muted)] border border-[var(--color-muted)] p-[1px]">
+                  {content.terminalInfo.customFields.map((field) => (
+                    <div
+                      key={field.id}
+                      className="bg-surface p-4 flex flex-col justify-between space-y-2"
+                    >
+                      <p className="font-mono text-[10px] tracking-widest text-[var(--color-accent)] opacity-80 uppercase">
+                        {field.fieldKey}
+                      </p>
+                      <div className="font-mono text-sm tracking-wider text-[var(--color-primary)] truncate">
+                        {field.fieldType === "url" ? (
+                          <a
+                            href={field.fieldValue}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-[var(--color-accent)] hover:underline transition-colors"
+                          >
+                            {field.fieldValue}
+                          </a>
+                        ) : field.fieldType === "badge" ? (
+                          <span className="inline-block border border-[var(--color-accent)] px-2 py-0.5 text-[var(--color-accent)]">
+                            {field.fieldValue}
+                          </span>
+                        ) : (
+                          <span>{field.fieldValue}</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
             {/* Embed */}
             {content.terminalInfo.style?.showEmbed && (
               <div className="hud-panel p-1">
                 <iframe
                   src={content.terminalInfo.url}
-                  style={{ width: '100%', height: content.terminalInfo.style.embedHeight, border: 'none' }}
+                  style={{
+                    width: "100%",
+                    height: content.terminalInfo.style.embedHeight,
+                    border: "none",
+                  }}
                   title="Terminal"
                   sandbox="allow-scripts allow-same-origin"
                   loading="lazy"
