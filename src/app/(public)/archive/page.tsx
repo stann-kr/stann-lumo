@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import type { GalleryPhoto, GallerySettings, GalleryData } from '@/types/content';
-import { createBorderFaint } from '@/utils/colorMix';
+
 import PageLayout from '@/components/feature/PageLayout';
 
 // ─── 설정 → CSS 클래스 매핑 ──────────────────────────────────────────────────
@@ -67,7 +67,7 @@ const GridItem = ({ photo, settings, onClick }: GridItemProps) => {
           loading="lazy"
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-12 h-12 bg-red-600/90 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-[var(--color-accent)]/80 rounded-full flex items-center justify-center">
             <i className="ri-play-fill text-white text-xl ml-0.5"></i>
           </div>
         </div>
@@ -132,35 +132,37 @@ const GridItem = ({ photo, settings, onClick }: GridItemProps) => {
   );
 };
 
+// ─── 고정 갤러리 레이아웃 설정 ───────────────────────────────────────────────
+const ARCHIVE_SETTINGS: GallerySettings = {
+  layoutMode: 'masonry',
+  columnsMobile: 2,
+  columnsTablet: 3,
+  columnsDesktop: 4,
+  gapSize: 'md',
+  aspectRatio: 'auto',
+  hoverEffect: 'zoom',
+  captionDisplay: 'overlay',
+  lightboxEnabled: true,
+};
+
 // ─── 메인 갤러리 페이지 ──────────────────────────────────────────────────────
 const GalleryPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [settings, setSettings] = useState<GallerySettings>({
-    layoutMode: 'masonry',
-    columnsMobile: 2,
-    columnsTablet: 3,
-    columnsDesktop: 4,
-    gapSize: 'md',
-    aspectRatio: 'auto',
-    hoverEffect: 'zoom',
-    captionDisplay: 'overlay',
-    lightboxEnabled: true,
-  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchGallery = async () => {
       try {
-        const res = await fetch('/api/gallery');
+        const res = await fetch('/api/archive');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as { success: boolean; data: GalleryData };
         if (json.success) {
           setPhotos(json.data.photos);
-          setSettings(json.data.settings);
         }
       } catch {
-        // 조용히 실패 — 빈 갤러리 표시
+        // 네트워크 오류 시 빈 갤러리 표시
       } finally {
         setIsLoading(false);
       }
@@ -168,8 +170,7 @@ const GalleryPage = () => {
     fetchGallery();
   }, []);
 
-  const borderStyle = createBorderFaint();
-  const containerClasses = buildContainerClasses(settings);
+  const containerClasses = buildContainerClasses(ARCHIVE_SETTINGS);
 
   return (
     <PageLayout
@@ -178,14 +179,14 @@ const GalleryPage = () => {
     >
       {/* 사진 그리드 */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-24">
-          <div className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
+        <div className="hud-panel flex items-center justify-center py-24">
+          <div className="text-[var(--color-secondary)]/40 text-sm font-mono tracking-widest animate-pulse">
             LOADING...
           </div>
         </div>
       ) : photos.length === 0 ? (
-        <div className="flex items-center justify-center py-24 border" style={borderStyle}>
-          <p className="text-[var(--color-secondary)]/30 text-sm tracking-widest">
+        <div className="hud-panel flex items-center justify-center py-24">
+          <p className="text-[var(--color-secondary)]/30 text-sm font-mono tracking-widest">
             {t('gallery_empty')}
           </p>
         </div>
@@ -195,8 +196,8 @@ const GalleryPage = () => {
             <GridItem
               key={photo.id}
               photo={photo}
-              settings={settings}
-              onClick={() => router.push(`/gallery/${photo.id}`)}
+              settings={ARCHIVE_SETTINGS}
+              onClick={() => router.push(`/archive/${photo.id}`)}
             />
           ))}
         </div>

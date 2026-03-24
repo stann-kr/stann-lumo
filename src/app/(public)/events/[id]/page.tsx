@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import PageLayout from '@/components/feature/PageLayout';
+import HudSpinner from '@/components/base/HudSpinner';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 import type { Performance, GalleryPhoto } from '@/types/content';
 
@@ -13,9 +14,9 @@ interface EventDetailData {
 }
 
 const STATUS_CLASSES: Record<Performance['status'], string> = {
-  Announced: 'text-green-400',
-  TBA:       'text-yellow-400',
-  Cancelled: 'text-red-400',
+  Announced: 'text-[var(--color-accent)]',
+  TBA:       'text-[var(--color-secondary)] opacity-60',
+  Cancelled: 'text-[var(--color-muted)]',
 };
 
 const EventDetailPage = () => {
@@ -45,17 +46,15 @@ const EventDetailPage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title="...">
-        <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
-          LOADING...
-        </p>
+      <PageLayout key="loading" title="">
+        <HudSpinner />
       </PageLayout>
     );
   }
 
   if (error || !data) {
     return (
-      <PageLayout title="EVENT NOT FOUND">
+      <PageLayout key="error" title="EVENT NOT FOUND">
         <p className="text-[var(--color-secondary)]/60 text-sm tracking-wider">{error}</p>
         <Link
           href="/events"
@@ -71,7 +70,7 @@ const EventDetailPage = () => {
   const { event, posterPhoto } = data;
 
   return (
-    <PageLayout title={event.title} subtitle={`${event.venue}${event.location ? ` · ${event.location}` : ''}`}>
+    <PageLayout key={data.event.id} title={event.title} subtitle={`${event.venue}${event.location ? ` · ${event.location}` : ''}`}>
       {/* 뒤로가기 */}
       <Link
         href="/events"

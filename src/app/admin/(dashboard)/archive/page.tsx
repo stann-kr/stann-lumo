@@ -8,7 +8,7 @@ import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { createBorderFaint } from '@/utils/colorMix';
-import type { GalleryPhoto, GallerySettings, Performance } from '@/types/content';
+import type { GalleryPhoto, Performance } from '@/types/content';
 
 // ─── YouTube URL 파싱 (클라이언트 전용) ───────────────────────────────────────
 function extractYoutubeId(url: string): string | null {
@@ -23,51 +23,6 @@ function extractYoutubeId(url: string): string | null {
     if (match?.[1]) return match[1];
   }
   return null;
-}
-
-const DEFAULT_SETTINGS: GallerySettings = {
-  layoutMode: 'masonry',
-  columnsMobile: 2,
-  columnsTablet: 3,
-  columnsDesktop: 4,
-  gapSize: 'md',
-  aspectRatio: 'auto',
-  hoverEffect: 'zoom',
-  captionDisplay: 'overlay',
-  lightboxEnabled: true,
-};
-
-// ─── RadioGroup 헬퍼 ─────────────────────────────────────────────────────────
-interface RadioGroupProps<T extends string> {
-  label: string;
-  value: T;
-  options: { value: T; label: string }[];
-  onChange: (v: T) => void;
-}
-function RadioGroup<T extends string>({ label, value, options, onChange }: RadioGroupProps<T>) {
-  const borderStyle = createBorderFaint();
-  return (
-    <div className="flex flex-col gap-1.5">
-      <p className="text-xs text-[var(--color-accent)] tracking-widest">{label}</p>
-      <div className="flex gap-3 flex-wrap">
-        {options.map((opt) => (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={`px-3 py-1.5 text-xs tracking-wider border transition-colors cursor-pointer ${
-              value === opt.value
-                ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]/60 text-[var(--color-accent)]'
-                : 'text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5'
-            }`}
-            style={value !== opt.value ? borderStyle : undefined}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // ─── FocalPicker ─────────────────────────────────────────────────────────────
@@ -145,7 +100,6 @@ function EventSelect({ value, performances, onChange, label = 'LINKED EVENT' }: 
 // ─── 메인 페이지 ─────────────────────────────────────────────────────────────
 const AdminGalleryPage = () => {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [settings, setSettings] = useState<GallerySettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -168,16 +122,13 @@ const AdminGalleryPage = () => {
   // ─── 초기 데이터 로드 ────────────────────────────────────────────────────
   const fetchData = async () => {
     try {
-      const [photosRes, settingsRes, perfsRes] = await Promise.all([
-        fetch('/api/admin/gallery'),
-        fetch('/api/admin/gallery-settings'),
+      const [photosRes, perfsRes] = await Promise.all([
+        fetch('/api/admin/archive'),
         fetch('/api/admin/performances'),
       ]);
       const photosJson = (await photosRes.json()) as { success: boolean; data: GalleryPhoto[] };
-      const settingsJson = (await settingsRes.json()) as { success: boolean; data: GallerySettings };
       const perfsJson = (await perfsRes.json()) as { success: boolean; data: Performance[] };
       if (photosJson.success) setPhotos(photosJson.data);
-      if (settingsJson.success) setSettings(settingsJson.data);
       if (perfsJson.success) setPerformances(perfsJson.data);
     } catch {
       // 조용히 실패
@@ -193,11 +144,6 @@ const AdminGalleryPage = () => {
     setYoutubePreviewId(extractYoutubeId(youtubeUrl));
     setYoutubeError('');
   }, [youtubeUrl]);
-
-  // ─── 설정 업데이트 ───────────────────────────────────────────────────────
-  const updateSetting = <K extends keyof GallerySettings>(key: K, value: GallerySettings[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
 
   // ─── 사진 메타 필드 업데이트 ─────────────────────────────────────────────
   const updatePhotoField = (index: number, field: keyof Pick<GalleryPhoto, 'altText' | 'caption' | 'linkedEventId'>, value: string) => {
@@ -222,18 +168,11 @@ const AdminGalleryPage = () => {
   const saveChanges = async () => {
     setIsSaving(true);
     try {
-      await Promise.all([
-        fetch('/api/admin/gallery', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photos }),
-        }),
-        fetch('/api/admin/gallery-settings', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ settings }),
-        }),
-      ]);
+      await fetch('/api/admin/archive', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photos }),
+      });
       showNotification();
     } catch {
       // 조용히 실패
@@ -250,7 +189,7 @@ const AdminGalleryPage = () => {
     const formData = new FormData();
     Array.from(files).forEach((file) => formData.append('files', file));
     try {
-      const res = await fetch('/api/admin/gallery/upload', { method: 'POST', body: formData });
+      const res = await fetch('/api/admin/archive/upload', { method: 'POST', body: formData });
       const json = (await res.json()) as { success: boolean; data: GalleryPhoto[]; error?: { message: string } };
       if (json.success && json.data.length > 0) {
         setPhotos((prev) => [...prev, ...json.data]);
@@ -281,7 +220,7 @@ const AdminGalleryPage = () => {
     setIsAddingYoutube(true);
     setYoutubeError('');
     try {
-      const res = await fetch('/api/admin/gallery/youtube', {
+      const res = await fetch('/api/admin/archive/youtube', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -310,7 +249,7 @@ const AdminGalleryPage = () => {
     const photo = photos[index];
     if (!photo) return;
     try {
-      await fetch(`/api/admin/gallery/${photo.id}`, { method: 'DELETE' });
+      await fetch(`/api/admin/archive/${photo.id}`, { method: 'DELETE' });
       setPhotos((prev) => prev.filter((_, i) => i !== index));
     } catch {
       // 조용히 실패
@@ -320,7 +259,7 @@ const AdminGalleryPage = () => {
   return (
     <div className="space-y-8">
       <AdminSectionHeader
-        title="GALLERY"
+        title="ARCHIVE"
         description="사진 업로드 및 레이아웃 관리"
         onSave={saveChanges}
         isSaving={isSaving}
@@ -348,159 +287,6 @@ const AdminGalleryPage = () => {
         className="hidden"
         onChange={(e) => handleUpload(e.target.files)}
       />
-
-      {/* ── DISPLAY SETTINGS 카드 ─────────────────────────────────────── */}
-      <AdminCard>
-        <div className="space-y-6">
-          <p className="text-xs text-[var(--color-accent)] tracking-widest border-b pb-3" style={borderStyle}>
-            DISPLAY SETTINGS
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* 레이아웃 모드 */}
-            <RadioGroup
-              label="LAYOUT MODE"
-              value={settings.layoutMode}
-              options={[
-                { value: 'masonry', label: 'Masonry' },
-                { value: 'grid', label: 'Grid' },
-              ]}
-              onChange={(v) => updateSetting('layoutMode', v)}
-            />
-
-            {/* 간격 */}
-            <RadioGroup
-              label="GAP SIZE"
-              value={settings.gapSize}
-              options={[
-                { value: 'sm', label: 'Tight' },
-                { value: 'md', label: 'Normal' },
-                { value: 'lg', label: 'Wide' },
-              ]}
-              onChange={(v) => updateSetting('gapSize', v)}
-            />
-
-            {/* 열 수 */}
-            <div className="space-y-2 md:col-span-2">
-              <p className="text-xs text-[var(--color-accent)] tracking-widest">COLUMNS</p>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-[var(--color-secondary)]/40 tracking-wider mb-1.5">Mobile</p>
-                  <select
-                    value={settings.columnsMobile}
-                    onChange={(e) => updateSetting('columnsMobile', Number(e.target.value) as GallerySettings['columnsMobile'])}
-                    className="w-full bg-transparent border px-2 py-1.5 text-sm text-[var(--color-secondary)] cursor-pointer focus:outline-none"
-                    style={borderStyle}
-                  >
-                    <option value={1}>1열</option>
-                    <option value={2}>2열</option>
-                  </select>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--color-secondary)]/40 tracking-wider mb-1.5">Tablet</p>
-                  <select
-                    value={settings.columnsTablet}
-                    onChange={(e) => updateSetting('columnsTablet', Number(e.target.value) as GallerySettings['columnsTablet'])}
-                    className="w-full bg-transparent border px-2 py-1.5 text-sm text-[var(--color-secondary)] cursor-pointer focus:outline-none"
-                    style={borderStyle}
-                  >
-                    <option value={2}>2열</option>
-                    <option value={3}>3열</option>
-                  </select>
-                </div>
-                <div>
-                  <p className="text-xs text-[var(--color-secondary)]/40 tracking-wider mb-1.5">Desktop</p>
-                  <select
-                    value={settings.columnsDesktop}
-                    onChange={(e) => updateSetting('columnsDesktop', Number(e.target.value) as GallerySettings['columnsDesktop'])}
-                    className="w-full bg-transparent border px-2 py-1.5 text-sm text-[var(--color-secondary)] cursor-pointer focus:outline-none"
-                    style={borderStyle}
-                  >
-                    <option value={2}>2열</option>
-                    <option value={3}>3열</option>
-                    <option value={4}>4열</option>
-                    <option value={5}>5열</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* 비율 (grid 모드에서만 활성) */}
-            <div className={settings.layoutMode !== 'grid' ? 'opacity-40 pointer-events-none' : ''}>
-              <p className="text-xs text-[var(--color-accent)] tracking-widest mb-1.5">
-                ASPECT RATIO
-                {settings.layoutMode !== 'grid' && (
-                  <span className="ml-2 text-[var(--color-secondary)]/30 normal-case">(grid 모드에서만)</span>
-                )}
-              </p>
-              <select
-                value={settings.aspectRatio}
-                onChange={(e) => updateSetting('aspectRatio', e.target.value as GallerySettings['aspectRatio'])}
-                disabled={settings.layoutMode !== 'grid'}
-                className="w-full bg-transparent border px-2 py-1.5 text-sm text-[var(--color-secondary)] cursor-pointer focus:outline-none disabled:cursor-not-allowed"
-                style={borderStyle}
-              >
-                <option value="auto">Auto (natural)</option>
-                <option value="1:1">1:1 Square</option>
-                <option value="4:3">4:3</option>
-                <option value="3:4">3:4</option>
-                <option value="16:9">16:9</option>
-              </select>
-            </div>
-
-            {/* 호버 효과 */}
-            <RadioGroup
-              label="HOVER EFFECT"
-              value={settings.hoverEffect}
-              options={[
-                { value: 'zoom', label: 'Zoom' },
-                { value: 'fade', label: 'Fade' },
-                { value: 'none', label: 'None' },
-              ]}
-              onChange={(v) => updateSetting('hoverEffect', v)}
-            />
-
-            {/* 캡션 */}
-            <RadioGroup
-              label="CAPTION"
-              value={settings.captionDisplay}
-              options={[
-                { value: 'overlay', label: 'Overlay' },
-                { value: 'below', label: 'Below' },
-                { value: 'hidden', label: 'Hidden' },
-              ]}
-              onChange={(v) => updateSetting('captionDisplay', v)}
-            />
-
-            {/* 라이트박스 */}
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs text-[var(--color-accent)] tracking-widest">LIGHTBOX</p>
-              <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
-                <div
-                  onClick={() => updateSetting('lightboxEnabled', !settings.lightboxEnabled)}
-                  className={`w-10 h-5 relative border transition-colors cursor-pointer ${
-                    settings.lightboxEnabled
-                      ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]/60'
-                      : ''
-                  }`}
-                  style={!settings.lightboxEnabled ? borderStyle : undefined}
-                >
-                  <div
-                    className={`absolute top-0.5 w-4 h-4 transition-all ${
-                      settings.lightboxEnabled
-                        ? 'left-5 bg-[var(--color-accent)]'
-                        : 'left-0.5 bg-[var(--color-secondary)]/30'
-                    }`}
-                  />
-                </div>
-                <span className="text-sm text-[var(--color-secondary)]/60 tracking-wider">
-                  {settings.lightboxEnabled ? 'Enabled' : 'Disabled'}
-                </span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </AdminCard>
 
       {/* ── 파일 업로드 영역 ──────────────────────────────────────────────── */}
       <div

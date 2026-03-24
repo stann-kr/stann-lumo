@@ -1,6 +1,6 @@
 /**
  * 갤러리 파일 업로드
- * POST /api/admin/gallery/upload — multipart/form-data, field: "files"
+ * POST /api/admin/archive/upload — multipart/form-data, field: "files"
  * R2 저장 + D1 메타데이터 INSERT
  * 이미지(image/*) + 동영상(video/*) 지원
  */

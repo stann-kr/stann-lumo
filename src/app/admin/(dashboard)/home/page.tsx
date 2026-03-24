@@ -14,8 +14,6 @@ import {
   updateHomeSections as apiUpdateHomeSections,
   updatePageMeta as apiUpdatePageMeta,
   updateArtistInfo as apiUpdateArtistInfo,
-  fetchDisplaySettings,
-  updateDisplaySettings,
   fetchTerminalConfig,
   updateTerminalConfig,
 } from '@/services/adminService';
@@ -23,8 +21,6 @@ import type {
   HomeSection, TerminalInfo, PageMeta, ArtistInfoItem,
   TerminalCustomField, TerminalStyleConfig,
 } from '@/types/content';
-import type { HomeDisplaySettings } from '@/types/displaySettings';
-import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 
 const AVAILABLE_ICONS = [
   { value: 'ri-user-line', label: 'User' },
@@ -57,9 +53,6 @@ const AdminHomePage = () => {
   const [terminalInfo, setTerminalInfo] = useState<TerminalInfo>(content.terminalInfo);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [artistInfo, setArtistInfo] = useState<ArtistInfoItem[]>(content.artistInfo);
-  const [displaySettings, setDisplaySettings] = useState<HomeDisplaySettings>(
-    DISPLAY_SETTINGS_DEFAULTS.home
-  );
   const [terminalCustomFields, setTerminalCustomFields] = useState<TerminalCustomField[]>([]);
   const [terminalStyle, setTerminalStyle] = useState<TerminalStyleConfig>({
     fontSize: 'md',
@@ -82,11 +75,6 @@ const AdminHomePage = () => {
   }, [currentEditLanguage, allContent]);
 
   useEffect(() => {
-    fetchDisplaySettings('home').then((res) => {
-      if (res.success && res.data) {
-        setDisplaySettings(res.data as HomeDisplaySettings);
-      }
-    });
     fetchTerminalConfig().then((res) => {
       if (res.success && res.data) {
         setTerminalCustomFields(res.data.customFields ?? []);
@@ -189,7 +177,6 @@ const AdminHomePage = () => {
         style:        terminalStyle,
       }),
       apiUpdateArtistInfo(currentEditLanguage, artistInfo),
-      updateDisplaySettings('home', displaySettings),
     ]);
     updateContent({
       homeSections,
@@ -237,56 +224,6 @@ const AdminHomePage = () => {
               <p className="text-xs text-[var(--color-secondary)] opacity-40 tracking-wider">
                 홈 화면 상단 타이핑 애니메이션으로 표시되는 아티스트 이름. About 페이지의 Artist Info Name 필드와 연동됨.
               </p>
-            </div>
-          </AdminCard>
-        </div>
-
-        {/* DISPLAY SETTINGS */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            DISPLAY SETTINGS
-          </h2>
-          <AdminCard>
-            <div className="space-y-6">
-              <RadioGroup
-                label="NAV GRID COLUMNS"
-                value={displaySettings.navGridColumns}
-                options={[
-                  { value: 1, label: '1' },
-                  { value: 2, label: '2' },
-                  { value: 3, label: '3' },
-                ]}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, navGridColumns: v }))}
-              />
-              <RadioGroup
-                label="NAV CARD PADDING"
-                value={displaySettings.navCardPadding}
-                options={[
-                  { value: 'sm', label: 'SM' },
-                  { value: 'md', label: 'MD' },
-                  { value: 'lg', label: 'LG' },
-                ]}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, navCardPadding: v }))}
-              />
-              <RadioGroup
-                label="NAV GRID GAP"
-                value={displaySettings.navGridGap}
-                options={[
-                  { value: 'sm', label: 'SM' },
-                  { value: 'md', label: 'MD' },
-                  { value: 'lg', label: 'LG' },
-                ]}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, navGridGap: v }))}
-              />
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={displaySettings.showTerminalInfo}
-                  onChange={(e) => setDisplaySettings((prev) => ({ ...prev, showTerminalInfo: e.target.checked }))}
-                  className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
-                />
-                <span className="text-xs text-[var(--color-secondary)] tracking-widest">SHOW TERMINAL INFO</span>
-              </label>
             </div>
           </AdminCard>
         </div>

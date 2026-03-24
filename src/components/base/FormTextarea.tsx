@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createBorderMid, createBorderAccent } from '../../utils/colorMix';
 
 interface FormTextareaProps {
@@ -22,6 +23,8 @@ const FormTextarea = ({
   placeholder,
   className = ''
 }: FormTextareaProps) => {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <div className={className}>
       <label className="block text-xs text-[var(--color-accent)] tracking-widest mb-2">
@@ -33,9 +36,9 @@ const FormTextarea = ({
         rows={rows}
         placeholder={placeholder}
         className="w-full bg-transparent border text-[var(--color-secondary)] text-sm leading-relaxed p-3 focus:outline-none transition-colors resize-none"
-        style={createBorderMid()}
-        onFocus={(e) => Object.assign(e.target.style, createBorderAccent())}
-        onBlur={(e) => Object.assign(e.target.style, createBorderMid())}
+        style={isFocused ? createBorderAccent() : createBorderMid()}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
     </div>
   );

@@ -5,15 +5,12 @@ import AdminSectionHeader from '@/components/base/AdminSectionHeader';
 import FormInput from '@/components/base/FormInput';
 import SuccessMessage from '@/components/base/SuccessMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
-import RadioGroup from '@/components/base/RadioGroup';
 import { useListEditor } from '@/hooks/useListEditor';
 import { useDeleteConfirm } from '@/hooks/useDeleteConfirm';
 import { useSaveNotification } from '@/hooks/useSaveNotification';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { RAApiConfig, Performance, PageMeta } from '@/types/content';
-import type { EventsDisplaySettings } from '@/types/displaySettings';
-import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
 import {
   fetchRAEvents,
   convertRAEventsToPerformances,
@@ -24,8 +21,6 @@ import {
   updatePerformances as apiUpdatePerformances,
   updatePageMeta as apiUpdatePageMeta,
   updateRaApiConfig as apiUpdateRaApiConfig,
-  fetchDisplaySettings,
-  updateDisplaySettings,
   uploadEventPoster,
   deleteEventPoster,
 } from '@/services/adminService';
@@ -40,16 +35,12 @@ const AdminEventsPage = () => {
     setItems: setPerformances,
     updateItem: updatePerformance,
     deleteItem: deletePerformance,
-    addItem: addPerformance,
   } = useListEditor<Performance>(content.performances);
 
   const [raApiConfig, setRaApiConfig] = useState<RAApiConfig>(
     content.raApiConfig || { userId: '', apiKey: '', djId: '', option: '1', year: '' }
   );
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
-  const [displaySettings, setDisplaySettings] = useState<EventsDisplaySettings>(
-    DISPLAY_SETTINGS_DEFAULTS.events
-  );
   const [isFetching, setIsFetching] = useState(false);
   const [fetchError, setFetchError] = useState('');
   const [fetchSuccess, setFetchSuccess] = useState('');
@@ -82,14 +73,6 @@ const AdminEventsPage = () => {
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent, setPerformances]);
 
-  useEffect(() => {
-    fetchDisplaySettings('events').then((res) => {
-      if (res.success && res.data) {
-        setDisplaySettings(res.data as EventsDisplaySettings);
-      }
-    });
-  }, []);
-
   const updatePageMetaField = (field: keyof PageMeta['events'], value: string) => {
     setPageMeta(prev => ({ ...prev, events: { ...prev.events, [field]: value } }));
   };
@@ -100,7 +83,6 @@ const AdminEventsPage = () => {
       apiUpdatePerformances(performances),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
       apiUpdateRaApiConfig(raApiConfig),
-      updateDisplaySettings('events', displaySettings),
     ]);
     updateContent({ performances, raApiConfig, pageMeta });
     showNotification();
@@ -213,67 +195,6 @@ const AdminEventsPage = () => {
       />
 
       <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
-
-      {/* DISPLAY SETTINGS */}
-      <div>
-        <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-          DISPLAY SETTINGS
-        </h2>
-        <AdminCard>
-          <div className="space-y-6">
-            <RadioGroup
-              label="SECTION SPACING"
-              value={displaySettings.spacing}
-              options={[
-                { value: 'sm', label: 'SM' },
-                { value: 'md', label: 'MD' },
-                { value: 'lg', label: 'LG' },
-              ]}
-              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, spacing: v }))}
-            />
-            <RadioGroup
-              label="CARD PADDING"
-              value={displaySettings.cardPadding}
-              options={[
-                { value: 'sm', label: 'SM' },
-                { value: 'md', label: 'MD' },
-                { value: 'lg', label: 'LG' },
-              ]}
-              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, cardPadding: v }))}
-            />
-            <RadioGroup
-              label="CARD GAP"
-              value={displaySettings.cardGap}
-              options={[
-                { value: 'sm', label: 'SM' },
-                { value: 'md', label: 'MD' },
-                { value: 'lg', label: 'LG' },
-              ]}
-              onChange={(v) => setDisplaySettings((prev) => ({ ...prev, cardGap: v }))}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormInput
-                label="INITIAL PAST COUNT"
-                type="number"
-                value={String(displaySettings.initialPastCount)}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, initialPastCount: Math.max(1, parseInt(v) || 1) }))}
-              />
-              <FormInput
-                label="LOAD MORE COUNT"
-                type="number"
-                value={String(displaySettings.loadMoreCount)}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, loadMoreCount: Math.max(1, parseInt(v) || 1) }))}
-              />
-              <FormInput
-                label="PAST EVENT OPACITY (%)"
-                type="number"
-                value={String(displaySettings.pastEventOpacity)}
-                onChange={(v) => setDisplaySettings((prev) => ({ ...prev, pastEventOpacity: Math.min(100, Math.max(0, parseInt(v) || 0)) }))}
-              />
-            </div>
-          </div>
-        </AdminCard>
-      </div>
 
       {/* PAGE SETTINGS */}
       <div>

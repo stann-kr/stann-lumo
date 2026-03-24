@@ -4,10 +4,12 @@ export default {
   nav_about: '소개',
   nav_music: '음악',
   nav_events: '이벤트',
-  nav_gallery: '갤러리',
+  nav_gallery: '아카이브',
   nav_contact: '연락',
   nav_link: '링크',
   nav_admin: '관리자',
+  nav_open_menu: '메뉴 열기',
+  nav_close_menu: '메뉴 닫기',
   
   // Page titles
   page_home_title: '아티스트 터미널',
@@ -60,6 +62,12 @@ export default {
   music_title: '음악',
   music_subtitle: '트랙 & 믹스',
   music_note: '모든 트랙은 SoundCloud 및 Mixcloud에서 스트리밍할 수 있습니다. 라이선스 문의는 Booking 섹션을 방문해주세요.',
+  music_col_id: 'ID',
+  music_col_title: '트랙명',
+  music_col_type: '유형',
+  music_col_dur: '길이',
+  music_col_yr: '연도',
+  music_col_action: '링크',
   
   // Events page
   events_title: '이벤트',
@@ -186,10 +194,12 @@ export default {
   // Time
   time_seoul: '서울 시간',
 
-  // Gallery
-  gallery_label: '갤러리',
-  gallery_title: '사진',
+  // Archive
+  gallery_label: '아카이브',
+  gallery_title: '아카이브',
   gallery_subtitle: '비주얼 아카이브',
   gallery_empty: '업로드된 사진이 없습니다',
   gallery_lightbox_close: '닫기',
+  gallery_back: '아카이브로 돌아가기',
+  gallery_load_error: '아카이브를 불러오지 못했습니다. 다시 시도해주세요.',
 };

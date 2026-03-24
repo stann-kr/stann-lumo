@@ -253,11 +253,10 @@ export interface GallerySettings {
 }
 
 /**
- * 갤러리 응답 데이터 타입 (photos + settings)
+ * 갤러리 응답 데이터 타입
  */
 export interface GalleryData {
   photos: GalleryPhoto[];
-  settings: GallerySettings;
 }
 
 /**
@@ -285,9 +284,8 @@ export interface ContentData {
   linkPlatforms: LinkPlatform[];
   terminalInfo: TerminalInfo;
   contactInfo: ContactItem[];
-  themeColors: ThemeColors;
+  themeColors?: ThemeColors;
   raApiConfig?: RAApiConfig;
-  displaySettings?: import('./displaySettings').AllDisplaySettings;
 }
 
 /**

@@ -1,105 +1,75 @@
-'use client';
-import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
-import { useContent } from '@/contexts/ContentContext';
-import PageLayout from '@/components/feature/PageLayout';
-import PageSection from '@/components/base/PageSection';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
-import { PADDING_MAP, GAP_MAP, MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
+"use client";
+import Link from "next/link";
+import { useTranslation } from "react-i18next";
+import { useContent } from "@/contexts/ContentContext";
+import PageLayout from "@/components/feature/PageLayout";
+import { createBorderFaint } from "@/utils/colorMix";
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { content, displaySettings } = useContent();
+  const { content } = useContent();
   const borderFaint = createBorderFaint();
-  const borderMid = createBorderMid();
-
-  const settings = displaySettings.home;
-  const navColsClass = MD_GRID_COLS_MAP[settings.navGridColumns];
-  const navGapClass = GAP_MAP[settings.navGridGap];
-  const navPaddingClass = PADDING_MAP[settings.navCardPadding];
 
   const artistName = Array.isArray(content.artistInfo)
-    ? (content.artistInfo.find((item) => item.key === 'Name' || item.key === '이름')?.value ?? '')
-    : '';
-  const nameParts = artistName.includes('&')
-    ? artistName.split('&').map((s) => s.trim())
-    : artistName.split(' ').map((s) => s.trim()).filter(Boolean);
+    ? (content.artistInfo.find(
+        (item) => item.key === "Name" || item.key === "이름",
+      )?.value ?? "")
+    : "";
+  const nameParts = artistName.includes("&")
+    ? artistName.split("&").map((s) => s.trim())
+    : artistName
+        .split(" ")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
   return (
     <PageLayout
       title={nameParts[0] ?? artistName}
       titleExtra={nameParts.slice(1)}
     >
-      <div className="space-y-12">
-        {/* Navigation Grid */}
-        <PageSection title={content.pageMeta?.home?.navTitle || t('home_nav_title') || 'NAVIGATION'} icon="ri-compass-3-line">
-          <div className={`grid grid-cols-1 ${navColsClass} ${navGapClass}`}>
-            {content.homeSections.map((section, index) => (
-              <Link
-                key={index}
-                href={section.path}
-                className={`group border transition-all duration-300 cursor-pointer ${navPaddingClass}`}
-                style={borderFaint}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor =
-                    'color-mix(in srgb, var(--color-accent) 50%, transparent)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor =
-                    'color-mix(in srgb, var(--color-secondary) 15%, transparent)';
-                }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 flex items-center justify-center">
-                        <i
-                          className={`${section.icon} text-xl`}
-                          style={{ color: 'var(--color-accent)' }}
-                        />
-                      </div>
-                      <h2
-                        className="text-base font-semibold tracking-widest"
-                        style={{ color: 'var(--color-primary)' }}
-                      >
-                        {section.title}
-                      </h2>
-                    </div>
-                    <p
-                      className="text-sm leading-relaxed"
-                      style={{ color: 'var(--color-secondary)', opacity: 0.55 }}
-                    >
-                      {section.description}
-                    </p>
-                  </div>
-                  <div className="w-5 h-5 flex items-center justify-center ml-3 mt-1">
-                    <i
-                      className="ri-arrow-right-line text-base transition-transform duration-300 group-hover:translate-x-1"
-                      style={{ color: 'var(--color-accent)', opacity: 0.6 }}
-                    />
-                  </div>
-                </div>
-              </Link>
-            ))}
+      <div className="space-y-10">
+        {/* Navigation — 컴팩트 리스트 (배경 최소화로 3D 백그라운드 노출) */}
+        <div>
+          <p className="font-mono text-xs text-[var(--color-accent)] tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-1 h-1 bg-[var(--color-accent)] animate-pulse"></span>
+            {content.pageMeta?.home?.navTitle || t("home_nav_title")}
+          </p>
+          <div className="border" style={borderFaint}>
+            {content.homeSections.map((section, index) => {
+              const numStr = (index + 1).toString().padStart(2, "0");
+              return (
+                <Link
+                  key={index}
+                  href={section.path}
+                  className="group flex items-center gap-4 px-4 py-3 border-b last:border-b-0 hover:bg-[var(--color-accent)]/5 transition-all duration-200 relative"
+                  style={borderFaint}
+                >
+                  <span className="font-mono text-[9px] text-[var(--color-muted)] tracking-widest group-hover:text-[var(--color-accent)] transition-colors shrink-0">
+                    [{numStr}]
+                  </span>
+                  <h2 className="font-mono text-sm uppercase tracking-[0.2em] text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors shrink-0">
+                    {section.title}
+                  </h2>
+                  <p className="font-mono text-xs text-[var(--color-secondary)]/30 group-hover:text-[var(--color-secondary)]/60 transition-all flex-1 truncate hidden md:block">
+                    {section.description}
+                  </p>
+                  <i className="ri-arrow-right-line text-xs text-[var(--color-muted)] group-hover:text-[var(--color-accent)] group-hover:translate-x-0.5 transition-all shrink-0" />
+                </Link>
+              );
+            })}
           </div>
-        </PageSection>
+        </div>
 
         {/* Terminal Info */}
-        {settings.showTerminalInfo && content.terminalInfo.url && (
-          <div className="pt-8 border-t space-y-6" style={borderMid}>
-            {/* 헤더 행: 설명 + 링크 버튼 */}
-            <div className="flex items-center justify-between gap-6">
-              <div className="space-y-1">
-                <p
-                  className="text-xs tracking-widest"
-                  style={{ color: 'var(--color-accent)', opacity: 0.7 }}
-                >
-                  {t('home_terminal_side_project')}
-                </p>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: 'var(--color-secondary)', opacity: 0.6 }}
-                >
+        {content.terminalInfo.url && (
+          <div className="pt-8 space-y-6 relative before:absolute before:top-0 before:left-0 before:w-16 before:h-px before:bg-[var(--color-accent)]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-[var(--color-accent)]"></span>
+                  {t("home_terminal_side_project")}
+                </div>
+                <p className="font-mono text-base leading-relaxed text-[var(--color-secondary)] opacity-60 max-w-2xl">
                   {content.terminalInfo.description}
                 </p>
               </div>
@@ -107,70 +77,65 @@ export default function HomePage() {
                 href={content.terminalInfo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2 border text-sm tracking-wider transition-all duration-200 whitespace-nowrap cursor-pointer"
-                style={{
-                  borderColor: 'color-mix(in srgb, var(--color-accent) 50%, transparent)',
-                  color: 'var(--color-accent)',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor =
-                    'color-mix(in srgb, var(--color-accent) 10%, transparent)';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                }}
+                className="group relative px-6 py-3 border border-[var(--color-accent)] text-sm font-mono tracking-widest text-[var(--color-accent)] whitespace-nowrap overflow-hidden transition-colors hover:text-white hover:bg-[var(--color-accent)]"
               >
-                {t('home_terminal_enter')} →
+                <div className="absolute inset-0 bg-[var(--color-accent)]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                <span className="relative z-10 flex items-center gap-2">
+                  {t("home_terminal_enter")}{" "}
+                  <i className="ri-arrow-right-up-line"></i>
+                </span>
               </a>
             </div>
 
-            {/* 커스텀 필드 */}
-            {content.terminalInfo.customFields && content.terminalInfo.customFields.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
-                {content.terminalInfo.customFields.map((field) => (
-                  <div key={field.id} className="space-y-0.5">
-                    <p className="text-[10px] tracking-widest" style={{ color: 'var(--color-accent)', opacity: 0.6 }}>
-                      {field.fieldKey.toUpperCase()}
-                    </p>
-                    {field.fieldType === 'url' ? (
-                      <a
-                        href={field.fieldValue}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs tracking-wider underline underline-offset-2"
-                        style={{ color: 'var(--color-secondary)', opacity: 0.7 }}
-                      >
-                        {field.fieldValue}
-                      </a>
-                    ) : field.fieldType === 'badge' ? (
-                      <span
-                        className="inline-block text-[10px] tracking-widest px-2 py-0.5 border"
-                        style={{
-                          borderColor: 'color-mix(in srgb, var(--color-accent) 40%, transparent)',
-                          color: 'var(--color-accent)',
-                        }}
-                      >
-                        {field.fieldValue}
-                      </span>
-                    ) : (
-                      <p className="text-xs tracking-wider" style={{ color: 'var(--color-secondary)', opacity: 0.7 }}>
-                        {field.fieldValue}
+            {/* Custom Fields */}
+            {content.terminalInfo.customFields &&
+              content.terminalInfo.customFields.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-[1px] bg-[var(--color-muted)] border border-[var(--color-muted)] p-[1px]">
+                  {content.terminalInfo.customFields.map((field) => (
+                    <div
+                      key={field.id}
+                      className="bg-surface p-4 flex flex-col justify-between space-y-2"
+                    >
+                      <p className="font-mono text-[10px] tracking-widest text-[var(--color-accent)] opacity-80 uppercase">
+                        {field.fieldKey}
                       </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div className="font-mono text-sm tracking-wider text-[var(--color-primary)] truncate">
+                        {field.fieldType === "url" ? (
+                          <a
+                            href={field.fieldValue}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-[var(--color-accent)] hover:underline transition-colors"
+                          >
+                            {field.fieldValue}
+                          </a>
+                        ) : field.fieldType === "badge" ? (
+                          <span className="inline-block border border-[var(--color-accent)] px-2 py-0.5 text-[var(--color-accent)]">
+                            {field.fieldValue}
+                          </span>
+                        ) : (
+                          <span>{field.fieldValue}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-            {/* 임베드 */}
+            {/* Embed */}
             {content.terminalInfo.style?.showEmbed && (
-              <div className="border" style={borderFaint}>
+              <div className="hud-panel p-1">
                 <iframe
                   src={content.terminalInfo.url}
-                  style={{ width: '100%', height: content.terminalInfo.style.embedHeight, border: 'none' }}
+                  style={{
+                    width: "100%",
+                    height: content.terminalInfo.style.embedHeight,
+                    border: "none",
+                  }}
                   title="Terminal"
                   sandbox="allow-scripts allow-same-origin"
                   loading="lazy"
+                  className="bg-black filter grayscale opacity-90 transition-all hover:grayscale-0 hover:opacity-100"
                 />
               </div>
             )}

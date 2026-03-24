@@ -2,6 +2,119 @@
 
 ---
 
+## [Unreleased] — 2026-03-24 (UI 일관성·버그 수정·어드민 연결성 개선)
+
+### Bug 1: TerminalLayout 모바일 언어 토글 역방향 동작 수정
+
+- `src/components/feature/TerminalLayout.tsx` — 모바일/데스크탑 EN·KO 버튼 모두 `toggleLanguage()` → `setLanguage('en'/'ko')` 명시적 전환으로 수정
+- 동일 언어 버튼 클릭 시 반대 언어로 전환되던 버그 해소
+
+### Bug 2: FormInput / FormTextarea React 안티패턴 수정
+
+- `src/components/base/FormInput.tsx` — `Object.assign(e.target.style, ...)` DOM 직접 변조 → `useState(isFocused)` 기반 조건부 style prop 적용
+- `src/components/base/FormTextarea.tsx` — 동일 패턴 수정
+
+### Bug 3: SuccessMessage 테두리 불투명도 통일
+
+- `src/components/base/SuccessMessage.tsx` — `{borderColor: 'var(--color-accent)'}` (100% 불투명) → `createBorderAccent()` (50% color-mix) 교체, 전체 컴포넌트와 일관성 확보
+
+### Bug 4: DeleteConfirmModal 하드코딩 red 색상 제거
+
+- `src/components/base/DeleteConfirmModal.tsx` — `bg-red-900/30 text-red-400 hover:bg-red-900/50` → `bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20`으로 교체, 테마 변경 시 자동 반영
+
+### Bug 5-6: Music·Events 공개 페이지 cardPadding 어드민 설정 연결
+
+- `src/app/(public)/music/page.tsx` — 트랙 행 패딩 하드코딩(`px-4 py-4 md:py-3`) → `PADDING_MAP[settings.cardPadding]` 적용
+- `src/app/(public)/events/page.tsx` — 이벤트 카드 패딩 하드코딩(`p-4`) → `PADDING_MAP[settings.cardPadding]` 적용 (예정·과거 이벤트 모두)
+
+---
+
+## [Unreleased] — 2026-03-23 (3D 씬 개선 및 홈 UI 개편)
+
+### 3D 배경 우주선 DB 연동 수정
+
+- `src/components/feature/Scene3D.tsx` — `VESSEL_ORBITAL_SLOTS` 고정 10슬롯 → `VESSEL_ORBITAL_POOL` 최대 20슬롯으로 확장
+- 트랙이 없는 슬롯("OBJ-XX")을 표시하지 않도록 변경 — DB 트랙 수만큼만 vessel 렌더링
+- 비ASCII 타입명(한국어 등) 처리: `replace(/[^\x20-\x7E]/g, '')` 후 빈 문자열이면 'TRK' 폴백
+- 비ASCII 제목 처리: ASCII 정제 후 빈 문자열이면 플랫폼명, 그것도 없으면 인덱스 폴백
+- 궤도 파라미터 모듈 레벨 `Math.random()` 복원 — 페이지 로드마다 랜덤 시작 위치
+
+### 홈 네비게이션 UI 개편
+
+- `src/app/(public)/page.tsx` — 네비게이션 그리드 카드(solid bg) → 컴팩트 리스트(투명 bg)로 교체
+- `PageSection` 래퍼 제거, 배경 없는 단순 border 리스트 구조 적용
+- 각 항목: `[01] SECTION_TITLE` 한 줄 형태, 설명은 md+ 호버 시 표시
+- 3D 배경 그래픽 노출 범위 확대
+
+---
+
+## [Unreleased] — 2026-03-23 (4개 버그 수정)
+
+### Bug 1: KO 언어 설정 시 영문 텍스트 노출 수정
+
+- `src/components/feature/TerminalLayout.tsx` — `NAV_ITEMS` 모듈 레벨 상수를 컴포넌트 내부로 이동, `useTranslation()` 적용하여 네비게이션 레이블 다국어 처리
+- `src/app/(public)/music/page.tsx` — 테이블 헤더(ID, TRACK_TITLE, TYPE, DUR, YR, ACTION) `t()` 함수 처리
+- `src/i18n/local/ko/index.ts` + `src/i18n/local/en/index.ts` — `music_col_*` 키 6개, `nav_open_menu`/`nav_close_menu` 키 추가
+
+### Bug 2: 콘텐츠 카드 상하 마진 불일치 수정
+
+- `src/components/base/PageSection.tsx` — `mb-16` 하드코딩 제거, 부모 `PageLayout`의 `space-y-*` spacing에 위임
+- `src/app/(public)/page.tsx` — 내부 `space-y-12` → `space-y-10` 통일
+
+### Bug 3: 갤러리 상세 페이지 에러 처리 강화
+
+- `src/app/(public)/gallery/[id]/page.tsx` — `fetchError` state 추가, `res.ok` 체크 추가, API 실패 시 NOT FOUND 대신 에러 메시지 렌더링
+- `src/app/(public)/gallery/page.tsx` — `res.ok` 체크 추가
+- `src/i18n/local/ko/index.ts` + `src/i18n/local/en/index.ts` — `gallery_back`, `gallery_load_error` 키 추가
+
+### Bug 4: 기타 버그 수정
+
+- `src/app/api/gallery/route.ts` — `ORDER BY sort_order DESC` → `ASC` 수정, 관리자 정렬 순서 반영
+- `src/components/feature/TerminalLayout.tsx` — 모바일 햄버거 버튼에 `aria-label`, `aria-expanded` 접근성 속성 추가
+
+---
+
+## [Unreleased] — 2026-03-23 (디자인 시스템 전면 점검 및 버그 수정)
+
+### Phase 1: 버그 및 잔재 코드 제거
+
+- `src/components/feature/TerminalLayout.tsx` — AI 편집 메모 잔류 주석 2줄 제거
+- `src/components/feature/TerminalLayout.tsx` — 로딩 스피너를 FUI 직각 테두리 회전 스피너로 교체 (`rounded-full` → 직각 `animate-spin`)
+- `src/components/home/CursorGlow.tsx` — `rounded-full` Tailwind 클래스 제거, 글로벌 `border-radius: 0 !important` 충돌 방지를 위해 인라인 스타일로 전환
+- `src/index.css` — 어디서도 import되지 않던 레거시 CSS 파일 삭제
+
+### Phase 2: 디자인 토큰 일관성 확보
+
+- `tailwind.config.ts` — 하드코딩된 `terminal.*` 색상 제거, CSS 변수 기반 `theme.*` 색상 시스템으로 통합
+- `src/constants/colors.ts` — `COLOR_VARS`에 누락된 `BG_SIDEBAR` 추가, `setAllColorVars`에 `bgSidebar` 파라미터 추가
+- `src/constants/styles.ts` — `BORDER.RADIUS` 사용 불가 값(SM/MD/LG/XL/FULL) 제거, `NONE`만 유지 (FUI 철학 반영)
+
+### Phase 3: Scene3D 성능 최적화 및 타입 수정
+
+- `src/components/feature/Scene3D.tsx` — `null as any` → `undefined` 타입 수정
+- `src/components/feature/Scene3D.tsx` — `ChromaticAberration offset` `useMemo`로 메모이제이션 (매 렌더 객체 생성 방지)
+- `src/components/feature/Scene3D.tsx` — deprecated `Vignette eskil` prop 제거
+- `src/components/feature/Scene3D.tsx` — `Particles` 기본값 300→250으로 사용처와 통일
+- `src/components/feature/Scene3D.tsx` — Canvas 내부를 `<Suspense>` 바운더리로 래핑
+- `src/components/feature/Scene3D.tsx` — `EffectComposer disableNormalPass` → `enableNormalPass={false}` (올바른 API)
+- `src/components/feature/Scene3D.tsx` — 파티클 초기화를 모듈 레벨 `createParticleData` 함수로 분리 (`react-hooks/purity` 규칙 준수)
+- `src/components/feature/Scene3D.tsx` — `CameraRig` 미사용 `t` 변수 제거
+
+### Phase 4: 애니메이션 코드 안정화
+
+- `src/components/home/CipherDecodeText.tsx` — `gsap.context()`로 모든 트윈 묶어 cleanup 시 일괄 kill 보장
+- `src/components/home/TypingText.tsx` — `onComplete`를 `useRef`로 최신 참조 유지, deps에서 제거하여 부모 리렌더 시 타이핑 재시작 방지
+
+### Phase 5: 코드 정리
+
+- `src/utils/colorMix.ts` — 미사용 함수 제거: `createMultiColorMixStyle`, `createBorderStyle`, `createBorderStrong`, `createBorderMuted` + `BORDER` import 정리
+- `src/components/feature/TerminalLayout.tsx`, `PageLayout.tsx` — 미사용 import 제거
+- `src/components/base/PageSection.tsx` — 미사용 `createBorderFaint` import 제거
+- `src/app/(public)/page.tsx`, `events/page.tsx`, `music/page.tsx` — 선언 후 미사용 변수/import 제거
+- `src/app/admin/(dashboard)/events/page.tsx`, `music/page.tsx` — useListEditor 미사용 destructure 제거
+
+---
+
 ## [Unreleased] — 2026-03-23 (RA API Year 파라미터 및 원본 데이터 보존 추가)
 
 ### RA API Config Year 파라미터 추가

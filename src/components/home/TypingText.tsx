@@ -30,6 +30,9 @@ const TypingText = ({
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
   const indexRef = useRef(0);
+  // 최신 onComplete 참조를 ref에 보관 — 부모 리렌더 시 타이핑 재시작 방지
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
 
   useEffect(() => {
     const delayTimer = setTimeout(() => setStarted(true), delay);
@@ -47,12 +50,12 @@ const TypingText = ({
       } else {
         clearInterval(interval);
         setDone(true);
-        onComplete?.();
+        onCompleteRef.current?.();
       }
     }, speed);
 
     return () => clearInterval(interval);
-  }, [started, safeText, speed, onComplete]);
+  }, [started, safeText, speed]);
 
   return (
     <span className={className} style={{ whiteSpace: 'pre-line' }}>

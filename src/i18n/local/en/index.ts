@@ -4,10 +4,12 @@ export default {
   nav_about: 'About',
   nav_music: 'Music',
   nav_events: 'Events',
-  nav_gallery: 'Gallery',
+  nav_gallery: 'Archive',
   nav_contact: 'Contact',
   nav_link: 'Link',
   nav_admin: 'Admin',
+  nav_open_menu: 'Open menu',
+  nav_close_menu: 'Close menu',
   
   // Page titles
   page_home_title: 'Artist Terminal',
@@ -60,6 +62,12 @@ export default {
   music_title: 'MUSIC',
   music_subtitle: 'TRACKS & MIXES',
   music_note: 'All tracks are available for streaming on SoundCloud and Mixcloud. For licensing inquiries, please visit the Booking section.',
+  music_col_id: 'ID',
+  music_col_title: 'TRACK_TITLE',
+  music_col_type: 'TYPE',
+  music_col_dur: 'DUR',
+  music_col_yr: 'YR',
+  music_col_action: 'ACTION',
   
   // Events page
   events_title: 'EVENTS',
@@ -186,10 +194,12 @@ export default {
   // Time
   time_seoul: 'Seoul Time',
 
-  // Gallery
-  gallery_label: 'GALLERY',
-  gallery_title: 'Photos',
+  // Archive
+  gallery_label: 'ARCHIVE',
+  gallery_title: 'Archive',
   gallery_subtitle: 'A visual archive',
   gallery_empty: 'No photos yet',
   gallery_lightbox_close: 'to close',
+  gallery_back: 'BACK TO ARCHIVE',
+  gallery_load_error: 'Failed to load archive. Please try again.',
 };

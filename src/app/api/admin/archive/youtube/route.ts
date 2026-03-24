@@ -1,6 +1,6 @@
 /**
  * YouTube 동영상 갤러리 추가
- * POST /api/admin/gallery/youtube
+ * POST /api/admin/archive/youtube
  * Body: { youtubeUrl: string, caption?: string, altText?: string }
  * R2 저장 없음 — D1 메타데이터만 INSERT
  */

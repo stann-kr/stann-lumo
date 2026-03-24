@@ -20,13 +20,10 @@ import type {
   EventsInfo,
   LinkPlatform,
   ContactItem,
-  ThemeColors,
   RAApiConfig,
   TerminalInfo,
   TerminalCustomField,
 } from '@/types/content';
-import { DISPLAY_SETTINGS_DEFAULTS } from '@/types/displaySettings';
-import type { AllDisplaySettings } from '@/types/displaySettings';
 
 // ---------- DB 행 타입 ----------
 
@@ -72,9 +69,6 @@ interface LinkPlatformRow {
 interface ContactInfoRow {
   id: string; lang: string; label: string; value: string; icon: string; sort_order: number;
 }
-interface ThemeColorsRow {
-  id: number; primary: string; secondary: string; accent: string; muted: string; bg: string; bg_sidebar: string;
-}
 interface SiteConfigRow {
   id: number; site_name: string; tagline: string; version: string;
   terminal_url: string | null; terminal_description: string | null;
@@ -89,10 +83,6 @@ interface TerminalCustomFieldRow {
 interface RAApiConfigRow {
   id: number; user_id: string | null; api_key: string | null; dj_id: string | null; option: string; year: string | null;
 }
-interface DisplaySettingsRow {
-  page: string; settings: string;
-}
-
 // ---------- 헬퍼: page_meta 행 → PageMeta 객체 ----------
 
 function buildPageMeta(rows: PageMetaRow[]): PageMeta {
@@ -192,10 +182,8 @@ export async function GET(
       db.prepare('SELECT * FROM events_tech_requirements WHERE lang = ? ORDER BY sort_order').bind(lang),
       db.prepare('SELECT * FROM link_platforms WHERE lang = ? ORDER BY sort_order').bind(lang),
       db.prepare('SELECT * FROM contact_info WHERE lang = ? ORDER BY sort_order').bind(lang),
-      db.prepare('SELECT * FROM theme_colors WHERE id = 1'),
       db.prepare('SELECT * FROM ra_api_config WHERE id = 1'),
       db.prepare('SELECT * FROM site_config WHERE id = 1'),
-      db.prepare('SELECT * FROM display_settings'),
       db.prepare('SELECT * FROM terminal_custom_fields ORDER BY sort_order ASC'),
     ];
 
@@ -226,35 +214,33 @@ export async function GET(
       return primary;
     };
 
-    const artistInfoRows    = getRows<ArtistInfoRow>(0, 18);
-    const aboutSectionRows  = getRows<AboutSectionRow>(1, 19);
-    const aboutParaRows     = getRows<AboutSectionParagraphRow>(2, 20);
-    const aboutPhilRows     = getRows<AboutSectionPhilosophyItemRow>(3, 21);
-    
+    const artistInfoRows    = getRows<ArtistInfoRow>(0, 16);
+    const aboutSectionRows  = getRows<AboutSectionRow>(1, 17);
+    const aboutParaRows     = getRows<AboutSectionParagraphRow>(2, 18);
+    const aboutPhilRows     = getRows<AboutSectionPhilosophyItemRow>(3, 19);
+
     // PageMeta는 병합 처리
     let pageMetaRows: PageMetaRow[] = (res[4].results as PageMetaRow[]);
     if (lang === 'ko') {
-      const enMetaRows = (res[22].results as PageMetaRow[]);
+      const enMetaRows = (res[20].results as PageMetaRow[]);
       const metaMap = new Map<string, PageMetaRow>();
       enMetaRows.forEach(r => metaMap.set(`${r.page}:${r.key}`, r));
       pageMetaRows.forEach(r => metaMap.set(`${r.page}:${r.key}`, r));
       pageMetaRows = Array.from(metaMap.values());
     }
 
-    const homeSectionRows   = getRows<HomeSectionRow>(5, 23);
-    const trackRows         = getRows<TrackRow>(6, 24);
+    const homeSectionRows   = getRows<HomeSectionRow>(5, 21);
+    const trackRows         = getRows<TrackRow>(6, 22);
     const performanceRows   = (res[7].results as PerformanceRow[]);
     const eventsInfoRow     = (res[8].results[0] as EventsInfoRow | undefined);
-    const setDurationRows   = getRows<EventsListRow>(9, 25);
-    const techReqRows       = getRows<EventsListRow>(10, 26);
-    const linkPlatformRows  = getRows<LinkPlatformRow>(11, 27);
-    const contactInfoRows   = getRows<ContactInfoRow>(12, 28);
-    
-    const themeRow              = (res[13].results[0] as ThemeColorsRow | undefined);
-    const raRow                 = (res[14].results[0] as RAApiConfigRow | undefined);
-    const siteRow               = (res[15].results[0] as SiteConfigRow | undefined);
-    const displaySettingsRows   = (res[16].results as DisplaySettingsRow[]);
-    const terminalFieldRows     = (res[17].results as TerminalCustomFieldRow[]);
+    const setDurationRows   = getRows<EventsListRow>(9, 23);
+    const techReqRows       = getRows<EventsListRow>(10, 24);
+    const linkPlatformRows  = getRows<LinkPlatformRow>(11, 25);
+    const contactInfoRows   = getRows<ContactInfoRow>(12, 26);
+
+    const raRow             = (res[13].results[0] as RAApiConfigRow | undefined);
+    const siteRow           = (res[14].results[0] as SiteConfigRow | undefined);
+    const terminalFieldRows = (res[15].results as TerminalCustomFieldRow[]);
 
     // ArtistInfo
     const artistInfo: ArtistInfoItem[] = artistInfoRows.map((r) => ({
@@ -345,18 +331,6 @@ export async function GET(
       label: r.label, value: r.value, icon: r.icon,
     }));
 
-    // ThemeColors
-    const themeColors: ThemeColors = themeRow
-      ? {
-          primary:    themeRow.primary,
-          secondary:  themeRow.secondary,
-          accent:     themeRow.accent,
-          muted:      themeRow.muted,
-          bg:         themeRow.bg,
-          bgSidebar:  themeRow.bg_sidebar,
-        }
-      : { primary: '#00ff00', secondary: '#ffffff', accent: '#00ff00', muted: '#666666', bg: '#000000', bgSidebar: '#000000' };
-
     // RAApiConfig
     const raApiConfig: RAApiConfig | undefined =
       raRow?.user_id
@@ -369,26 +343,6 @@ export async function GET(
           }
         : undefined;
 
-    // DisplaySettings — 기본값과 shallow merge
-    const dsMap = Object.fromEntries(displaySettingsRows.map((r) => [r.page, r.settings]));
-    function mergeDs<K extends keyof AllDisplaySettings>(page: K): AllDisplaySettings[K] {
-      try {
-        const parsed = JSON.parse(dsMap[page] ?? '{}') as Partial<AllDisplaySettings[K]>;
-        return { ...DISPLAY_SETTINGS_DEFAULTS[page], ...parsed };
-      } catch {
-        return DISPLAY_SETTINGS_DEFAULTS[page];
-      }
-    }
-    const displaySettings: AllDisplaySettings = {
-      global:  mergeDs('global'),
-      home:    mergeDs('home'),
-      about:   mergeDs('about'),
-      music:   mergeDs('music'),
-      events:  mergeDs('events'),
-      contact: mergeDs('contact'),
-      link:    mergeDs('link'),
-    };
-
     const data: ContentData = {
       artistInfo,
       aboutSections,
@@ -400,9 +354,7 @@ export async function GET(
       linkPlatforms,
       terminalInfo,
       contactInfo,
-      themeColors,
       ...(raApiConfig && { raApiConfig }),
-      displaySettings,
     };
 
     return NextResponse.json({ success: true, data });

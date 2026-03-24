@@ -4,19 +4,13 @@
 import { useTranslation } from 'react-i18next';
 import { useContent } from '@/contexts/ContentContext';
 import PageLayout from '@/components/feature/PageLayout';
-import { createBorderFaint } from '@/utils/colorMix';
+import PageSection from '@/components/base/PageSection';
 // import { createBorderMid } from '@/utils/colorMix'; // TODO: 폼 활성화 시 주석 해제
-import { MD_GRID_COLS_MAP } from '@/utils/displaySettingsMap';
 
 const ContactPage = () => {
   const { t } = useTranslation();
-  const { contactContent, eventsContent, content, displaySettings } = useContent();
-  const borderFaint = createBorderFaint();
+  const { contactContent, eventsContent, content } = useContent();
   // const borderMid = createBorderMid(); // TODO: 폼 활성화 시 주석 해제
-
-  const settings = displaySettings.contact;
-  const contactColsClass = MD_GRID_COLS_MAP[settings.contactInfoColumns];
-  const bookingColsClass = MD_GRID_COLS_MAP[settings.bookingColumns];
 
   // TODO: 메일링 서비스(NEXT_PUBLIC_FORM_ENDPOINT) 연결 후 아래 블록 전체 주석 해제
   // const [formData, setFormData] = useState({ callsign: '', email: '', message: '' });
@@ -59,7 +53,6 @@ const ContactPage = () => {
     <PageLayout
       title={content.pageMeta?.contact?.title || t('contact_title')}
       subtitle={content.pageMeta?.contact?.subtitle || t('contact_subtitle')}
-      spacing={settings.spacing}
     >
       {/* Guestbook Form — 메일링 서비스 연결 후 활성화 예정 */}
       {/* TODO: NEXT_PUBLIC_FORM_ENDPOINT 환경변수 설정 후 아래 주석 블록 전체 해제 */}
@@ -126,19 +119,18 @@ const ContactPage = () => {
       </div>
       */}
 
-      {/* Direct Contact — TODO: 게스트북 폼 활성화 시 className에 "pt-8 border-t" 추가 */}
-      <div className="space-y-6">
-        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
-          {content.pageMeta?.contact?.directTitle || t('contact_direct')}
-        </h2>
-
-        <div className={`grid ${contactColsClass} gap-6`}>
+      {/* Direct Contact */}
+      <PageSection
+        title={content.pageMeta?.contact?.directTitle || t('contact_direct')}
+        icon="ri-mail-line"
+      >
+        <div className="grid md:grid-cols-3 gap-6">
           {contactContent.contactInfo.map((item, index) => (
-            <div key={index} className="space-y-2">
+            <div key={index} className="space-y-3">
               <div className="w-8 h-8 flex items-center justify-center">
                 <i className={`text-lg text-[var(--color-accent)] ${item.icon}`}></i>
               </div>
-              <h3 className="text-xs text-[var(--color-secondary)] opacity-45 tracking-widest">{item.label}</h3>
+              <h3 className="text-xs font-mono text-[var(--color-accent)] tracking-widest">{item.label}</h3>
               {item.value.includes('@') ? (
                 <a
                   href={`mailto:${item.value}`}
@@ -152,21 +144,20 @@ const ContactPage = () => {
             </div>
           ))}
         </div>
-      </div>
+      </PageSection>
 
       {/* Booking Info */}
-      <div className="space-y-8 pt-8 border-t" style={borderFaint}>
-        <h2 className="text-xs font-semibold text-[var(--color-accent)] tracking-widest">
-          {content.pageMeta?.contact?.bookingTitle || t('contact_booking_info')}
-        </h2>
-
-        <div className={`grid ${bookingColsClass} gap-8`}>
+      <PageSection
+        title={content.pageMeta?.contact?.bookingTitle || t('contact_booking_info')}
+        icon="ri-calendar-check-line"
+      >
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Set Duration */}
           <div className="space-y-4">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <i className="ri-time-line text-lg text-[var(--color-accent)]"></i>
+            <div className="flex items-center gap-2">
+              <i className="ri-time-line text-base text-[var(--color-accent)]"></i>
+              <h3 className="text-xs font-mono text-[var(--color-accent)] tracking-widest">{t('events_set_duration')}</h3>
             </div>
-            <h3 className="text-xs text-[var(--color-secondary)] opacity-45 tracking-widest">{t('events_set_duration')}</h3>
             <div className="space-y-2">
               {eventsContent.eventsInfo.setDurations.map((duration, index) => (
                 <p key={index} className="text-sm text-[var(--color-secondary)] opacity-70">
@@ -178,10 +169,10 @@ const ContactPage = () => {
 
           {/* Technical Requirements */}
           <div className="space-y-4">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <i className="ri-settings-3-line text-lg text-[var(--color-accent)]"></i>
+            <div className="flex items-center gap-2">
+              <i className="ri-settings-3-line text-base text-[var(--color-accent)]"></i>
+              <h3 className="text-xs font-mono text-[var(--color-accent)] tracking-widest">{t('events_technical')}</h3>
             </div>
-            <h3 className="text-xs text-[var(--color-secondary)] opacity-45 tracking-widest">{t('events_technical')}</h3>
             <div className="space-y-2">
               {eventsContent.eventsInfo.technicalRequirements.map((req, index) => (
                 <p key={index} className="text-sm text-[var(--color-secondary)] opacity-70">
@@ -193,10 +184,10 @@ const ContactPage = () => {
 
           {/* Booking Contact */}
           <div className="space-y-4">
-            <div className="w-8 h-8 flex items-center justify-center">
-              <i className="ri-calendar-check-line text-lg text-[var(--color-accent)]"></i>
+            <div className="flex items-center gap-2">
+              <i className="ri-mail-send-line text-base text-[var(--color-accent)]"></i>
+              <h3 className="text-xs font-mono text-[var(--color-accent)] tracking-widest">{t('events_contact')}</h3>
             </div>
-            <h3 className="text-xs text-[var(--color-secondary)] opacity-45 tracking-widest">{t('events_contact')}</h3>
             <div className="space-y-3">
               <a
                 href={`mailto:${eventsContent.eventsInfo.contactEmail}`}
@@ -210,7 +201,7 @@ const ContactPage = () => {
             </div>
           </div>
         </div>
-      </div>
+      </PageSection>
     </PageLayout>
   );
 };

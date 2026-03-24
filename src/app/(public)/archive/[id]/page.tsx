@@ -4,8 +4,9 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import type { GalleryPhoto, GalleryData } from '@/types/content';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import { createBorderFaint, createBorderMid, createBorderAccent } from '@/utils/colorMix';
 import PageLayout from '@/components/feature/PageLayout';
+import HudSpinner from '@/components/base/HudSpinner';
 
 const GalleryPhotoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,17 +14,22 @@ const GalleryPhotoPage = () => {
   const { t } = useTranslation();
   const borderFaint = createBorderFaint();
   const borderMid = createBorderMid();
+  const borderAccent = createBorderAccent();
 
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     fetch('/api/gallery')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((json: { success: boolean; data: GalleryData }) => {
         if (json.success) setPhotos(json.data.photos);
       })
-      .catch(() => {})
+      .catch(() => setFetchError(true))
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -34,9 +40,9 @@ const GalleryPhotoPage = () => {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft' && prevPhoto) router.push(`/gallery/${prevPhoto.id}`);
-      if (e.key === 'ArrowRight' && nextPhoto) router.push(`/gallery/${nextPhoto.id}`);
-      if (e.key === 'Escape') router.push('/gallery');
+      if (e.key === 'ArrowLeft' && prevPhoto) router.push(`/archive/${prevPhoto.id}`);
+      if (e.key === 'ArrowRight' && nextPhoto) router.push(`/archive/${nextPhoto.id}`);
+      if (e.key === 'Escape') router.push('/archive');
     },
     [prevPhoto, nextPhoto, router],
   );
@@ -48,23 +54,40 @@ const GalleryPhotoPage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout title="...">
-        <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
-          LOADING...
-        </p>
+      <PageLayout key="loading" title="">
+        <HudSpinner />
+      </PageLayout>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <PageLayout key="error" title="ERROR">
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--color-secondary)]/60 tracking-widest">
+            {t('gallery_load_error')}
+          </p>
+          <Link
+            href="/archive"
+            className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
+          >
+            <i className="ri-arrow-left-line"></i>
+            {t('gallery_back')}
+          </Link>
+        </div>
       </PageLayout>
     );
   }
 
   if (!photo) {
     return (
-      <PageLayout title="NOT FOUND">
+      <PageLayout key="not-found" title="NOT FOUND">
         <Link
-          href="/gallery"
+          href="/archive"
           className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors"
         >
           <i className="ri-arrow-left-line"></i>
-          BACK TO GALLERY
+          {t('gallery_back')}
         </Link>
       </PageLayout>
     );
@@ -72,7 +95,7 @@ const GalleryPhotoPage = () => {
 
   // 타이틀: 파일명 제외, caption > altText > 인덱스 순 폴백
   const pageTitle = photo.caption || photo.altText
-    || `${t('gallery_label') || 'GALLERY'} ${currentIndex + 1}`;
+    || `${t('gallery_label') || 'ARCHIVE'} ${currentIndex + 1}`;
 
   // 카테고리 뱃지
   const categoryLabel =
@@ -87,20 +110,20 @@ const GalleryPhotoPage = () => {
     : 'ri-image-line';
 
   return (
-    <PageLayout title={pageTitle}>
+    <PageLayout key={photo.id} title={pageTitle}>
       {/* 상단 — 뒤로가기 + 카테고리 + 인덱스 */}
       <div className="flex items-center justify-between">
         <Link
-          href="/gallery"
+          href="/archive"
           className="inline-flex items-center gap-2 text-xs tracking-widest text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] transition-colors"
         >
           <i className="ri-arrow-left-line"></i>
-          GALLERY
+          ARCHIVE
         </Link>
         <div className="flex items-center gap-4">
           {/* 카테고리 뱃지 */}
-          <span className="inline-flex items-center gap-1.5 text-[10px] tracking-widest px-2 py-1 border"
-            style={{ borderColor: 'color-mix(in srgb, var(--color-accent) 30%, transparent)', color: 'var(--color-accent)', opacity: 0.7 }}>
+          <span className="inline-flex items-center gap-1.5 text-[10px] tracking-widest px-2 py-1 border text-[var(--color-accent)] opacity-70"
+            style={borderAccent}>
             <i className={`${categoryIcon} text-xs`}></i>
             {categoryLabel}
           </span>
@@ -142,7 +165,7 @@ const GalleryPhotoPage = () => {
         {/* 이전 화살표 오버레이 */}
         {prevPhoto && (
           <Link
-            href={`/gallery/${prevPhoto.id}`}
+            href={`/archive/${prevPhoto.id}`}
             className="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-start pl-3 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-r from-[var(--color-bg)]/60 to-transparent"
             aria-label="Previous photo"
           >
@@ -153,7 +176,7 @@ const GalleryPhotoPage = () => {
         {/* 다음 화살표 오버레이 */}
         {nextPhoto && (
           <Link
-            href={`/gallery/${nextPhoto.id}`}
+            href={`/archive/${nextPhoto.id}`}
             className="absolute right-0 top-0 bottom-0 w-16 flex items-center justify-end pr-3 opacity-0 hover:opacity-100 transition-opacity bg-gradient-to-l from-[var(--color-bg)]/60 to-transparent"
             aria-label="Next photo"
           >
@@ -184,7 +207,7 @@ const GalleryPhotoPage = () => {
         {/* 이전/다음 버튼 */}
         <div className="flex items-center gap-2 shrink-0">
           <Link
-            href={prevPhoto ? `/gallery/${prevPhoto.id}` : '/gallery'}
+            href={prevPhoto ? `/archive/${prevPhoto.id}` : '/archive'}
             className={`w-10 h-10 border flex items-center justify-center transition-colors ${
               prevPhoto
                 ? 'text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 cursor-pointer'
@@ -196,7 +219,7 @@ const GalleryPhotoPage = () => {
             <i className="ri-arrow-left-line text-sm"></i>
           </Link>
           <Link
-            href={nextPhoto ? `/gallery/${nextPhoto.id}` : '/gallery'}
+            href={nextPhoto ? `/archive/${nextPhoto.id}` : '/archive'}
             className={`w-10 h-10 border flex items-center justify-center transition-colors ${
               nextPhoto
                 ? 'text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 cursor-pointer'

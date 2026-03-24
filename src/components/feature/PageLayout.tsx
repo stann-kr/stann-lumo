@@ -1,10 +1,9 @@
 'use client';
-import type { CSSProperties, ReactNode, ReactElement } from 'react';
-import { Children, isValidElement } from 'react';
-import TypingText from '../home/TypingText';
-import { createBorderMid } from '../../utils/colorMix';
-import { MAX_WIDTH_MAP } from '../../utils/displaySettingsMap';
-import { useContent } from '../../contexts/ContentContext';
+import type { ReactNode } from 'react';
+import { Children, isValidElement, useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import CipherDecodeText from '../home/CipherDecodeText';
 
 interface PageLayoutProps {
   title: string;
@@ -13,62 +12,41 @@ interface PageLayoutProps {
   typingSpeed?: number;
   typingDelay?: number;
   children: ReactNode;
-  spacing?: 'sm' | 'md' | 'lg';
 }
-
-const spacingMap = {
-  sm: 'space-y-6',
-  md: 'space-y-10',
-  lg: 'space-y-14',
-};
 
 const PageLayout = ({
   title,
   titleExtra,
   subtitle,
-  typingSpeed,
+  typingSpeed = 80,
   typingDelay = 100,
   children,
-  spacing,
 }: PageLayoutProps) => {
-  const borderMid = createBorderMid();
-  const { displaySettings } = useContent();
-  const global = displaySettings.global;
-
-  // 페이지별 props 우선, 없으면 global 설정 사용
-  const resolvedTypingSpeed = typingSpeed ?? global.typingSpeed;
-  const resolvedSpacing = spacing ?? global.defaultSpacing;
-  const resolvedMaxWidth = MAX_WIDTH_MAP[global.pageMaxWidth];
-
   const extraDelays = (titleExtra ?? []).reduce<number[]>((acc, part, i) => {
     if (i === 0) {
-      acc.push(typingDelay + title.length * resolvedTypingSpeed + 200);
+      acc.push(typingDelay + title.length * typingSpeed + 200);
     } else {
       const prev = acc[i - 1];
       const prevLen = (titleExtra ?? [])[i - 1].length;
-      acc.push(prev + prevLen * resolvedTypingSpeed + 200);
+      acc.push(prev + prevLen * typingSpeed + 200);
     }
     return acc;
   }, []);
 
-  const baseDelay = global.animationEnabled ? 200 : 0;
-  const stepDelay = global.animationEnabled ? 120 : 0;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.fromTo('.gsap-stagger-item',
+      { y: 20, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power3.out', delay: 0.2 }
+    );
+  }, { scope: containerRef });
 
   const animatedChildren = Children.map(children, (child, index) => {
-    const delay = baseDelay + index * stepDelay;
     if (isValidElement(child)) {
-      const el = child as ReactElement<{ className?: string; style?: CSSProperties }>;
       return (
-        <div
-          key={index}
-          className={global.animationEnabled ? 'animate-slideUp' : ''}
-          style={
-            global.animationEnabled
-              ? { animationDelay: `${delay}ms`, animationFillMode: 'both', opacity: 0 }
-              : undefined
-          }
-        >
-          {el}
+        <div key={index} className="gsap-stagger-item opacity-0">
+          {child}
         </div>
       );
     }
@@ -76,38 +54,40 @@ const PageLayout = ({
   });
 
   return (
-    <div className={`${resolvedMaxWidth} ${spacingMap[resolvedSpacing]} pt-4 pb-8 md:pt-8`}>
-      {/* Page Header */}
-      <div
-        className={global.animationEnabled ? 'space-y-3 animate-slideUp' : 'space-y-3'}
-        style={
-          global.animationEnabled
-            ? { animationDelay: '0ms', animationFillMode: 'both', opacity: 0 }
-            : undefined
-        }
-      >
-        <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-primary)] tracking-tight leading-tight">
-          <TypingText text={title} speed={resolvedTypingSpeed} delay={typingDelay} />
+    <div ref={containerRef} className="max-w-5xl space-y-10 pb-8 relative">
+      {/* Sci-Fi Page Header */}
+      <div className="relative space-y-4 gsap-stagger-item opacity-0">
+        <div className="font-mono text-xs text-[var(--color-accent)] tracking-widest flex items-center gap-2">
+          <span className="w-1.5 h-1.5 bg-[var(--color-accent)] animate-pulse"></span>
+          ACCESS_GRANTED // PAGE_INIT
+        </div>
+        
+        <h1 className="text-6xl md:text-8xl font-black uppercase tracking-[0.1em] text-[var(--color-primary)] leading-none break-words">
+          <CipherDecodeText text={title} delay={typingDelay} />
           {titleExtra && titleExtra.map((part, i) => (
-            <span key={i} className="block">
-              <TypingText
+            <span key={i} className="block mt-2">
+              <CipherDecodeText
                 text={part}
-                speed={resolvedTypingSpeed}
                 delay={extraDelays[i]}
               />
             </span>
           ))}
         </h1>
-        <div className="w-12 h-px" style={borderMid} />
-        {subtitle && (
-          <p className="text-[var(--color-secondary)] opacity-50 text-xs tracking-widest">
-            {subtitle}
-          </p>
-        )}
+        
+        <div className="flex items-center gap-4 pt-4">
+          <div className="flex-1 h-px bg-[var(--color-muted)] opacity-50"></div>
+          {subtitle && (
+            <p className="font-mono text-xs text-[var(--color-accent)] tracking-[0.2em] uppercase shrink-0">
+              [{subtitle}]
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Page Content */}
-      {animatedChildren}
+      <div className="relative z-10 pt-4 space-y-10">
+        {animatedChildren}
+      </div>
     </div>
   );
 };
