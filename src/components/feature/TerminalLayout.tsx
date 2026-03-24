@@ -25,8 +25,8 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const { content, isLoading, isError } = useContent();
 
   // pathname 변경 = 네비게이션 완료 → 스피너 해제
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsNavigating(false);
   }, [pathname]);
 
