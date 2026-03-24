@@ -94,7 +94,7 @@ const EventsPage = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col md:items-end justify-center shrink-0 w-32 font-mono">
+                  <div className="flex flex-col md:items-end justify-center shrink-0 md:w-32 font-mono">
                     <p className="text-sm text-[var(--color-primary)] tracking-widest mb-1">
                       {event.date}
                     </p>

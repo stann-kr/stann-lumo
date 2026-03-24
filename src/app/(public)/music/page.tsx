@@ -46,15 +46,15 @@ const MusicPage = () => {
                 </h3>
               </div>
 
-              <div className="w-24 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-60">
+              <div className="hidden md:block w-24 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-60">
                 {`[${track.type}]`}
               </div>
 
-              <div className="w-16 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-30">
+              <div className="hidden md:block w-16 font-mono text-xs tracking-widest text-[var(--color-secondary)] opacity-30">
                 {track.year}
               </div>
 
-              <div className="w-32 md:text-right mt-2 md:mt-0">
+              <div className="md:w-32 md:text-right mt-2 md:mt-0">
                 <a
                   href={track.link}
                   target="_blank"
