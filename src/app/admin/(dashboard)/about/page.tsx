@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useContent } from "@/contexts/ContentContext";
 import AdminCard from "@/components/base/AdminCard";
 import AdminSectionHeader from "@/components/base/AdminSectionHeader";
