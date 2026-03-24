@@ -24,6 +24,18 @@ html {
   font-size: 17px;
 }
 
+/* ── 네이티브 스크롤바 완전 숨김 ───────────────────────────────────────
+   React CustomScrollbar 컴포넌트(position:fixed)로 대체
+   → DOM 변경 시 브라우저 네이티브 재렌더 타이밍 플래시 원천 차단
+   ──────────────────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
 * {
   margin: 0;
   padding: 0;

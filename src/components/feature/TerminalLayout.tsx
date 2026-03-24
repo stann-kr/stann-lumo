@@ -10,6 +10,7 @@ import { SITE_NAME, SITE_VERSION, TERMINAL_URL } from '../../constants/site';
 import CursorGlow from '../home/CursorGlow';
 import LiveClock from '../home/LiveClock';
 import Scene3D from './Scene3D';
+import CustomScrollbar from '../base/CustomScrollbar';
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -53,6 +54,8 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
   return (
     <div className="min-h-screen bg-transparent text-[var(--color-primary)] font-sans antialiased flex selection:bg-[var(--color-accent)] selection:text-white">
+      {/* 커스텀 스크롤바 — 페이지 전환 독립, 네이티브 플래시 차단 */}
+      <CustomScrollbar />
       {/* 전역 커서 글로우 (Sci-Fi 스타일 유지) */}
       <CursorGlow />
 
@@ -249,46 +252,60 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         <div className="hidden lg:block absolute bottom-8 left-8 w-4 h-4 border-b border-l border-[var(--color-muted)] pointer-events-none"></div>
         <div className="hidden lg:block absolute bottom-8 right-8 w-4 h-4 border-b border-r border-[var(--color-muted)] pointer-events-none"></div>
 
-        {isLoading || isNavigating ? (
-          <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
-            <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] flex flex-col items-center gap-2">
-              <div className="w-4 h-4 border border-[var(--color-accent)] border-t-transparent animate-spin"></div>
-              <span className="animate-pulse">FETCHING DATA...</span>
-            </div>
-          </div>
-        ) : isError ? (
-          <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
-            <div className="font-mono flex flex-col items-center gap-4 text-center px-8">
-              <div className="text-[10px] tracking-[0.2em] text-[var(--color-muted)] uppercase">
-                SYS.ERR — CONNECTION FAILED
+        <AnimatePresence mode="wait">
+          {isLoading || isNavigating ? (
+            <motion.div
+              key="spinner"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeInOut' }}
+              className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center"
+            >
+              <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] flex flex-col items-center gap-2">
+                <div className="w-4 h-4 border border-[var(--color-accent)] border-t-transparent animate-spin"></div>
+                <span className="animate-pulse">FETCHING DATA...</span>
               </div>
-              <div className="w-8 h-[1px] bg-[var(--color-muted)]"></div>
-              <p className="text-xs text-[var(--color-muted)] tracking-widest max-w-xs leading-relaxed">
-                일시적인 서버 오류가 발생했습니다.<br />
-                잠시 후 다시 시도해 주세요.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-2 border border-[var(--color-muted)] px-6 py-2 text-[10px] font-mono tracking-[0.2em] text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors cursor-pointer"
-              >
-                RETRY
-              </button>
-            </div>
-          </div>
-        ) : (
-          <AnimatePresence mode="wait">
+            </motion.div>
+          ) : isError ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeInOut' }}
+              className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center"
+            >
+              <div className="font-mono flex flex-col items-center gap-4 text-center px-8">
+                <div className="text-[10px] tracking-[0.2em] text-[var(--color-muted)] uppercase">
+                  SYS.ERR — CONNECTION FAILED
+                </div>
+                <div className="w-8 h-[1px] bg-[var(--color-muted)]"></div>
+                <p className="text-xs text-[var(--color-muted)] tracking-widest max-w-xs leading-relaxed">
+                  일시적인 서버 오류가 발생했습니다.<br />
+                  잠시 후 다시 시도해 주세요.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-2 border border-[var(--color-muted)] px-6 py-2 text-[10px] font-mono tracking-[0.2em] text-[var(--color-muted)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition-colors cursor-pointer"
+                >
+                  RETRY
+                </button>
+              </div>
+            </motion.div>
+          ) : (
             <motion.div
               key={pathname}
               initial={{ opacity: 0, y: 10, filter: 'blur(8px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -10, filter: 'blur(8px)' }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+              exit={{ opacity: 0, y: -6, filter: 'blur(6px)' }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
               className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] p-4 md:p-8 lg:p-12 relative z-10"
             >
               {children}
             </motion.div>
-          </AnimatePresence>
-        )}
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
