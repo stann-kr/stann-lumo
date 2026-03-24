@@ -1,5 +1,5 @@
 'use client';
-import { useState, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -17,10 +17,16 @@ interface TerminalLayoutProps {
 
 const TerminalLayout = ({ children }: TerminalLayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const { content, isLoading, isError } = useContent();
+
+  // pathname 변경 = 네비게이션 완료 → 스피너 해제
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname]);
 
   const NAV_ITEMS = [
     { label: t('nav_home'), path: '/' },
@@ -41,6 +47,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
 
   const handleNavClick = (path: string) => {
     if (path === pathname) return;
+    setIsNavigating(true);
     setMobileMenuOpen(false);
   };
 
@@ -242,7 +249,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
         <div className="hidden lg:block absolute bottom-8 left-8 w-4 h-4 border-b border-l border-[var(--color-muted)] pointer-events-none"></div>
         <div className="hidden lg:block absolute bottom-8 right-8 w-4 h-4 border-b border-r border-[var(--color-muted)] pointer-events-none"></div>
 
-        {isLoading ? (
+        {isLoading || isNavigating ? (
           <div className="min-h-[calc(100dvh-4rem)] lg:min-h-[100dvh] flex items-center justify-center">
             <div className="font-mono text-[10px] tracking-[0.2em] text-[var(--color-accent)] flex flex-col items-center gap-2">
               <div className="w-4 h-4 border border-[var(--color-accent)] border-t-transparent animate-spin"></div>
