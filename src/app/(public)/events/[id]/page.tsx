@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import PageLayout from '@/components/feature/PageLayout';
+import HudSpinner from '@/components/base/HudSpinner';
 import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
 import type { Performance, GalleryPhoto } from '@/types/content';
 
@@ -45,10 +46,8 @@ const EventDetailPage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout key="loading" title="...">
-        <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
-          LOADING...
-        </p>
+      <PageLayout key="loading" title="">
+        <HudSpinner />
       </PageLayout>
     );
   }

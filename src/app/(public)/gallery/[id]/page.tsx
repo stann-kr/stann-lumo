@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { GalleryPhoto, GalleryData } from '@/types/content';
 import { createBorderFaint, createBorderMid, createBorderAccent } from '@/utils/colorMix';
 import PageLayout from '@/components/feature/PageLayout';
+import HudSpinner from '@/components/base/HudSpinner';
 
 const GalleryPhotoPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,10 +54,8 @@ const GalleryPhotoPage = () => {
 
   if (isLoading) {
     return (
-      <PageLayout key="loading" title="...">
-        <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">
-          LOADING...
-        </p>
+      <PageLayout key="loading" title="">
+        <HudSpinner />
       </PageLayout>
     );
   }
