@@ -311,7 +311,7 @@ const TerminalLayout = ({ children }: TerminalLayoutProps) => {
       <Scene3D />
 
       {/* Main Content (HUD Viewport) */}
-      <main className="flex-1 lg:ml-64 relative mobile-header-offset">
+      <main className="flex-1 lg:ml-64 relative mobile-header-offset overflow-x-hidden">
         {/* HUD Viewport Brackets at the corners of Main space */}
         <div className="hidden lg:block absolute top-8 left-8 w-4 h-4 border-t border-l border-[var(--color-muted)] pointer-events-none"></div>
         <div className="hidden lg:block absolute top-8 right-8 w-4 h-4 border-t border-r border-[var(--color-muted)] pointer-events-none"></div>

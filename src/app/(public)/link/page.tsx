@@ -3,13 +3,14 @@ import { useTranslation } from "react-i18next";
 import { useContent } from "@/contexts/ContentContext";
 import PageLayout from "@/components/feature/PageLayout";
 import PageSection from "@/components/base/PageSection";
-import { createBorderMid } from "@/utils/colorMix";
+import { createBorderMid, createBorderFaint } from "@/utils/colorMix";
 
 const LinkPage = () => {
   const { t } = useTranslation();
   const { content } = useContent();
   const { linkPlatforms, terminalInfo } = content;
   const borderMid = createBorderMid();
+  const borderFaint = createBorderFaint();
 
   return (
     <PageLayout
@@ -101,7 +102,7 @@ const LinkPage = () => {
       </PageSection>
 
       {/* Footer Note */}
-      <div className="pt-6 border-t border-[var(--color-muted)]/30">
+      <div className="pt-6 border-t" style={borderFaint}>
         <p className="text-xs text-[var(--color-secondary)] opacity-35 text-center">
           {t("link_footer_note")}{" "}
           <a

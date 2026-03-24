@@ -14,7 +14,7 @@ const MusicPage = () => {
       subtitle={content.pageMeta?.music?.subtitle || t("music_subtitle")}
     >
       {/* Track List - Database Log Style */}
-      <div className="border border-[var(--color-muted)] p-[1px] flex flex-col gap-[1px]">
+      <div className="border border-[var(--color-muted)] p-[1px] flex flex-col gap-[1px] overflow-x-hidden">
         {/* Header Row */}
         <div className="hidden md:flex items-center px-4 py-2 bg-surface font-mono text-[10px] tracking-widest text-[var(--color-accent)] uppercase">
           <div className="w-16">{t("music_col_id")}</div>
@@ -35,7 +35,7 @@ const MusicPage = () => {
                 {idStr}
               </div>
 
-              <div className="flex-1 min-w-0 pr-4">
+              <div className="flex-1 w-full min-w-0 pr-4">
                 <div className="flex items-center gap-2 md:hidden mb-2">
                   <span className="font-mono text-[10px] text-[var(--color-accent)]">
                     [{idStr}]

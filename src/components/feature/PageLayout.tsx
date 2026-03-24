@@ -62,7 +62,7 @@ const PageLayout = ({
           ACCESS_GRANTED // PAGE_INIT
         </div>
         
-        <h1 className="text-6xl md:text-8xl font-black uppercase tracking-[0.1em] text-[var(--color-primary)] leading-none break-words">
+        <h1 className="text-6xl md:text-8xl font-black uppercase tracking-[0.1em] text-[var(--color-primary)] leading-none break-all overflow-hidden">
           <CipherDecodeText text={title} delay={typingDelay} />
           {titleExtra && titleExtra.map((part, i) => (
             <span key={i} className="block mt-2">

@@ -61,7 +61,7 @@ export default {
   // Music page
   music_title: 'MUSIC',
   music_subtitle: 'TRACKS & MIXES',
-  music_note: 'All tracks are available for streaming on SoundCloud and Mixcloud. For licensing inquiries, please visit the Booking section.',
+  music_note: 'All tracks are available for streaming on Multiple Platforms. For licensing inquiries, please visit the Booking section.',
   music_col_id: 'ID',
   music_col_title: 'TRACK_TITLE',
   music_col_type: 'TYPE',
