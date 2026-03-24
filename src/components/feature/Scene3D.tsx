@@ -7,6 +7,7 @@ import { EffectComposer, Bloom, Noise, ChromaticAberration, Vignette } from '@re
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useContent } from '../../contexts/ContentContext';
+import { COLORS } from '../../styles/colors';
 
 // ─── 궤도 파라미터 타입 ───────────────────────────────────────────────────────
 
@@ -333,9 +334,9 @@ const CameraRig = () => {
 // ─── Scene3D ──────────────────────────────────────────────────────────────────
 
 export default function Scene3D() {
-  const { content, musicContent } = useContent();
-  const accentColor = content.themeColors.accent || '#00ff00';
-  const mutedColor = content.themeColors.muted || '#333333';
+  const { musicContent } = useContent();
+  const accentColor = COLORS.scene3d.accent;
+  const mutedColor  = COLORS.scene3d.muted;
 
   const chromaticOffset = useMemo(() => new THREE.Vector2(0.004, 0.004), []);
 

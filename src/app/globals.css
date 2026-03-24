@@ -6,13 +6,17 @@
 @tailwind utilities;
 
 :root {
-  /* Sci-Fi Defaults - can be overridden by theme_colors DB */
-  --color-primary: #ffffff;
-  --color-secondary: #00ff00; 
-  --color-accent: #ff0033;
-  --color-muted: #333333;
-  --color-bg: #000000;
-  --color-bg-sidebar: #050505;
+  /*
+   * ── 색상 단일 소스 ──────────────────────────────────────────────────
+   *  색상 변경 시: src/styles/colors.ts 의 THEME 섹션 수정 후
+   *  이 파일의 값과 동기화 유지 (두 파일이 1:1 대응)
+   * ─────────────────────────────────────────────────────────────────── */
+  --color-primary:    #ffffff;   /* THEME.primary   */
+  --color-secondary:  #00ff00;   /* THEME.secondary */
+  --color-accent:     #ff0033;   /* THEME.accent    */
+  --color-muted:      #333333;   /* THEME.muted     */
+  --color-bg:         #000000;   /* THEME.bg        */
+  --color-bg-sidebar: #050505;   /* THEME.bgSidebar */
 }
 
 html {

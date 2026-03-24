@@ -16,7 +16,6 @@ import type {
   EventsInfo,
   LinkPlatform,
   ContactItem,
-  ThemeColors,
   RAApiConfig,
   TerminalCustomField,
   TerminalStyleConfig,
@@ -144,15 +143,6 @@ export function fetchContactInfo(lang: 'en' | 'ko') {
 }
 export function updateContactInfo(lang: 'en' | 'ko', items: ContactItem[]) {
   return apiPut<void>('/api/admin/contact-info', { lang, items });
-}
-
-// ---------- 테마 ----------
-
-export function fetchThemeColors() {
-  return apiGet<ThemeColors>('/api/admin/theme');
-}
-export function updateThemeColors(themeColors: ThemeColors) {
-  return apiPut<void>('/api/admin/theme', { themeColors });
 }
 
 // ---------- 사이트 설정 ----------

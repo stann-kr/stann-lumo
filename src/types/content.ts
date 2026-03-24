@@ -284,7 +284,7 @@ export interface ContentData {
   linkPlatforms: LinkPlatform[];
   terminalInfo: TerminalInfo;
   contactInfo: ContactItem[];
-  themeColors: ThemeColors;
+  themeColors?: ThemeColors;
   raApiConfig?: RAApiConfig;
 }
 

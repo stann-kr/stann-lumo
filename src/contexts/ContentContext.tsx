@@ -216,14 +216,6 @@ const defaultEnContent: ContentData = {
       icon: "ri-briefcase-line",
     },
   ],
-  themeColors: {
-    primary: "#00ff00",
-    secondary: "#ffffff",
-    accent: "#00ff00",
-    muted: "#666666",
-    bg: "#000000",
-    bgSidebar: "#000000",
-  },
 };
 
 const defaultKoContent: ContentData = {
@@ -411,14 +403,6 @@ const defaultKoContent: ContentData = {
       icon: "ri-briefcase-line",
     },
   ],
-  themeColors: {
-    primary: "#00ff00",
-    secondary: "#ffffff",
-    accent: "#00ff00",
-    muted: "#666666",
-    bg: "#000000",
-    bgSidebar: "#000000",
-  },
 };
 
 const defaultMultiLanguageContent: MultiLanguageContent = {
@@ -482,21 +466,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
 
   const content = allContent[language];
 
-  useEffect(() => {
-    // SSR에서 layout.tsx가 이미 DB 테마를 <style>로 주입 — 로딩 중에는 덮어쓰지 않음
-    // isLoading=false가 되는 시점에 content.themeColors는 이미 DB 값으로 갱신됨
-    if (isLoading) return;
-    const root = document.documentElement;
-    root.style.setProperty("--color-primary", content.themeColors.primary);
-    root.style.setProperty("--color-secondary", content.themeColors.secondary);
-    root.style.setProperty("--color-accent", content.themeColors.accent);
-    root.style.setProperty("--color-muted", content.themeColors.muted);
-    root.style.setProperty("--color-bg", content.themeColors.bg);
-    root.style.setProperty(
-      "--color-bg-sidebar",
-      content.themeColors.bgSidebar ?? content.themeColors.bg,
-    );
-  }, [content.themeColors, isLoading]);
+  // 색상은 globals.css :root 정적 변수로 관리 — src/styles/colors.ts 참조
 
   /**
    * 인메모리 콘텐츠 업데이트 — 어드민 페이지 편집 시 즉시 UI 반영용.
