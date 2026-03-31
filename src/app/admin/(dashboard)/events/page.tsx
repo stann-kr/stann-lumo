@@ -79,11 +79,13 @@ const AdminEventsPage = () => {
 
   const saveChanges = async () => {
     setIsSaving(true);
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       apiUpdatePerformances(performances),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
       apiUpdateRaApiConfig(raApiConfig),
     ]);
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length > 0) console.error('일부 저장 실패:', failed);
     updateContent({ performances, raApiConfig, pageMeta });
     showNotification();
     setIsSaving(false);

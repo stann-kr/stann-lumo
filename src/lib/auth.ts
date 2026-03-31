@@ -26,7 +26,10 @@ export async function createSession(): Promise<string> {
   const db = getDB();
 
   if (!db) {
-    // Docker 개발 환경 폴백
+    // Docker 개발 환경 전용 폴백 — 프로덕션에서는 DB 없이 세션 생성 불가
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('DB unavailable in production — cannot create session');
+    }
     return DEV_SESSION_VALUE;
   }
 
@@ -47,8 +50,11 @@ export async function createSession(): Promise<string> {
  * @returns 유효하면 true, 만료/미존재 시 false
  */
 export async function validateSession(sessionId: string): Promise<boolean> {
-  // 개발 환경 폴백
-  if (sessionId === DEV_SESSION_VALUE) return true;
+  // 개발 환경 전용 폴백 — 프로덕션에서는 절대 허용 안 함
+  if (sessionId === DEV_SESSION_VALUE) {
+    if (process.env.NODE_ENV === 'production') return false;
+    return true;
+  }
 
   const db = getDB();
   if (!db) return false;

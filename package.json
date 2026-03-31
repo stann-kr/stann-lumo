@@ -1,12 +1,12 @@
 {
-  "name": "react",
+  "name": "stann-lumo",
   "private": true,
   "version": "0.0.0",
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "NODE_ENV=production next build",
     "start": "next start --port 3000",
-    "lint": "eslint src app --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint src --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit",
     "deploy": "opennextjs-cloudflare build && wrangler deploy"
   },
@@ -15,7 +15,6 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.5.0",
     "@react-three/postprocessing": "^3.0.4",
-    "@types/three": "^0.183.1",
     "framer-motion": "^12.38.0",
     "gsap": "^3.14.2",
     "i18next": "^25.3.2",
@@ -44,6 +43,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
-    "wrangler": "^4.74.0"
+    "wrangler": "^4.74.0",
+    "@types/three": "^0.183.1"
   }
 }

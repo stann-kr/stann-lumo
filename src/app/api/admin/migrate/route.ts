@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getDB } from '@/lib/db';
+import { getDB, getEnv } from '@/lib/db';
 import { requireAdminSession } from '@/lib/adminAuth';
 import type { MultiLanguageContent, ContentData, DynamicSection } from '@/types/content';
 
@@ -18,6 +18,15 @@ const LANGS = ['en', 'ko'] as const;
 export async function POST(request: NextRequest) {
   const authError = await requireAdminSession(request);
   if (authError) return authError;
+
+  // MIGRATE_ENABLED=true 일 때만 허용 — 기본 비활성
+  const { MIGRATE_ENABLED } = getEnv();
+  if (MIGRATE_ENABLED !== 'true') {
+    return NextResponse.json(
+      { success: false, error: { code: 'FORBIDDEN', message: 'Migration endpoint is disabled. Set MIGRATE_ENABLED=true to enable.' } },
+      { status: 403 },
+    );
+  }
 
   const db = getDB();
   if (!db) {

@@ -2,6 +2,41 @@
 
 ---
 
+## [Unreleased] — 2026-03-31 (보안·SEO·성능·코드 품질 일괄 개선)
+
+### 보안 (긴급)
+
+- `src/lib/auth.ts` — `validateSession()`, `createSession()`에 `NODE_ENV === 'production'` 체크 추가. `dev-session` 값이 프로덕션에서 인증 우회 가능했던 취약점 차단
+- `src/app/api/auth/login/route.ts` — 비밀번호 단순 문자열 비교(`!==`) → Web Crypto API `SHA-256` 해싱 기반 상수 시간 비교(`timingSafeEqual`)로 교체, 타이밍 사이드 채널 공격 방어
+- `src/app/api/admin/migrate/route.ts` — `MIGRATE_ENABLED=true` 환경변수가 없으면 403 반환. 마이그레이션 엔드포인트 기본 비활성화
+- `src/lib/db.ts` — `getEnv()` 반환 타입에 `MIGRATE_ENABLED` 추가
+- `.env.example` — `MIGRATE_ENABLED=false` 문서화
+
+### SEO
+
+- `src/app/layout.tsx` — `lang="en"` → `lang="ko"` (한국 아티스트 기본 언어 정렬)
+- `src/app/(public)/layout.tsx` — `'use client'` 제거, 서버 컴포넌트로 전환. `metadata` title template 추가 (`%s | STANN LUMO`)
+- `src/app/(public)/about/layout.tsx` 외 5개 — 페이지별 `metadata` (title, description) 서버 컴포넌트 layout 신규 생성
+
+### 에러 처리
+
+- `src/hooks/useAdminForm.ts` — `catch` 블록에 `showError` 상태 추가, 4초 후 자동 해제
+- `src/app/admin/(dashboard)/{about,contact,events,home,link,music}/page.tsx` — `Promise.allSettled` 결과 수집 후 실패 항목 `console.error` 로깅
+
+### 성능
+
+- `src/app/api/archive/route.ts` — `Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=600` 헤더 추가
+- `src/app/api/events/[id]/route.ts` — 동일 캐싱 헤더 추가
+- `src/app/api/content/[lang]/route.ts` — 동일 캐싱 헤더 추가
+
+### 설정
+
+- `next.config.ts` — `poweredByHeader: false` 및 보안 HTTP 헤더 (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`) 추가
+- `package.json` — `name: "react"` → `"stann-lumo"`, `@types/three` dependencies → devDependencies 이동, lint 스크립트 경로 수정 (`app` 경로 제거, `--ext` 플래그 제거)
+- `tailwind.config.ts` — 잘못된 `./app/**` content 경로 제거, archive 페이지 동적 컬럼/gap 클래스 safelist 추가
+
+---
+
 ## [Unreleased] — 2026-03-24 (UI 일관성·버그 수정·어드민 연결성 개선)
 
 ### Bug 1: TerminalLayout 모바일 언어 토글 역방향 동작 수정

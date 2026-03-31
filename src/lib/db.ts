@@ -65,6 +65,8 @@ declare global {
     DB: D1Database;
     MEDIA: R2Bucket;
     ADMIN_PASSWORD: string;
+    /** 마이그레이션 엔드포인트 활성화 플래그 — 기본 비활성 */
+    MIGRATE_ENABLED?: string;
   }
 }
 
@@ -194,10 +196,11 @@ export function getR2(): R2Bucket | null {
  * CF 환경변수 접근
  * @returns CF Workers: env vars / Node.js: process.env
  */
-export function getEnv(): { ADMIN_PASSWORD: string } {
+export function getEnv(): { ADMIN_PASSWORD: string; MIGRATE_ENABLED?: string } {
   const ctx = getRequestCtx();
   if (ctx) return ctx.env;
   return {
     ADMIN_PASSWORD: (typeof process !== 'undefined' ? process.env.ADMIN_PASSWORD : undefined) ?? '',
+    MIGRATE_ENABLED: typeof process !== 'undefined' ? process.env.MIGRATE_ENABLED : undefined,
   };
 }

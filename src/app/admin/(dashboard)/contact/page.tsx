@@ -98,11 +98,13 @@ const AdminContactPage = () => {
 
   const saveChanges = async () => {
     setIsSaving(true);
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       apiUpdateContactInfo(currentEditLanguage, contactInfo),
       apiUpdateEventsInfo(currentEditLanguage, eventsInfo),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
     ]);
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length > 0) console.error('일부 저장 실패:', failed);
     updateContent({ contactInfo, eventsInfo, pageMeta });
     showNotification();
     setIsSaving(false);
