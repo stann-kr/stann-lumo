@@ -67,6 +67,7 @@ export interface AdminFormReturn<T extends object> {
   isSaved: boolean;
   isSaving: boolean;
   showSuccess: boolean;
+  showError: boolean;
   updateField: (field: string, value: unknown) => void;
   saveForm: () => Promise<void>;
   setFormData: (data: T) => void;
