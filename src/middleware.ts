@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * next.config.ts headers()는 OpenNext Cloudflare edge converter에서 미지원 —
  * 미들웨어에서 직접 주입하여 Cloudflare Workers 환경에서도 동작 보장.
  */
-export function middleware(request: NextRequest) {
+export function middleware(_request: NextRequest) {
   const response = NextResponse.next();
 
   response.headers.set('X-Content-Type-Options', 'nosniff');
