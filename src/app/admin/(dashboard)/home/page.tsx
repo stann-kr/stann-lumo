@@ -167,7 +167,7 @@ const AdminHomePage = () => {
 
   const saveChanges = async () => {
     setIsSaving(true);
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       apiUpdateHomeSections(currentEditLanguage, homeSections),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
       updateTerminalConfig({
@@ -178,6 +178,10 @@ const AdminHomePage = () => {
       }),
       apiUpdateArtistInfo(currentEditLanguage, artistInfo),
     ]);
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length > 0) {
+      console.error('일부 저장 실패:', failed);
+    }
     updateContent({
       homeSections,
       terminalInfo: { ...terminalInfo, customFields: terminalCustomFields, style: terminalStyle },

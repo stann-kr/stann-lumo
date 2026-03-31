@@ -78,10 +78,12 @@ const AdminMusicPage = () => {
 
   const saveChanges = async () => {
     setIsSaving(true);
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       apiUpdateTracks(currentEditLanguage, tracks),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
     ]);
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length > 0) console.error('일부 저장 실패:', failed);
     updateContent({ tracks, pageMeta });
     showNotification();
     setIsSaving(false);

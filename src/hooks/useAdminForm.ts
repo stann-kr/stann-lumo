@@ -8,6 +8,7 @@ export function useAdminForm<T extends object>(
   const [formData, setFormData] = useState<T>(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   // 언어 전환 시 initialData가 바뀌면 formData도 갱신
   useEffect(() => {
@@ -26,6 +27,8 @@ export function useAdminForm<T extends object>(
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error('Form save error:', error);
+      setShowError(true);
+      setTimeout(() => setShowError(false), 4000);
     } finally {
       setIsSaving(false);
     }
@@ -44,5 +47,6 @@ export function useAdminForm<T extends object>(
     resetForm,
     isSaving,
     showSuccess,
+    showError,
   };
 }

@@ -26,10 +26,12 @@ const AdminAboutPage = () => {
 
   const handleSave = useCallback(
     async (data: ContentData) => {
-      await Promise.allSettled([
+      const results = await Promise.allSettled([
         apiUpdateArtistInfo(currentEditLanguage, data.artistInfo),
         apiUpdateAboutSections(currentEditLanguage, data.aboutSections),
       ]);
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length > 0) console.error('일부 저장 실패:', failed);
       updateContent(data);
     },
     [currentEditLanguage, updateContent],

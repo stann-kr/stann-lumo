@@ -103,11 +103,13 @@ const AdminLinkPage = () => {
 
   const saveChanges = async () => {
     setIsSaving(true);
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       apiUpdateLinkPlatforms(currentEditLanguage, linkPlatforms),
       apiUpdatePageMeta(currentEditLanguage, pageMeta),
       apiUpdateTerminalInfo(terminalInfo),
     ]);
+    const failed = results.filter((r) => r.status === 'rejected');
+    if (failed.length > 0) console.error('일부 저장 실패:', failed);
     updateContent({ linkPlatforms, terminalInfo, pageMeta });
     showNotification();
     setIsSaving(false);
