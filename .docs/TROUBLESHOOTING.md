@@ -24,6 +24,28 @@
 
 ## Cloudflare / 빌드 관련 이슈
 
+### [2026-03-31] 보안 헤더가 배포 후 HTTP 응답에 미반영 — OpenNext `external: true` 미들웨어 구조 제약
+
+**발생 상황 및 에러 로그 요약**
+- 증상: `next.config.ts headers()`, `src/middleware.ts NextResponse.next().headers.set()` 모두 설정했으나 `curl -I https://lumo.stann.kr`에서 보안 헤더(`X-Frame-Options` 등) 미반환
+- 시도한 방법: (1) `next.config.ts headers()` → 동작 안 함, (2) `src/middleware.ts` → 동작 안 함, (3) `external: false` 변경 시도 → 빌드 즉시 실패
+
+**원인 분석**
+- `@opennextjs/cloudflare`는 `middleware.external: true`를 필수로 강제 (`ensure-cf-config.js` 빌드 검증)
+- `external: true` 구조에서 미들웨어가 별도 Edge Worker 번들로 분리됨
+- Edge Worker가 `NextResponse.next()` 반환 시 내부적으로 `x-middleware-next: 1` 헤더만 설정
+- Edge Worker → 메인 앱 Node Worker 프록시 과정에서 **미들웨어 응답 헤더가 최종 응답에 병합되지 않음**
+- OpenNext GitHub Issues #606, #501, #585에서 확인된 알려진 제약사항
+
+**해결 방법**
+- Cloudflare Transform Rules 사용 (CDN 레벨 — Worker 코드와 완전히 무관하게 전체 응답에 적용)
+- Dashboard 경로: 도메인 → Rules → Transform Rules → Modify Response Header → Create rule
+- 조건: `Hostname equals lumo.stann.kr`
+- 설정 헤더 5개: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- `src/middleware.ts` 삭제 (작동하지 않는 코드 제거)
+
+---
+
 ### [2026-03-19] ESLint 빌드 오류 — `react-hooks` v5+ 엄격 규칙 (purity / set-state-in-effect)
 
 **발생 상황 및 에러 로그 요약**

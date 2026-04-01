@@ -31,7 +31,9 @@
 
 ### 설정
 
-- `next.config.ts` — `poweredByHeader: false` 및 보안 HTTP 헤더 (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`) 추가
+- `next.config.ts` — `poweredByHeader: false` 추가. ~~보안 헤더 `headers()` 추가~~ → OpenNext Cloudflare 런타임에서 미처리 확인, 제거됨 (TROUBLESHOOTING 참조)
+- `src/middleware.ts` — 보안 헤더 미들웨어 생성 → `NextResponse.next()` 헤더가 external 미들웨어 구조에서 병합되지 않아 제거됨 (TROUBLESHOOTING 참조)
+- **보안 헤더** — Cloudflare Transform Rules (CDN 레벨)로 적용. 사용자 직접 Dashboard 설정 필요: `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`
 - `package.json` — `name: "react"` → `"stann-lumo"`, `@types/three` dependencies → devDependencies 이동, lint 스크립트 경로 수정 (`app` 경로 제거, `--ext` 플래그 제거)
 - `tailwind.config.ts` — 잘못된 `./app/**` content 경로 제거, archive 페이지 동적 컬럼/gap 클래스 safelist 추가
 
