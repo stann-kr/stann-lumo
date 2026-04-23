@@ -25,6 +25,9 @@ import {
   deleteEventPoster,
 } from '@/services/adminService';
 
+const POSTER_ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
+const POSTER_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
 const AdminEventsPage = () => {
   const { t } = useTranslation();
   const { allContent, updateContent, currentEditLanguage } = useContent();
@@ -46,6 +49,7 @@ const AdminEventsPage = () => {
   const [fetchSuccess, setFetchSuccess] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [posterUploading, setPosterUploading] = useState<Record<string, boolean>>({});
+  const [posterError, setPosterError] = useState<Record<string, string | null>>({});
 
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
 
@@ -151,6 +155,17 @@ const AdminEventsPage = () => {
   };
 
   const handlePosterUpload = async (eventId: string, file: File) => {
+    setPosterError((prev) => ({ ...prev, [eventId]: null }));
+
+    if (!POSTER_ALLOWED_TYPES.includes(file.type)) {
+      setPosterError((prev) => ({ ...prev, [eventId]: 'JPG, PNG, WebP, AVIF, GIF 형식만 지원합니다.' }));
+      return;
+    }
+    if (file.size > POSTER_MAX_SIZE_BYTES) {
+      setPosterError((prev) => ({ ...prev, [eventId]: '파일 크기가 10MB를 초과합니다.' }));
+      return;
+    }
+
     setPosterUploading((prev) => ({ ...prev, [eventId]: true }));
     try {
       const result = await uploadEventPoster(eventId, file);
@@ -158,7 +173,11 @@ const AdminEventsPage = () => {
         setPerformances(
           performances.map((p) => p.id === eventId ? { ...p, posterImageId: result.data!.photoId } : p)
         );
+      } else {
+        setPosterError((prev) => ({ ...prev, [eventId]: '업로드에 실패했습니다. 다시 시도해 주세요.' }));
       }
+    } catch {
+      setPosterError((prev) => ({ ...prev, [eventId]: '네트워크 오류가 발생했습니다.' }));
     } finally {
       setPosterUploading((prev) => ({ ...prev, [eventId]: false }));
     }
@@ -385,20 +404,39 @@ const AdminEventsPage = () => {
                           {posterUploading[performance.id] ? 'REMOVING...' : 'REMOVE POSTER'}
                         </button>
                       ) : (
-                        <label className="flex items-center gap-2 cursor-pointer text-xs text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] tracking-widest transition-colors">
-                          <i className="ri-upload-line"></i>
-                          {posterUploading[performance.id] ? 'UPLOADING...' : 'UPLOAD POSTER'}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={posterUploading[performance.id]}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handlePosterUpload(performance.id, file);
-                            }}
-                          />
-                        </label>
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 cursor-pointer text-xs text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] tracking-widest transition-colors">
+                            <i className="ri-upload-line"></i>
+                            <span>UPLOAD POSTER</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+                              className="hidden"
+                              disabled={posterUploading[performance.id]}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handlePosterUpload(performance.id, file);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
+                          {posterUploading[performance.id] && (
+                            <div className="w-full h-0.5 bg-[var(--color-secondary)]/10 overflow-hidden rounded-full">
+                              <div className="h-full w-1/2 bg-[var(--color-accent)] animate-shimmer rounded-full" />
+                            </div>
+                          )}
+                          {!posterUploading[performance.id] && (
+                            <p className="text-[10px] text-[var(--color-secondary)]/30 tracking-wider">
+                              JPG · PNG · WebP · AVIF · GIF · max 10MB
+                            </p>
+                          )}
+                          {posterError[performance.id] && (
+                            <p className="text-[10px] text-red-400 tracking-wider flex items-center gap-1">
+                              <i className="ri-error-warning-line" />
+                              {posterError[performance.id]}
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
