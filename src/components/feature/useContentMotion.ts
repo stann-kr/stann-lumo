@@ -36,16 +36,16 @@ export function useContentMotion(rootRef: RefObject<HTMLElement | null>, revisio
         }
         const isRow = element.dataset.reveal === 'row';
         const tween = gsap.fromTo(element, {
-          y: isRow ? 0 : 8,
+          y: isRow ? 0 : 16,
           opacity: 0,
         }, {
           y: 0, opacity: 1,
           duration: PUBLIC_MOTION.content,
-          delay: (index % 3) * 0.02,
+          delay: (index % 3) * 0.035,
           ease: PUBLIC_MOTION.ease,
           clearProps: 'transform,opacity',
           onStart: () => { revealed.current.add(element); },
-          scrollTrigger: { trigger: element, start: 'top 94%', once: true },
+          scrollTrigger: { trigger: element, start: 'top 92%', once: true },
         });
         reveals.set(element, tween);
       });

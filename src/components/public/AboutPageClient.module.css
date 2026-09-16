@@ -1,9 +1,9 @@
 .about { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(0, 3fr); gap: 3rem clamp(2rem, 6vw, 7rem); border-top: 1px solid var(--color-muted); padding-top: 2rem; }
-.facts { align-self: start; }
+.facts { align-self: start; position: sticky; top: 7rem; }
 .facts > div { margin-bottom: 2rem; }
 .facts dt { font: .8rem 'JetBrains Mono', monospace; color: var(--color-secondary); margin-bottom: .5rem; }
 .facts dd { font-size: 1.25rem; font-weight: 500; overflow-wrap: anywhere; }
-.prose { max-width: 65ch; }
+.prose { max-width: 65ch; min-width: 0; }
 .prose section + section { margin-top: 4rem; }
 .prose .artistName { font-size: clamp(2rem, 4.5vw, 5rem); line-height: 1.05; letter-spacing: -.045em; font-weight: 800; margin-bottom: 2rem; }
 .prose h3:not(:global(.sr-only)) { font-size: 1.25rem; line-height: 1.25; font-weight: 600; margin-bottom: 1.5rem; }
@@ -14,4 +14,4 @@
 .references { display: flex; gap: 2rem; border-top: 1px solid var(--color-muted); padding-top: 1rem; margin-top: 2rem; }
 .references a { display: inline-flex; align-items: center; min-height: 44px; }
 .references a:hover { color: var(--color-accent); }
-@media (max-width: 699px) { .about { grid-template-columns: minmax(0, 1fr); } .facts { display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; } .facts > div { margin: 0; } }
+@media (max-width: 699px) { .about { grid-template-columns: minmax(0, 1fr); } .facts { position: static; display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; } .facts > div { margin: 0; } }

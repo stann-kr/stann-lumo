@@ -1,7 +1,7 @@
 .shell {
   composes: root from '../../styles/designV2.module.css';
-  --page-gutter: clamp(1.25rem, 4vw, 5rem);
-  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --page-gutter: clamp(1.25rem, 3vw, 3.5rem);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   min-height: 100svh;
   position: relative;
   isolation: isolate;
@@ -24,7 +24,7 @@
 .navList { display: flex; align-items: center; gap: 1.25rem; }
 .navList a { position: relative; display: flex; align-items: center; min-height: 44px; font-size: .8rem; font-weight: 600; }
 .navList a[aria-current] { text-decoration: underline; text-decoration-color: var(--color-accent); text-underline-offset: .6rem; text-decoration-thickness: 2px; }
-.navList a:hover, .externalLinks a:hover { color: var(--color-secondary); }
+.navList a:hover, .externalLinks a:hover { color: var(--color-accent); }
 .languages { display: flex; }
 .languages button { min-width: 44px; min-height: 44px; font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--color-secondary); }
 .languages button[aria-pressed='true'] { color: var(--color-primary); text-decoration: underline; text-underline-offset: .4rem; }
@@ -49,6 +49,9 @@
   .desktopNav .navList a:not([aria-current]):hover::after { transform: scaleX(1); }
 }
 .desktopNav .navList a:focus-visible::after { transform: scaleX(1); transition: none; }
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+  .desktopNav .navList a::after { transition: transform 280ms var(--motion-ease-out); }
+}
 @media (hover: hover) and (pointer: fine) {
   .shell, .shell :is(a, button, label, input[type='radio'], input[type='checkbox']) { cursor: crosshair; }
   .shell :is(button, input):disabled { cursor: not-allowed; }

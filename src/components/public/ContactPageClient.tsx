@@ -16,13 +16,13 @@ export default function ContactPageClient({ bookingInfo, contactInfo, contactMet
       <section className={styles.direct}>
         <h2 className="sr-only">{contactMeta.directTitle || t("contact_direct")}</h2>
         {contactInfo.map((item, index) => (
-          <div key={index} className={styles.contact}>
+          <div key={index} className={styles.contact} data-reveal>
             <h3>{item.label}</h3>
             {item.value.includes('@') ? <a href={`mailto:${item.value}`} data-hover><span className={styles.address} data-hover-label>{item.value}</span><i className={styles.linkRule} data-hover-rule aria-hidden="true" /></a> : <p>{item.value}</p>}
           </div>
         ))}
       </section>
-      <section className={styles.booking}>
+      <section className={styles.booking} data-reveal>
         <h2>{contactMeta.bookingTitle || t("contact_booking_info")}</h2>
         <div className={styles.details}>
           {!!bookingInfo.setDurations.length && <div><h3>{t("events_set_duration")}</h3><ul>{bookingInfo.setDurations.map((duration, index) => <li key={index}>{duration}</li>)}</ul></div>}

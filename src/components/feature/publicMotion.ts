@@ -12,8 +12,9 @@ export function usePublicMotionInput() {
 
 export const PUBLIC_MOTION = {
   ease: 'power3.out',
-  feedback: 0.16,
-  content: 0.24,
-  panel: 0.28,
-  heading: 0.42,
+  panelEase: 'power3.inOut',
+  feedback: 0.22,
+  content: 0.48,
+  panel: 0.56,
+  heading: 0.68,
 } as const;

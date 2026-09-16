@@ -18,13 +18,13 @@ export default function AboutPageClient({ artistInfo, aboutSections }: AboutPage
     <PageLayout title={t("about_title")}>
       <div className={styles.about}>
         {facts.length > 0 && <dl className={styles.facts}>
-          {facts.map((info) => <div key={info.id}><dt>{info.key}</dt><dd>{info.value}</dd></div>)}
+          {facts.map((info) => <div key={info.id} data-reveal><dt>{info.key}</dt><dd>{info.value}</dd></div>)}
         </dl>}
         <div className={styles.prose}>
-          <h2 className={styles.artistName}>{artistName}</h2>
+          <h2 className={styles.artistName} data-reveal>{artistName}</h2>
           {sortedSections.map((section) => {
             const isBiography = /^(biography|바이오그래피|약력)$/i.test(section.title.trim());
-            return <section key={section.id}>
+            return <section key={section.id} data-reveal>
               <h3 className={isBiography ? 'sr-only' : undefined}>{section.title}</h3>
               {section.type === "paragraphs" && (section.paragraphs ?? []).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               {section.type === "philosophy-items" && (section.items ?? []).map((item) => (

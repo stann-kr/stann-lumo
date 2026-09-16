@@ -303,11 +303,14 @@ describe('PublicSiteShell public navigation', () => {
     try {
       expect(screen.getByRole('heading', { level: 1, name: 'STANN LUMO' })).toBeInTheDocument();
       expect(ScrollTrigger.getAll()).toEqual([unrelated]);
-      const intro = screen.getByText('Explore');
-      act(() => { gsap.getTweensOf(intro)[0]?.pause(0); });
+      const contact = screen.getByRole('link', { name: 'Contact Contact description' });
+      const reveal = gsap.getTweensOf(contact)[0];
+      expect(reveal).toBeDefined();
+      act(() => { reveal.pause(0); });
+      expect(contact).not.toBeVisible();
       fireEvent.keyDown(screen.getByRole('link', { name: 'STANN LUMO' }), { key: 'PageDown' });
-      expect(intro).toBeVisible();
-      expect(gsap.getTweensOf(intro, true)).toHaveLength(0);
+      expect(contact).toBeVisible();
+      expect(gsap.getTweensOf(contact, true)).toHaveLength(0);
       const user = userEvent.setup();
       await user.click(screen.getByRole('button', { name: 'Archive' }));
       screen.getByRole('link', { name: /Open archive/ }).focus();

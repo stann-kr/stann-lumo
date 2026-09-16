@@ -55,7 +55,7 @@ export function useHomeMotion(rootRef: RefObject<HTMLDivElement | null>, selecte
         bounds: panel.element.getBoundingClientRect(),
         isExpanded: panel.element.dataset.expanded === 'true',
       }));
-      const transition = gsap.timeline({ defaults: { duration: PUBLIC_MOTION.panel, ease: PUBLIC_MOTION.ease, autoRound: false } });
+      const transition = gsap.timeline({ defaults: { duration: PUBLIC_MOTION.panel, ease: PUBLIC_MOTION.panelEase, autoRound: false } });
       active.current = transition;
       // These four panels must move the actual document flow. Transforming only
       // their borders leaves hit areas and following mobile rows at the destination.
@@ -74,12 +74,13 @@ export function useHomeMotion(rootRef: RefObject<HTMLDivElement | null>, selecte
         }
         if (wasExpanded !== isExpanded) transition.fromTo(element.querySelector('[data-panel-title]'), {
           opacity: isStacked ? 0.65 : 0,
-        }, { opacity: 1, duration: PUBLIC_MOTION.feedback, clearProps: 'opacity' }, isStacked ? 0 : 0.04);
+        }, { opacity: 1, duration: PUBLIC_MOTION.content, ease: PUBLIC_MOTION.ease, clearProps: 'opacity' }, isStacked ? 0 : 0.08);
       }
       const content = root.querySelector('[data-expanded="true"] [data-panel-content]');
-      if (content) transition.fromTo(content.children, { opacity: 0 }, {
-        opacity: 1, duration: PUBLIC_MOTION.feedback, clearProps: 'opacity',
-      }, 0.04);
+      if (content) transition.fromTo(content.children, { y: 12, opacity: 0 }, {
+        y: 0, opacity: 1, duration: 0.32, stagger: 0.04,
+        ease: PUBLIC_MOTION.ease, clearProps: 'transform,opacity',
+      }, 0.16);
       return () => { active.current = null; };
     }, rootRef);
     return () => media.revert();

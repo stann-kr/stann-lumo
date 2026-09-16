@@ -95,14 +95,14 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
       {homeSections.length > 4 && (
         <div className={styles.secondary}>
           {homeSections.slice(4).map((section, index) => (
-            <Link key={`${section.path}-${index}`} href={section.path}>
+            <Link key={`${section.path}-${index}`} href={section.path} data-reveal="row">
               <h2 data-hover-label>{section.title}</h2>{section.path !== '/link' && <p>{section.description}</p>}
             </Link>
           ))}
         </div>
       )}
       {terminalInfo.url && (
-        <section className={styles.terminal} aria-labelledby={`${panelId}-terminal`}>
+        <section className={styles.terminal} aria-labelledby={`${panelId}-terminal`} data-reveal>
           <div className={styles.terminalIntro}>
             <h2 id={`${panelId}-terminal`}>{t("home_terminal_side_project")}</h2>
             {!/^terminal platform$/i.test(terminalInfo.description.trim()) && <p>{terminalInfo.description}</p>}
