@@ -59,8 +59,9 @@ export function useHomeMotion(rootRef: RefObject<HTMLDivElement | null>, selecte
       // Animate the real flow so the next trigger and its hit area move together.
       transition.fromTo(group, { height: snapshot.height }, { height, clearProps: 'height' }, 0);
       for (const { element, height: previousHeight, surfaceScale, bounds, wasExpanded, isExpanded } of targets) {
-        transition.set(element, { flex: 'none', overflow: 'clip', minHeight: 0 }, 0);
-        transition.fromTo(element, { height: previousHeight }, {
+        // fromTo applies its starting height immediately, before the first tick.
+        // Clip at the same time so newly shown content cannot overflow that height.
+        transition.fromTo(element, { height: previousHeight, flex: 'none', overflow: 'clip', minHeight: 0 }, {
           height: bounds.height,
           clearProps: 'height,flex,minHeight,overflow',
         }, 0);

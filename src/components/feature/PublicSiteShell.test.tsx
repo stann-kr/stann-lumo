@@ -303,7 +303,7 @@ describe('PublicSiteShell public navigation', () => {
     try {
       expect(screen.getByRole('heading', { level: 1, name: 'STANN LUMO' })).toBeInTheDocument();
       expect(ScrollTrigger.getAll()).toEqual([unrelated]);
-      const contact = screen.getByRole('link', { name: 'Contact Contact description' });
+      const contact = screen.getByRole('link', { name: 'Contact' });
       const reveal = gsap.getTweensOf(contact)[0];
       expect(reveal).toBeDefined();
       act(() => { reveal.pause(0); });
@@ -379,7 +379,7 @@ describe('Home panels', () => {
     expect(archive).toHaveAttribute('aria-expanded', 'false');
     expect(archive).toHaveAccessibleDescription('Real poster');
     expect(screen.queryByRole('link', { name: /Open archive/ })).not.toBeInTheDocument();
-    for (const title of ['Contact', 'Link']) expect(screen.getByRole('link', { name: new RegExp(title === 'Link' ? '^Link$' : `${title} ${title} description`) })).toHaveAttribute('href', `/${title.toLowerCase()}`);
+    for (const title of ['Contact', 'Link']) expect(screen.getByRole('link', { name: title })).toHaveAttribute('href', `/${title.toLowerCase()}`);
   });
 
   it('animates pointer category changes, accepts the latest choice and finishes before keyboard navigation', async () => {

@@ -38,7 +38,9 @@ export default function HomePanelPreview({ section, artistFacts, previews }: Hom
           <strong>{track.title}</strong>
         </span>
         {track.link && <span className={styles.listen}>
-          {t('music_listen_on', { platform: track.platform })}<span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span>
+          <span className={styles.listenLabel}>{t('music_listen_on', { platform: track.platform })}</span>
+          <span className={styles.listenPlatform} aria-hidden="true">{track.platform || (isKorean ? '감상' : 'Listen')}</span>
+          <span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span>
         </span>}
       </>;
       return <li key={track.id} data-featured={index === 0}>

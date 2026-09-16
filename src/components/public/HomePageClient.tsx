@@ -27,7 +27,7 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
   const { isResolved, prefersReducedMotion } = useMotionPreference();
   const panelId = useId();
   const isMotionEnabled = isResolved && !prefersReducedMotion;
-  // The CMS owns order: the first four sections are panels, all remaining sections stay visible below.
+  // The CMS owns order: the first four sections are panels, all remaining sections stay available beside the panels.
   const panels = homeSections.slice(0, 4);
   const [selectedPath, setSelectedPath] = useState<string | null>(() => panels.find((section) => section.path === "/music")?.path ?? panels[0]?.path ?? null);
   const homeRef = useRef<HTMLDivElement>(null);
@@ -43,6 +43,44 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
         <header className={styles.intro}>
           <KineticHeading title={firstName} extra={remainingName.length ? [remainingName.join(' ')] : undefined} />
           {homeMeta.navTitle && <p>{homeMeta.navTitle}</p>}
+          <div className={styles.utilities}>
+            {homeSections.length > 4 && (
+              <div className={styles.secondary}>
+                {homeSections.slice(4).map((section, index) => (
+                  <Link key={`${section.path}-${index}`} href={section.path} data-reveal="row">
+                    <span data-hover-label>{section.title}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            {terminalInfo.url && (
+              <section className={styles.terminal} aria-labelledby={`${panelId}-terminal`}>
+                <div className={styles.terminalIntro}>
+                  <h2 id={`${panelId}-terminal`} className="sr-only">{t("home_terminal_side_project")}</h2>
+                  {!/^terminal platform$/i.test(terminalInfo.description.trim()) && <p>{terminalInfo.description}</p>}
+                  <div className={styles.terminalLinks}>
+                    <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{language === "ko" ? "뮤직 허브" : "Music hub"}<span className="sr-only">{newTabLabel}</span></a>
+                    <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">Terminal<span className="sr-only">{newTabLabel}</span></a>
+                  </div>
+                </div>
+                {!!terminalInfo.customFields?.length && (
+                  <dl className={styles.fields}>
+                    {terminalInfo.customFields.map((field) => (
+                      <div key={field.id}>
+                        <dt>{field.fieldKey}</dt>
+                        <dd>{field.fieldType === "url" ? (
+                          <a href={field.fieldValue} target="_blank" rel="noopener noreferrer">{field.fieldValue}<span className="sr-only">{newTabLabel}</span></a>
+                        ) : <span data-badge={field.fieldType === "badge"}>{field.fieldValue}</span>}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {terminalInfo.style?.showEmbed && (
+                  <iframe src={terminalInfo.url} style={{ height: terminalInfo.style.embedHeight }} title="Terminal" sandbox="allow-scripts allow-same-origin" loading="lazy" />
+                )}
+              </section>
+            )}
+          </div>
         </header>
         <div className={styles.panels} data-home-panels>
           {panels.map((section, index) => {
@@ -81,42 +119,6 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
           })}
         </div>
       </div>
-      {homeSections.length > 4 && (
-        <div className={styles.secondary}>
-          {homeSections.slice(4).map((section, index) => (
-            <Link key={`${section.path}-${index}`} href={section.path} data-reveal="row">
-              <h2 data-hover-label>{section.title}</h2>{section.path !== '/link' && <p>{section.description}</p>}
-            </Link>
-          ))}
-        </div>
-      )}
-      {terminalInfo.url && (
-        <section className={styles.terminal} aria-labelledby={`${panelId}-terminal`} data-reveal>
-          <div className={styles.terminalIntro}>
-            <h2 id={`${panelId}-terminal`}>{t("home_terminal_side_project")}</h2>
-            {!/^terminal platform$/i.test(terminalInfo.description.trim()) && <p>{terminalInfo.description}</p>}
-            <div className={styles.terminalLinks}>
-              <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{language === "ko" ? "뮤직 허브" : "Music hub"}<span className="sr-only">{newTabLabel}</span></a>
-              <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">Terminal<span className="sr-only">{newTabLabel}</span></a>
-            </div>
-          </div>
-          {!!terminalInfo.customFields?.length && (
-            <dl className={styles.fields}>
-              {terminalInfo.customFields.map((field) => (
-                <div key={field.id}>
-                  <dt>{field.fieldKey}</dt>
-                  <dd>{field.fieldType === "url" ? (
-                    <a href={field.fieldValue} target="_blank" rel="noopener noreferrer">{field.fieldValue}<span className="sr-only">{newTabLabel}</span></a>
-                  ) : <span data-badge={field.fieldType === "badge"}>{field.fieldValue}</span>}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          {terminalInfo.style?.showEmbed && (
-            <iframe src={terminalInfo.url} style={{ height: terminalInfo.style.embedHeight }} title="Terminal" sandbox="allow-scripts allow-same-origin" loading="lazy" />
-          )}
-        </section>
-      )}
     </div>
   );
 }

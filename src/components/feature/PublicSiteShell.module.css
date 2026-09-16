@@ -34,6 +34,19 @@
 .footer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 2rem; border-top: 1px solid var(--color-muted); padding: 2rem var(--page-gutter); }
 .externalLinks { display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: .8rem; }
 .externalLinks a { display: inline-flex; align-items: center; min-height: 44px; }
+.document[data-home] { height: 100svh; }
+.document[data-home] .header, .document[data-home] .footer { flex-shrink: 0; }
+.document[data-home] .main, .document[data-home] .main > div { display: flex; flex: 1; min-height: 0; min-width: 0; }
+.document[data-home] .footer { align-items: center; padding-block: .25rem; gap: 1rem; }
+.document[data-home] .footer nav { flex-direction: row; align-items: center; gap: 1rem; }
+.document[data-home] .externalLinks { display: none; }
+@media (max-width: 899px) {
+  .document[data-home] .header { min-height: calc(3.5rem + env(safe-area-inset-top, 0px)); }
+  .document[data-home] .footer { justify-content: center; }
+  .document[data-home] .footer nav { flex-direction: column; gap: 0; }
+  .document[data-home] .footer nav > span:last-child { gap: .5rem; }
+  .document[data-home] .footer nav :is(span, a) { font-size: .6rem; letter-spacing: .02em; }
+}
 .skipLink { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: 1rem; background: black; transform: translateY(-200%); }
 .skipLink:focus { transform: none; }
 .menuLayer { position: fixed; inset: 0; z-index: 60; overscroll-behavior: none; }
