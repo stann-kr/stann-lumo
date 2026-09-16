@@ -138,8 +138,8 @@ const AdminLinkPage = () => {
   return (
     <div className="space-y-8">
         <AdminSectionHeader
-          title="LINK SECTION"
-          description={`소셜 미디어 및 플랫폼 링크 관리 (${currentEditLanguage.toUpperCase()})`}
+          title="링크"
+          description="외부 사이트와 소셜 링크를 관리합니다."
           onSave={saveChanges}
           isSaving={isSaving}
           action={

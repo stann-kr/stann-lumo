@@ -34,8 +34,8 @@ const SaveButton = ({
   onClick,
   isSaving,
   disabled = false,
-  text = 'SAVE CHANGES',
-  savingText = 'SAVING...',
+  text = '변경 사항 저장',
+  savingText = '저장 중…',
 }: SaveButtonProps) => {
   return (
     <button

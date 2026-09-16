@@ -1,0 +1,9 @@
+.field { min-width: 0; }
+.label { display: block; margin-bottom: 7px; font-size: .8125rem; font-weight: 500; line-height: 1.5; color: var(--color-secondary); }
+.control { display: block; width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--color-secondary) 28%, transparent); border-radius: 0; background: color-mix(in srgb, var(--color-secondary) 4%, var(--color-bg)); color: var(--color-primary); font: inherit; line-height: 1.5; transition: border-color 150ms ease; }
+.control::placeholder { color: var(--color-text-muted, var(--color-secondary)); }
+.control:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; border-color: var(--color-accent); }
+.control:disabled { opacity: .5; cursor: not-allowed; }
+select.control { padding-right: 32px; cursor: pointer; }
+textarea.control { resize: vertical; min-height: 110px; }
+@media (prefers-reduced-motion: reduce) { .control { transition: none; } }

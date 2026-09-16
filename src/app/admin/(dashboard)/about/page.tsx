@@ -281,8 +281,8 @@ const AdminAboutPage = () => {
   return (
     <div className="space-y-8">
       <AdminSectionHeader
-        title="ABOUT SECTION"
-        description={`아티스트 정보, 약력, 철학 편집 (${currentEditLanguage.toUpperCase()})`}
+        title="소개"
+        description="아티스트 정보와 소개 내용을 편집합니다."
         onSave={saveForm}
         isSaving={isSaving}
       />

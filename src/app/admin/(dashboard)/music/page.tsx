@@ -113,8 +113,8 @@ const AdminMusicPage = () => {
   return (
     <div className="space-y-8">
         <AdminSectionHeader
-          title="MUSIC SECTION"
-          description={`트랙, 릴리즈, 오디오 작업 관리 (${currentEditLanguage.toUpperCase()})`}
+          title="음악"
+          description="트랙과 릴리즈를 관리합니다."
           onSave={saveChanges}
           isSaving={isSaving}
           action={

@@ -136,8 +136,8 @@ const AdminContactPage = () => {
   return (
     <div className="space-y-8">
         <AdminSectionHeader
-          title="CONTACT SECTION"
-          description={`연락처 정보 편집 (${currentEditLanguage.toUpperCase()})`}
+          title="연락처"
+          description="연락처와 부킹 안내를 편집합니다."
           onSave={saveChanges}
           isSaving={isSaving}
         />
