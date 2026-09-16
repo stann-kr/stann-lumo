@@ -41,4 +41,32 @@ describe('Home content editor', () => {
     expect(screen.getByRole('button', { name: '변경 사항 저장' })).toBeDisabled();
     expect(mocks.saveTerminal).not.toHaveBeenCalled();
   });
+
+  it('recovers a failed settings read and saves the loaded values', async () => {
+    mocks.terminal.mockResolvedValueOnce({ success: false });
+    render(<AdminEditGuardProvider><AdminHomePage /></AdminEditGuardProvider>);
+    fireEvent.click(await screen.findByRole('button', { name: 'Terminal 설정 다시 불러오기' }));
+    const save = screen.getByRole('button', { name: '변경 사항 저장' });
+    await waitFor(() => expect(save).toBeEnabled());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    fireEvent.click(save);
+    await waitFor(() => expect(mocks.saveTerminal).toHaveBeenCalledWith(expect.objectContaining({ style })));
+  });
+
+  it('keeps the added home item selected after moving it and preserves other entries', async () => {
+    render(<AdminEditGuardProvider><AdminHomePage /></AdminEditGuardProvider>);
+    const add = screen.getByRole('button', { name: '항목 추가' });
+    await waitFor(() => expect(add).toBeEnabled());
+    fireEvent.click(add);
+    fireEvent.change(screen.getByLabelText('메뉴 제목'), { target: { value: 'Archive' } });
+    fireEvent.change(screen.getByLabelText('연결 경로'), { target: { value: '/archive' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Archive 위로 이동' }));
+    expect(screen.getByLabelText('메뉴 제목')).toHaveValue('Archive');
+    fireEvent.change(screen.getByLabelText('메뉴 설명'), { target: { value: 'Archive preview' } });
+    fireEvent.click(screen.getByRole('button', { name: '변경 사항 저장' }));
+    await waitFor(() => expect(mocks.saveHome).toHaveBeenCalledWith('en', [
+      { title: 'Archive', path: '/archive', description: 'Archive preview', icon: 'ri-star-line' },
+      content.homeSections[0],
+    ]));
+  });
 });

@@ -10,9 +10,9 @@ import SuccessMessage from '@/components/base/SuccessMessage';
 import SaveErrorMessage from '@/components/base/SaveErrorMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import collection from '@/capabilities/admin/AdminCollection.module.css';
+import AdminEditorItem from '@/capabilities/admin/AdminEditorItem';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
-import { createBorderFaint } from '@/utils/colorMix';
 import { runSave } from '@/capabilities/admin/saveResult';
 import {
   updateHomeSections as apiUpdateHomeSections,
@@ -44,6 +44,9 @@ const AdminHomePage = () => {
     showEmbed: false,
     embedHeight: '400px',
   });
+  const [expandedSection, setExpandedSection] = useState<number | null>(null);
+  const [expandedCustomField, setExpandedCustomField] = useState<string | null>(null);
+  const [terminalLoadAttempt, setTerminalLoadAttempt] = useState(0);
   const [terminalConfigVersion, setTerminalConfigVersion] = useState(0);
   const [isTerminalLoading, setIsTerminalLoading] = useState(true);
   const [terminalLoadError, setTerminalLoadError] = useState('');
@@ -62,17 +65,22 @@ const AdminHomePage = () => {
   }, [currentEditLanguage, allContent]);
 
   useEffect(() => {
+    let cancelled = false;
     void fetchTerminalConfig()
       .then((res) => {
+        if (cancelled) return;
         if (!res.success || !res.data) throw new Error('terminal config');
         if (res.success && res.data) {
           setTerminalCustomFields(res.data.customFields ?? []);
           if (res.data.style) setTerminalStyle(res.data.style);
         }
       })
-      .catch(() => setTerminalLoadError('Terminal 설정을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'))
-      .finally(() => { setTerminalConfigVersion((version) => version + 1); setIsTerminalLoading(false); });
-  }, []);
+      .catch(() => { if (!cancelled) setTerminalLoadError('Terminal 설정을 불러오지 못했습니다. 다시 불러와 주세요.'); })
+      .finally(() => { if (!cancelled) { setTerminalConfigVersion((version) => version + 1); setIsTerminalLoading(false); } });
+    return () => { cancelled = true; };
+  }, [terminalLoadAttempt]);
+
+  useEffect(() => { setExpandedSection(null); setExpandedCustomField(null); }, [currentEditLanguage]);
 
   const { markSaved } = useUnsavedChanges(
     { artistInfo, homeSections, pageMeta, terminalCustomFields, terminalInfo, terminalStyle },
@@ -86,12 +94,13 @@ const AdminHomePage = () => {
   };
 
   const addSection = () => {
+    setExpandedSection(homeSections.length);
     setHomeSections(prev => [
       ...prev,
       {
-        title: 'NEW SECTION',
-        description: 'Description',
-        path: '/new',
+        title: '',
+        description: '',
+        path: '',
         icon: 'ri-star-line',
       },
     ]);
@@ -99,6 +108,7 @@ const AdminHomePage = () => {
 
   const deleteSection = (index: number) => {
     setHomeSections(prev => prev.filter((_, i) => i !== index));
+    setExpandedSection(null);
     setShowDeleteModal(null);
   };
 
@@ -108,13 +118,16 @@ const AdminHomePage = () => {
     const updated = [...homeSections];
     [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
     setHomeSections(updated);
+    setExpandedSection((selected) => selected === index ? newIndex : selected === newIndex ? index : selected);
   };
 
   // ─── 터미널 커스텀 필드 핸들러 ─────────────────────────────────
   const addCustomField = () => {
+    const id = crypto.randomUUID();
+    setExpandedCustomField(id);
     setTerminalCustomFields((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), fieldKey: '', fieldValue: '', fieldType: 'text', sortOrder: prev.length },
+      { id, fieldKey: '', fieldValue: '', fieldType: 'text', sortOrder: prev.length },
     ]);
   };
 
@@ -162,12 +175,12 @@ const AdminHomePage = () => {
   };
 
   const saveChanges = async () => {
-    if (isTerminalLoading || terminalLoadError) return;
+    if (isSaving || isLoading || isTerminalLoading || terminalLoadError) return;
     setIsSaving(true);
     setSaveError('');
     try {
       await runSave(
-        ['HOME SECTIONS', 'PAGE SETTINGS', 'TERMINAL INFO', 'ARTIST INFO'],
+        ['홈 탐색 항목', '홈 문구', 'Terminal 정보', '아티스트 정보'],
         [
           apiUpdateHomeSections(currentEditLanguage, homeSections),
           apiUpdatePageMeta(currentEditLanguage, pageMeta),
@@ -205,26 +218,29 @@ const AdminHomePage = () => {
           description="홈 메뉴의 순서와 소개 문구를 관리합니다."
           onSave={saveChanges}
           isSaving={isSaving}
-          isSaveDisabled={isTerminalLoading || Boolean(terminalLoadError)}
+          isSaveDisabled={isLoading || isTerminalLoading || Boolean(terminalLoadError)}
           action={
             <button
               onClick={addSection}
-              disabled={isSaving || isTerminalLoading || Boolean(terminalLoadError)}
-              className="px-6 py-3 border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors whitespace-nowrap cursor-pointer text-sm tracking-wider"
-              style={createBorderFaint()}
+              disabled={isSaving || isLoading || isTerminalLoading || Boolean(terminalLoadError)}
+              type="button"
+              className={collection.button}
             >
-              <i className="ri-add-line mr-2"></i>항목 추가
+              항목 추가
             </button>
           }
         />
 
       <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
       <SaveErrorMessage message={saveError || terminalLoadError} />
-      <fieldset disabled={isSaving || isTerminalLoading || Boolean(terminalLoadError)} className="space-y-8">
+      {terminalLoadError && <button type="button" className={collection.button} onClick={() => {
+        setTerminalLoadError(''); setIsTerminalLoading(true); setTerminalLoadAttempt((attempt) => attempt + 1);
+      }}>Terminal 설정 다시 불러오기</button>}
+      <fieldset disabled={isSaving || isLoading || isTerminalLoading || Boolean(terminalLoadError)} className="space-y-8">
       {customFieldDeleteIndex !== null && (
         <DeleteConfirmModal
           show={true}
-          itemName={terminalCustomFields[customFieldDeleteIndex]?.fieldKey || 'CUSTOM FIELD'}
+          itemName={terminalCustomFields[customFieldDeleteIndex]?.fieldKey || '추가 정보'}
           onConfirm={() => {
             removeCustomField(customFieldDeleteIndex);
             setCustomFieldDeleteIndex(null);
@@ -246,7 +262,7 @@ const AdminHomePage = () => {
                 onChange={setArtistName}
                 placeholder="ARTIST NAME"
               />
-              <p className="text-xs text-[var(--color-secondary)] opacity-40 tracking-wider">
+              <p className="text-xs text-[var(--color-secondary)]">
                 홈 제목과 소개 페이지에 함께 표시됩니다.
               </p>
             </div>
@@ -277,87 +293,24 @@ const AdminHomePage = () => {
           </h2>
           <p className="mb-4 text-sm text-[var(--color-secondary)]">저장한 순서대로 앞 4개 항목은 홈의 큰 패널에, 이후 항목은 패널 아래 보조 링크에 표시됩니다. 음악·공연·아카이브·소개 패널의 미리보기는 해당 콘텐츠에서 가져옵니다.</p>
           <div className="space-y-4">
-            {homeSections.map((section, index) => (
-              <AdminCard key={index}>
-                <p className="mb-4 text-sm text-[var(--color-text-muted)]">{index < 4 ? `홈 패널 ${index + 1}` : `보조 링크 ${index - 3}`}</p>
-                {showDeleteModal === index ? (
-                  <DeleteConfirmModal
-                    show={true}
-                    itemName={section.title}
-                    onConfirm={() => deleteSection(index)}
-                    onCancel={() => setShowDeleteModal(null)}
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    {/* Card Header */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-[var(--color-accent)] tracking-widest font-medium">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <span className="text-sm text-[var(--color-secondary)] tracking-wider font-medium">
-                          {section.title}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => moveSection(index, 'up')}
-                          disabled={index === 0}
-                          className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                          style={createBorderFaint()}
-                          title="위로 이동"
-                        >
-                          <i className="ri-arrow-up-line" />
-                        </button>
-                        <button
-                          onClick={() => moveSection(index, 'down')}
-                          disabled={index === homeSections.length - 1}
-                          className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                          style={createBorderFaint()}
-                          title="아래로 이동"
-                        >
-                          <i className="ri-arrow-down-line" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowDeleteModal(index)}
-                          aria-label={`홈 카드 ${section.title} 삭제`}
-                          className="w-8 h-8 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer"
-                          title="삭제"
-                        >
-                          <i className="ri-delete-bin-line" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormInput
-                        label="메뉴 제목"
-                        value={section.title}
-                        onChange={(value) => updateSectionField(index, 'title', value)}
-                        placeholder="ABOUT"
-                      />
-                      <FormInput
-                        label="연결 경로"
-                        value={section.path}
-                        onChange={(value) => updateSectionField(index, 'path', value)}
-                        placeholder="/about"
-                      />
-                    </div>
-
-                    <FormInput
-                      label="설명"
-                      value={section.description}
-                      onChange={(value) => updateSectionField(index, 'description', value)}
-                      placeholder="Short description"
-                    />
-
-
-                  </div>
-                )}
-              </AdminCard>
-            ))}
+            {homeSections.map((section, index) => <AdminEditorItem key={index} title={section.title || '제목 없는 홈 항목'}
+              summary={`${index < 4 ? `홈 패널 ${index + 1}` : `보조 링크 ${index - 3}`} · ${section.path || '경로 미입력'}`}
+              position={index + 1} expanded={expandedSection === index}
+              onToggle={() => setExpandedSection(expandedSection === index ? null : index)}
+              onMoveUp={index > 0 ? () => moveSection(index, 'up') : undefined}
+              onMoveDown={index < homeSections.length - 1 ? () => moveSection(index, 'down') : undefined}
+              onDelete={() => setShowDeleteModal(index)}>
+              <div className={collection.stack}>
+                <div className={collection.fields}>
+                  <FormInput label="메뉴 제목" value={section.title} onChange={(value) => updateSectionField(index, 'title', value)} />
+                  <FormInput label="연결 경로" value={section.path} onChange={(value) => updateSectionField(index, 'path', value)} placeholder="/music" />
+                </div>
+                <FormInput label="메뉴 설명" value={section.description} onChange={(value) => updateSectionField(index, 'description', value)} />
+              </div>
+            </AdminEditorItem>)}
+            {!homeSections.length && <p className={collection.empty}>항목 추가로 홈에 표시할 메뉴를 등록하세요.</p>}
+            {showDeleteModal !== null && <DeleteConfirmModal show itemName={homeSections[showDeleteModal]?.title || '홈 항목'}
+              onConfirm={() => deleteSection(showDeleteModal)} onCancel={() => setShowDeleteModal(null)} />}
           </div>
         </div>
         {/* Terminal Info */}
@@ -368,13 +321,14 @@ const AdminHomePage = () => {
           <AdminCard>
             <div className="space-y-4">
               <FormInput
-                label="URL"
+                label="Terminal 주소"
+                type="url"
                 value={terminalInfo.url}
                 onChange={(value) => setTerminalInfo(prev => ({ ...prev, url: value }))}
                 placeholder="https://example.com"
               />
               <FormTextarea
-                label="설명"
+                label="Terminal 설명"
                 value={terminalInfo.description}
                 onChange={(value) => setTerminalInfo(prev => ({ ...prev, description: value }))}
                 rows={3}
@@ -415,10 +369,11 @@ const AdminHomePage = () => {
                     <button
                       type="button"
                       onClick={() => setShowEmbedPreview((prev) => !prev)}
+                      aria-expanded={showEmbedPreview}
                       className="text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors cursor-pointer flex items-center gap-2"
                     >
                       <i className={`${showEmbedPreview ? 'ri-eye-off-line' : 'ri-eye-line'}`}></i>
-                      {showEmbedPreview ? 'HIDE PREVIEW' : 'SHOW PREVIEW'}
+                      {showEmbedPreview ? '미리보기 닫기' : '미리보기 열기'}
                     </button>
                     {showEmbedPreview && (
                       <div className="mt-3 border" style={{ borderColor: 'color-mix(in srgb, var(--color-secondary) 20%, transparent)' }}>
@@ -452,72 +407,28 @@ const AdminHomePage = () => {
 
             {terminalCustomFields.length === 0 ? (
               <AdminCard>
-                <p className="text-xs text-[var(--color-secondary)]/30 tracking-widest text-center py-2">
-                  필드 없음 — 정보 추가로 추가
+                <p className="text-xs text-[var(--color-secondary)] text-center py-2">
+                  등록한 추가 정보가 없습니다.
                 </p>
               </AdminCard>
             ) : (
               <div className="space-y-3">
-                {terminalCustomFields.map((field, index) => (
-                  <AdminCard key={field.id}>
-                    <div className="flex items-start gap-3">
-                      {/* 순서 이동 */}
-                      <div className="flex flex-col gap-1 shrink-0 pt-6">
-                        <button
-                          onClick={() => moveCustomField(index, 'up')}
-                          disabled={index === 0}
-                          className="w-6 h-6 flex items-center justify-center text-[var(--color-secondary)]/40 hover:text-[var(--color-secondary)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          <i className="ri-arrow-up-s-line text-sm"></i>
-                        </button>
-                        <button
-                          onClick={() => moveCustomField(index, 'down')}
-                          disabled={index === terminalCustomFields.length - 1}
-                          className="w-6 h-6 flex items-center justify-center text-[var(--color-secondary)]/40 hover:text-[var(--color-secondary)] disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          <i className="ri-arrow-down-s-line text-sm"></i>
-                        </button>
-                      </div>
-
-                      {/* 필드 입력 */}
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <FormInput
-                          label="항목 이름"
-                          value={field.fieldKey}
-                          onChange={(v) => updateCustomField(index, { fieldKey: v })}
-                          placeholder="Label"
-                        />
-                        <FormInput
-                          label="내용"
-                          value={field.fieldValue}
-                          onChange={(v) => updateCustomField(index, { fieldValue: v })}
-                          placeholder="Content"
-                        />
-                        <FormSelect
-                          id={`terminal-custom-field-type-${field.id}`}
-                          name={`terminalCustomFieldType-${field.id}`}
-                          label="표시 방식"
-                          value={field.fieldType}
-                          onChange={(value) => updateCustomField(index, { fieldType: value as TerminalCustomField['fieldType'] })}
-                          >
-                            <option value="text">TEXT</option>
-                            <option value="url">URL (링크)</option>
-                            <option value="badge">BADGE</option>
-                        </FormSelect>
-                      </div>
-
-                      {/* 삭제 */}
-                      <button
-                        type="button"
-                        onClick={() => setCustomFieldDeleteIndex(index)}
-                        aria-label={`커스텀 필드 ${field.fieldKey || index + 1} 삭제`}
-                        className="w-7 h-7 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer shrink-0 mt-5"
-                      >
-                        <i className="ri-delete-bin-line text-sm"></i>
-                      </button>
+                {terminalCustomFields.map((field, index) => <AdminEditorItem key={field.id} title={field.fieldKey || '이름 없는 추가 정보'}
+                  summary={field.fieldValue} position={index + 1} expanded={expandedCustomField === field.id}
+                  onToggle={() => setExpandedCustomField(expandedCustomField === field.id ? null : field.id)}
+                  onMoveUp={index > 0 ? () => moveCustomField(index, 'up') : undefined}
+                  onMoveDown={index < terminalCustomFields.length - 1 ? () => moveCustomField(index, 'down') : undefined}
+                  onDelete={() => setCustomFieldDeleteIndex(index)}>
+                  <div className={collection.stack}>
+                    <div className={collection.fields}>
+                      <FormInput label="항목 이름" value={field.fieldKey} onChange={(fieldKey) => updateCustomField(index, { fieldKey })} />
+                      <FormSelect label="표시 방식" value={field.fieldType} onChange={(value) => updateCustomField(index, { fieldType: value as TerminalCustomField['fieldType'] })}>
+                        <option value="text">텍스트</option><option value="url">링크</option><option value="badge">배지</option>
+                      </FormSelect>
                     </div>
-                  </AdminCard>
-                ))}
+                    <FormInput label="내용" value={field.fieldValue} onChange={(fieldValue) => updateCustomField(index, { fieldValue })} />
+                  </div>
+                </AdminEditorItem>)}
               </div>
             )}
           </div>
