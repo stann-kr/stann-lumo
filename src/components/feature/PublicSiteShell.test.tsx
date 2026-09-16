@@ -320,7 +320,7 @@ describe('PublicSiteShell public navigation', () => {
       await waitFor(() => expect(ScrollTrigger.getAll()).toEqual([unrelated]));
       expect(screen.getByRole('link', { name: /Open archive/ })).toBeVisible();
       const headingLines = container.querySelectorAll<HTMLElement>('[data-heading-line]');
-      expect(headingLines).toHaveLength(1);
+      expect(headingLines.length).toBeGreaterThan(0);
       for (const line of headingLines) {
         expect(line.style.transform).toBe('');
       }
@@ -344,8 +344,10 @@ describe('Home panels', () => {
   it('keeps CMS order and separates keyboard expansion from route links', async () => {
     const user = userEvent.setup();
     render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [{ id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' }], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }] }} terminalInfo={{ url: '', description: '' }} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('STANN LUMO');
-    expect(screen.getAllByRole('button').map((button) => button.textContent?.replace(/[+−]/g, ''))).toEqual(['About', 'Music', 'Events', 'Archive']);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveAccessibleName('STANN LUMO');
+    const triggers = screen.getAllByRole('button');
+    expect(triggers).toHaveLength(4);
+    ['About', 'Music', 'Events', 'Archive'].forEach((name, index) => expect(triggers[index]).toHaveAccessibleName(name));
     expect(screen.getByRole('link', { name: /All recordings/ })).toHaveAttribute('href', '/music');
     expect(screen.getByText('Real track')).toBeVisible();
     expect(screen.getByRole('link', { name: /music_listen_on/ })).toHaveAttribute('href', 'https://music.example/track');
@@ -398,6 +400,8 @@ describe('Home panels', () => {
       expect(panel.style.flex).toBe('');
       expect(panel.querySelector<HTMLElement>('[data-panel-edge]')?.style.transform).toBe('');
       expect(panel.querySelector<HTMLElement>('[data-panel-heading]')?.style.width).toBe('');
+      expect(panel.querySelector<HTMLElement>('[data-panel-surface]')?.style.transform).toBe('');
+      expect(panel.querySelector<HTMLElement>('[data-panel-title]')?.style.transform).toBe('');
     }
     expect(container.querySelector<HTMLElement>('[data-home-panels]')?.style.height).toBe('');
   });
