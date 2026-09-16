@@ -16,7 +16,7 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
   const { language } = useLanguage();
   const newTabLabel = language === 'ko' ? '새 창에서 열기' : 'Opens in a new tab';
   return (
-    <PageLayout title={linkMeta.title || t("link_title")} subtitle={linkMeta.subtitle}>
+    <PageLayout title={linkMeta.title || t("link_title")} subtitle={linkMeta.subtitle} fit>
       <ul className={styles.platforms}>
         {linkPlatforms.map((link) => <li key={link.id} data-reveal="row">
           <a href={link.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>

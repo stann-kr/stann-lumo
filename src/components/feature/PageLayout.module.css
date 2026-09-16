@@ -6,3 +6,12 @@
 .header[data-size='display'] { grid-template-columns: minmax(0, 1fr); }
 .header p { max-width: 60ch; font-size: .95rem; color: var(--color-secondary); overflow-wrap: anywhere; }
 @media (max-width: 699px) { .header { grid-template-columns: minmax(0, 1fr); } }
+.page[data-fit] { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; width: 100%; padding-block: clamp(.75rem, 2svh, 1.5rem); }
+.page[data-fit] > .header { flex-shrink: 0; padding-bottom: 1rem; gap: .5rem 2rem; }
+.page[data-fit] > .header h1 { font-size: 1.25rem; }
+.page[data-fit] > .header p { font-size: .8rem; }
+@media (max-width: 699px), (max-height: 699px) {
+  .page[data-fit] { padding-block: .5rem; }
+  .page[data-fit] > .header { padding-bottom: .75rem; }
+  .page[data-fit] > .header h1 { font-size: 1.125rem; }
+}

@@ -12,7 +12,7 @@ export default function ContactPageClient({ bookingInfo, contactInfo, contactMet
   const { t } = useTranslation();
   const isBookingAddressListed = contactInfo.some((item) => item.value.trim().toLowerCase() === bookingInfo.contactEmail.trim().toLowerCase());
   return (
-    <PageLayout title={contactMeta.title || t("contact_title")} subtitle={/guestbook|방명록/i.test(contactMeta.subtitle) ? undefined : contactMeta.subtitle}>
+    <PageLayout title={contactMeta.title || t("contact_title")} subtitle={/guestbook|방명록/i.test(contactMeta.subtitle) ? undefined : contactMeta.subtitle} fit>
       <section className={styles.direct}>
         <h2 className="sr-only">{contactMeta.directTitle || t("contact_direct")}</h2>
         {contactInfo.map((item, index) => (

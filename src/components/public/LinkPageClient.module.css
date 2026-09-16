@@ -1,6 +1,6 @@
 .platforms { border-top: 1px solid var(--color-muted); }
-.row { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: baseline; gap: 2rem; padding: clamp(1.75rem, 3vw, 3rem) 0; min-height: 44px; border-bottom: 1px solid var(--color-muted); }
-.row h2 { font-size: clamp(1.75rem, 4vw, 3.5rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.15; overflow-wrap: anywhere; }
+.row { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: baseline; gap: 1rem; padding: 1rem 0; min-height: 44px; border-bottom: 1px solid var(--color-muted); }
+.row h2 { font-size: clamp(1.5rem, 2.5vw, 2.5rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.15; overflow-wrap: anywhere; }
 .row p { max-width: 55ch; color: var(--color-secondary); overflow-wrap: anywhere; }
 .rowRule { position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; pointer-events: none; }
 .row:focus-visible h2 { color: var(--color-accent); }
@@ -8,8 +8,8 @@
 @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
   .row h2 { transition: color 220ms var(--motion-ease-out, ease-out); }
 }
-.terminal { margin-top: 4rem; }
+.terminal { margin-top: 1.5rem; }
 .terminal > p { font: .8rem 'JetBrains Mono', monospace; color: var(--color-secondary); }
-.footer { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; margin-top: 3rem; color: var(--color-secondary); }
+.footer { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 2rem; margin-top: auto; padding-top: 1rem; color: var(--color-secondary); }
 .footer a { min-height: 44px; display: inline-flex; align-items: center; text-decoration: underline; text-underline-offset: .3rem; }
-@media (max-width: 699px) { .row { grid-template-columns: minmax(0, 1fr); gap: 1rem; } }
+@media (max-width: 699px) { .row { grid-template-columns: minmax(0, 1fr); gap: .5rem; } .row p:empty { display: none; } }
