@@ -69,22 +69,29 @@
   .fields { grid-template-columns: 1fr; }
 }
 
-.trackPreview, .eventPreview, .photoPreview, .artistPreview { margin-top: .5rem; }
-.trackPreview li { padding-block: .75rem; border-top: 1px solid var(--color-muted); }
+.trackPreview, .eventPreview, .photoPreview, .artistPreview { --preview-columns: repeat(3, minmax(0, 1fr)); --preview-gap: 1rem; margin-top: .5rem; }
+.trackPreview li, .eventPreview a, .artistPreview > div { display: grid; grid-template-columns: var(--preview-columns); align-items: start; column-gap: var(--preview-gap); row-gap: .5rem; }
+.trackPreview li { padding-block: var(--preview-gap); border-top: 1px solid var(--color-muted); }
+.trackPreview strong, .trackPreview a, .eventPreview a > div, .artistPreview dd { grid-column: 2 / -1; min-width: 0; }
 .trackPreview strong, .eventPreview strong { display: block; line-height: 1.35; overflow-wrap: anywhere; }
-.trackPreview > li > span, .eventPreview span, .eventPreview time, .artistPreview dt { display: block; font: .75rem/1.6 'JetBrains Mono', monospace; color: var(--color-secondary); margin-block: .35rem; }
-.trackPreview li[data-featured='true'] { padding: 0 0 1.25rem; border: 0; }
+.trackPreview > li > span, .eventPreview span, .eventPreview time, .artistPreview dt { display: block; font: .75rem/1.6 'JetBrains Mono', monospace; color: var(--color-secondary); overflow-wrap: anywhere; }
+.trackPreview li[data-featured='true'] { padding-top: 0; border: 0; }
+.trackPreview li:last-child { padding-bottom: 0; }
 .trackPreview li[data-featured='true'] strong { font-size: clamp(1.5rem, 2.6vw, 2.75rem); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; }
-.trackPreview a { display: inline-flex; align-items: center; min-height: 44px; margin-top: .5rem; border-bottom: 1px solid var(--color-accent); }
-.eventPreview { display: grid; gap: 1.25rem; }
-.eventPreview a { display: flex; align-items: center; gap: 1rem; min-height: 44px; }
-.eventPreview img { width: 4.5rem; height: 6rem; object-fit: contain; flex-shrink: 0; }
-.eventPreview a:first-child { align-items: start; padding-bottom: 1rem; border-bottom: 1px solid var(--color-muted); }
-.eventPreview a:first-child time { margin-top: 0; color: var(--color-accent); font: 600 clamp(1.5rem, 2.6vw, 2.5rem)/1.2 var(--font-display, sans-serif); letter-spacing: -.03em; }
-.eventPreview a:first-child strong { font-size: 1.25rem; margin-top: .75rem; }
-.photoPreview { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: .75rem; }
-.photoPreview a:first-child { grid-row: span 2; }
-.photoPreview img { width: 100%; height: 6.5rem; object-fit: contain; }
-.photoPreview a:first-child img { height: 13.75rem; }
-.artistPreview { display: grid; gap: 2rem; }
+.trackPreview a { display: inline-flex; justify-self: start; align-items: center; min-height: 44px; border-bottom: 1px solid var(--color-accent); }
+.eventPreview { display: grid; gap: var(--preview-gap); }
+.eventPreview a { min-height: 44px; }
+.eventPreview img { grid-column: 1; grid-row: 1; width: 100%; height: 6rem; object-fit: contain; object-position: left top; }
+.eventPreview a > div { display: grid; grid-row: 1; gap: .5rem; }
+.eventPreview a + a { padding-top: var(--preview-gap); border-top: 1px solid var(--color-muted); }
+.eventPreview a:first-child time { color: var(--color-accent); font: 600 clamp(1.5rem, 2.6vw, 2.5rem)/1.2 var(--font-display, sans-serif); letter-spacing: -.03em; }
+.eventPreview a:first-child strong { font-size: 1.25rem; }
+.photoPreview { display: grid; grid-template-columns: var(--preview-columns); gap: var(--preview-gap); }
+.photoPreview a { min-width: 0; }
+.photoPreview img { display: block; width: 100%; height: clamp(8rem, 14vw, 13.75rem); object-fit: contain; object-position: center top; }
+.artistPreview { display: grid; gap: var(--preview-gap); }
 .artistPreview dd { font-size: clamp(1.5rem, 3vw, 3rem); line-height: 1.2; letter-spacing: -.035em; overflow-wrap: anywhere; }
+@media (max-width: 479px) {
+  .trackPreview li, .artistPreview > div { grid-template-columns: minmax(0, 1fr); }
+  .trackPreview strong, .trackPreview a, .artistPreview dd { grid-column: 1; }
+}
