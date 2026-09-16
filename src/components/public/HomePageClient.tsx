@@ -11,7 +11,7 @@ import type { TerminalInfo } from "@/capabilities/terminal/terminalConfig";
 import styles from "./HomePageClient.module.css";
 import KineticHeading from '../feature/KineticHeading';
 import { useHomeMotion } from './useHomeMotion';
-import HomePanelPreview from './HomePanelPreview';
+import HomePanelPreview, { getHomePanelSummary } from './HomePanelPreview';
 
 interface HomePageClientProps {
   artistInfo: ArtistInfoItem[];
@@ -41,27 +41,27 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
     <div ref={homeRef} className={styles.home} data-motion={isMotionEnabled ? "on" : "off"}>
       <div className={styles.stage}>
         <header className={styles.intro}>
-          <div className={styles.name}>
-            <KineticHeading title={firstName} extra={remainingName.length ? [remainingName.join(' ')] : undefined} />
-            {homeMeta.navTitle && <p>{homeMeta.navTitle}</p>}
-          </div>
-          {artistFacts.length > 0 && <div className={styles.identity}>
-            {artistFacts.map((info) => <span key={info.id}>{info.value}</span>)}
-          </div>}
+          <KineticHeading title={firstName} extra={remainingName.length ? [remainingName.join(' ')] : undefined} />
+          {homeMeta.navTitle && <p>{homeMeta.navTitle}</p>}
         </header>
         <div className={styles.panels} data-home-panels>
           {panels.map((section, index) => {
             const isExpanded = section.path === selectedPath;
             const contentId = `${panelId}-${index}`;
+            const summary = getHomePanelSummary({ section, artistFacts, previews }, language === 'ko');
             return (
               <section key={`${section.path}-${index}`} className={styles.panel} data-expanded={isExpanded}>
                 <span className={styles.panelEdge} data-panel-edge aria-hidden="true" />
                 <h2 data-panel-heading>
                   <button type="button" id={`${contentId}-trigger`} aria-expanded={isExpanded} aria-controls={contentId}
+                    aria-labelledby={`${contentId}-title`} aria-describedby={!isExpanded && summary ? `${contentId}-summary` : undefined}
                     onClick={(event) => { preparePanelTransition(event.detail > 0); setSelectedPath(isExpanded ? null : section.path); }}>
                     <span className={styles.panelSurface} data-panel-surface aria-hidden="true" />
                     <span className={styles.panelIndex} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-                    <span className={styles.titleWindow}><span className={styles.panelTitle} data-panel-title>{section.title}</span></span>
+                    <span className={styles.panelLabel}>
+                      <span id={`${contentId}-title`} className={styles.panelTitle} data-panel-title>{section.title}</span>
+                      {summary && <span id={`${contentId}-summary`} className={styles.panelSummary} aria-hidden={isExpanded}>{summary}</span>}
+                    </span>
                     <span className={styles.toggle} aria-hidden="true" />
                   </button>
                 </h2>

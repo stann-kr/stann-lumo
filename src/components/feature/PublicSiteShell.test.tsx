@@ -343,25 +343,41 @@ const sections = ['About', 'Music', 'Events', 'Archive', 'Contact', 'Link'].map(
 describe('Home panels', () => {
   it('keeps CMS order and separates keyboard expansion from route links', async () => {
     const user = userEvent.setup();
-    render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [{ id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' }], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }] }} terminalInfo={{ url: '', description: '' }} />);
+    render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [
+      { id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' },
+      { id: 'mix', title: 'Live mix', type: 'DJ Mix', year: '2025', platform: 'YouTube', link: 'https://music.example/mix' },
+      { id: 'unlinked', title: 'Unreleased track', type: 'Original', year: '2026', platform: '', link: '' },
+    ], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }] }} terminalInfo={{ url: '', description: '' }} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveAccessibleName('STANN LUMO');
     const triggers = screen.getAllByRole('button');
     expect(triggers).toHaveLength(4);
     ['About', 'Music', 'Events', 'Archive'].forEach((name, index) => expect(triggers[index]).toHaveAccessibleName(name));
     expect(screen.getByRole('link', { name: /All recordings/ })).toHaveAttribute('href', '/music');
-    expect(screen.getByText('Real track')).toBeVisible();
-    expect(screen.getByRole('link', { name: /music_listen_on/ })).toHaveAttribute('href', 'https://music.example/track');
+    for (const [title, href] of [['Real track', 'https://music.example/track'], ['Live mix', 'https://music.example/mix']]) {
+      const recording = screen.getByRole('link', { name: new RegExp(`${title}.*music_listen_on.*opens in a new tab`) });
+      expect(recording).toHaveAttribute('href', href);
+      expect(recording).toHaveAttribute('target', '_blank');
+      expect(recording).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(recording).toBeVisible();
+    }
+    expect(screen.getByText('Unreleased track')).toBeVisible();
+    expect(screen.queryByRole('link', { name: /Unreleased track/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Events' })).toHaveAccessibleDescription('No upcoming events.');
     expect(screen.queryByRole('link', { name: /Open archive/ })).not.toBeInTheDocument();
     const archive = screen.getByRole('button', { name: 'Archive' });
+    expect(archive).toHaveAccessibleDescription('Real poster');
     archive.focus();
     await user.keyboard('{Enter}');
     expect(archive).toHaveAttribute('aria-expanded', 'true');
+    expect(archive).not.toHaveAttribute('aria-describedby');
+    expect(screen.getByRole('button', { name: 'Music' })).toHaveAccessibleDescription('Real track');
     expect(screen.getByRole('link', { name: /Open archive/ })).toHaveAttribute('href', '/archive');
     expect(screen.getByRole('link', { name: 'Real poster' })).toHaveAttribute('href', '/archive/poster');
     expect(screen.getByRole('img', { name: 'Poster' })).toHaveAttribute('src', '/api/media/poster?v=2');
     expect(screen.queryByRole('link', { name: /All recordings/ })).not.toBeInTheDocument();
     await user.keyboard(' ');
     expect(archive).toHaveAttribute('aria-expanded', 'false');
+    expect(archive).toHaveAccessibleDescription('Real poster');
     expect(screen.queryByRole('link', { name: /Open archive/ })).not.toBeInTheDocument();
     for (const title of ['Contact', 'Link']) expect(screen.getByRole('link', { name: new RegExp(title === 'Link' ? '^Link$' : `${title} ${title} description`) })).toHaveAttribute('href', `/${title.toLowerCase()}`);
   });

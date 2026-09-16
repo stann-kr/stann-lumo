@@ -54,7 +54,7 @@ export function useHomeMotion(rootRef: RefObject<HTMLDivElement | null>, selecte
         bounds: panel.element.getBoundingClientRect(),
         isExpanded: panel.element.dataset.expanded === 'true',
       }));
-      const transition = gsap.timeline({ defaults: { duration: 0.64, ease: PUBLIC_MOTION.panelEase, autoRound: false } });
+      const transition = gsap.timeline({ defaults: { duration: 0.28, ease: PUBLIC_MOTION.ease, autoRound: false } });
       active.current = transition;
       // Animate the real flow so the next trigger and its hit area move together.
       transition.fromTo(group, { height: snapshot.height }, { height, clearProps: 'height' }, 0);
@@ -68,21 +68,16 @@ export function useHomeMotion(rootRef: RefObject<HTMLDivElement | null>, selecte
           transition.fromTo(element.querySelector('[data-panel-surface]'), {
             scaleY: surfaceScale,
           }, {
-            scaleY: isExpanded ? 1 : 0, duration: 0.42,
+            scaleY: isExpanded ? 1 : 0, duration: 0.2,
             clearProps: 'transform',
           }, 0);
-          if (isExpanded) transition.fromTo(element.querySelector('[data-panel-title]'), {
-            yPercent: 80,
-          }, {
-            yPercent: 0, duration: 0.48, ease: PUBLIC_MOTION.ease, clearProps: 'transform',
-          }, 0.08);
         }
       }
       const content = root.querySelector('[data-expanded="true"] [data-panel-content]');
-      if (content) transition.fromTo(content.children, { y: 24, opacity: 0 }, {
-        y: 0, opacity: 1, duration: 0.4, stagger: 0.05,
+      if (content) transition.fromTo(content.children, { y: 8, opacity: 0.6 }, {
+        y: 0, opacity: 1, duration: 0.2,
         ease: PUBLIC_MOTION.ease, clearProps: 'transform,opacity',
-      }, 0.2);
+      }, 0);
       return () => { active.current = null; };
     }, rootRef);
     return () => media.revert();

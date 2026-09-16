@@ -13,19 +13,39 @@ interface HomePanelPreviewProps {
   previews?: HomePreviews;
 }
 
+export function getHomePanelSummary({ section, artistFacts, previews }: HomePanelPreviewProps, isKorean: boolean) {
+  if (section.path === '/about') return artistFacts.map((info) => info.value).join(' / ');
+  if (section.path === '/music') return previews?.tracks[0]?.title ?? '';
+  if (section.path === '/events') {
+    const event = previews?.events[0];
+    return event ? `${event.date.replace(/\./g, '-')} / ${event.title}`
+      : isKorean ? '예정된 공연이 없습니다.' : 'No upcoming events.';
+  }
+  if (section.path === '/archive') return previews?.photos[0]?.caption || previews?.photos[0]?.altText || section.description;
+  return section.description;
+}
+
 export default function HomePanelPreview({ section, artistFacts, previews }: HomePanelPreviewProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isKorean = language === 'ko';
 
   if (section.path === '/music' && previews?.tracks.length) return <ul className={styles.tracks}>
-    {previews.tracks.map((track, index) => <li key={track.id} data-featured={index === 0}>
-      <span className={styles.meta}>{[track.type, track.year].filter(Boolean).join(' / ')}</span>
-      <strong>{track.title}</strong>
-      {index === 0 && track.link && <a className={styles.listen} href={track.link} target="_blank" rel="noopener noreferrer">
-        {t('music_listen_on', { platform: track.platform })}<span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span>
-      </a>}
-    </li>)}
+    {previews.tracks.map((track, index) => {
+      const content = <>
+        <span className={styles.trackInfo}>
+          <span className={styles.meta}>{[track.type, track.year].filter(Boolean).join(' / ')}</span>
+          <strong>{track.title}</strong>
+        </span>
+        {track.link && <span className={styles.listen}>
+          {t('music_listen_on', { platform: track.platform })}<span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span>
+        </span>}
+      </>;
+      return <li key={track.id} data-featured={index === 0}>
+        {track.link ? <a className={styles.track} href={track.link} target="_blank" rel="noopener noreferrer">{content}</a>
+          : <div className={styles.track}>{content}</div>}
+      </li>;
+    })}
   </ul>;
 
   if (section.path === '/events') return previews?.events.length ? <div className={styles.events}>
