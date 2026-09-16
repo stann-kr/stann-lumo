@@ -51,7 +51,7 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
   return (
     <article ref={pageRef} className={styles.page} aria-label={`Archive item: ${itemLabel}`}>
       <header className={styles.header}>
-        <Link href={backHref} scroll={false}><span aria-hidden="true">←</span> {t('gallery_title')}</Link>
+        <Link href={backHref} scroll={false}>{t('gallery_title')}</Link>
         <h1>{t('gallery_sort_' + browse.sort)} <span>{index + 1} / {total}</span><span className="sr-only"> — {itemLabel}</span></h1>
       </header>
       <div className={styles.detail}>
@@ -64,12 +64,12 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
           <p className={styles.type}>{photo.mediaType === 'video_youtube' ? 'YouTube' : photo.mediaType === 'video_file' ? (isKorean ? '영상' : 'Video') : (isKorean ? '이미지' : 'Image')}</p>
           {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
           {photo.eventDate && <time dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
-          {photo.linkedEventId && <Link href={`/events/${photo.linkedEventId}`} className={styles.event}>{isKorean ? '공연 보기' : 'View event'} <span aria-hidden="true">↗</span></Link>}
+          {photo.linkedEventId && <Link href={`/events/${photo.linkedEventId}`} className={styles.event}>{isKorean ? '공연 보기' : 'View event'}</Link>}
           <nav className={styles.navigation} aria-label={isKorean ? '아카이브 탐색' : 'Archive navigation'}>
-            {previousHref ? <Link href={previousHref} aria-label={previousLabel} aria-keyshortcuts="ArrowLeft"><span aria-hidden="true">←</span> {isKorean ? '이전' : 'Previous'}</Link>
-              : <button type="button" aria-label={isKorean ? '이전 아카이브 항목 없음' : 'No previous archive item'} disabled><span aria-hidden="true">←</span> {isKorean ? '이전' : 'Previous'}</button>}
-            {nextHref ? <Link href={nextHref} aria-label={nextLabel} aria-keyshortcuts="ArrowRight">{isKorean ? '다음' : 'Next'} <span aria-hidden="true">→</span></Link>
-              : <button type="button" aria-label={isKorean ? '다음 아카이브 항목 없음' : 'No next archive item'} disabled>{isKorean ? '다음' : 'Next'} <span aria-hidden="true">→</span></button>}
+            {previousHref ? <Link href={previousHref} aria-label={previousLabel} aria-keyshortcuts="ArrowLeft">{isKorean ? '이전' : 'Previous'}</Link>
+              : <button type="button" aria-label={isKorean ? '이전 아카이브 항목 없음' : 'No previous archive item'} disabled>{isKorean ? '이전' : 'Previous'}</button>}
+            {nextHref ? <Link href={nextHref} aria-label={nextLabel} aria-keyshortcuts="ArrowRight">{isKorean ? '다음' : 'Next'}</Link>
+              : <button type="button" aria-label={isKorean ? '다음 아카이브 항목 없음' : 'No next archive item'} disabled>{isKorean ? '다음' : 'Next'}</button>}
           </nav>
           <p className={styles.hint}>{isKorean ? '← → 이전·다음 / Esc 목록으로' : '← → Previous / next · Esc back to archive'}</p>
         </div>

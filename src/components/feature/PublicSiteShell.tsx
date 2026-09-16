@@ -221,8 +221,8 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
         <footer inert={isNavigating || undefined} className={`${styles.footer} ${isNavigating ? styles.pendingContent : ''}`}>
           <SignalNet />
           <div className={styles.externalLinks}>
-            <a href={HUB_URL} target="_blank" rel="noopener noreferrer">HUB <span aria-hidden="true">↗</span><span className="sr-only">{language === "ko" ? " (새 창)" : " (opens in a new tab)"}</span></a>
-            <a href={TERMINAL_URL} target="_blank" rel="noopener noreferrer">TERMINAL <span aria-hidden="true">↗</span><span className="sr-only">{language === "ko" ? " (새 창)" : " (opens in a new tab)"}</span></a>
+            <a href={HUB_URL} target="_blank" rel="noopener noreferrer">HUB<span className="sr-only">{language === "ko" ? " (새 창)" : " (opens in a new tab)"}</span></a>
+            <a href={TERMINAL_URL} target="_blank" rel="noopener noreferrer">TERMINAL<span className="sr-only">{language === "ko" ? " (새 창)" : " (opens in a new tab)"}</span></a>
           </div>
         </footer>
         {isNavigating && <PublicPageLoading overlay />}

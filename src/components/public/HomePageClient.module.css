@@ -17,13 +17,12 @@
 .panelContent { padding: 0 2rem 2rem; flex-shrink: 0; }
 .panelContent[hidden] { display: none; }
 .panelContent p { max-width: 45ch; color: var(--color-secondary); line-height: 1.75; }
-.visit { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 1rem; min-height: 44px; margin-top: 2rem; padding-block: .75rem; border-top: 1px solid var(--color-muted); }
+.visit { position: relative; display: flex; align-items: center; min-height: 44px; margin-top: 2rem; padding-block: .75rem; border-top: 1px solid var(--color-muted); }
 .secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--color-muted); }
-.secondary a { display: grid; grid-template-columns: 1fr auto; align-content: start; gap: .5rem 1rem; padding: 2rem; border-right: 1px solid var(--color-muted); }
+.secondary a { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .5rem; padding: 2rem; border-right: 1px solid var(--color-muted); }
 .secondary a:nth-child(even) { border-right: 0; }
 .secondary h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em; }
 .secondary p { grid-column: 1; color: var(--color-secondary); overflow-wrap: anywhere; }
-.secondary a > span { grid-column: 2; grid-row: 1; }
 .terminal { margin-top: 4rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem 4rem; }
 .terminal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
 .terminalIntro p { max-width: 60ch; color: var(--color-secondary); }
@@ -76,7 +75,7 @@
 .trackPreview > li > span, .eventPreview span, .eventPreview time, .artistPreview dt { display: block; font: .75rem/1.6 'JetBrains Mono', monospace; color: var(--color-secondary); margin-block: .35rem; }
 .trackPreview li[data-featured='true'] { padding: 0 0 1.25rem; border: 0; }
 .trackPreview li[data-featured='true'] strong { font-size: clamp(1.5rem, 2.6vw, 2.75rem); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; }
-.trackPreview a { display: inline-flex; align-items: center; min-height: 44px; gap: .5rem; margin-top: .5rem; border-bottom: 1px solid var(--color-accent); }
+.trackPreview a { display: inline-flex; align-items: center; min-height: 44px; margin-top: .5rem; border-bottom: 1px solid var(--color-accent); }
 .eventPreview { display: grid; gap: 1.25rem; }
 .eventPreview a { display: flex; align-items: center; gap: 1rem; min-height: 44px; }
 .eventPreview img { width: 4.5rem; height: 6rem; object-fit: contain; flex-shrink: 0; }

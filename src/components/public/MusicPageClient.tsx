@@ -21,10 +21,7 @@ function TrackRow({ track, featured }: { track: Track; featured: boolean }) {
       {track.link && <span className={styles.listen}>{t('music_listen_on', { platform: track.platform })}</span>}
     </div>
     <div className={styles.meta}><span>{track.type}</span>{track.duration && <span className={styles.duration}>{track.duration}</span>}</div>
-    {track.link && <>
-      <span className={styles.arrow} aria-hidden="true">↗</span>
-      <i className={styles.rowRule} aria-hidden="true" />
-    </>}
+    {track.link && <i className={styles.rowRule} aria-hidden="true" />}
   </>;
 
   return track.link ? (
@@ -47,8 +44,8 @@ export default function MusicPageClient({ musicMeta, tracks }: MusicPageClientPr
       <footer className={styles.footer}>
         <Link href="/contact">{t('music_licensing')}</Link>
         <div>
-          <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{isKorean ? '뮤직 허브' : 'Music hub'}<span aria-hidden="true"> ↗</span><span className="sr-only">{newTabLabel}</span></a>
-          <a href="https://terminal.stann.kr" target="_blank" rel="noopener noreferrer">{isKorean ? '라이브 인터페이스' : 'Live interface'}<span aria-hidden="true"> ↗</span><span className="sr-only">{newTabLabel}</span></a>
+          <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{isKorean ? '뮤직 허브' : 'Music hub'}<span className="sr-only">{newTabLabel}</span></a>
+          <a href="https://terminal.stann.kr" target="_blank" rel="noopener noreferrer">{isKorean ? '라이브 인터페이스' : 'Live interface'}<span className="sr-only">{newTabLabel}</span></a>
         </div>
       </footer>
     </PageLayout>
