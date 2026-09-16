@@ -85,7 +85,6 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
                     : section.path === '/archive' ? (language === 'ko' ? '아카이브 열기' : 'Open archive')
                     : section.path === '/about' ? (language === 'ko' ? '소개 읽기' : 'Read biography')
                     : section.title}</span>
-                  <i className={styles.linkRule} data-hover-rule aria-hidden="true" />
                 </Link>
               </div>
             </section>
