@@ -12,14 +12,13 @@ interface PageLayoutProps {
   motionRevision?: string | number;
   titleSize?: 'label' | 'display';
   animateEntry?: boolean;
-  fit?: boolean;
 }
 
-export default function PageLayout({ title, titleExtra, subtitle, children, motionRevision, titleSize = 'label', animateEntry = true, fit = false }: PageLayoutProps) {
+export default function PageLayout({ title, titleExtra, subtitle, children, motionRevision, titleSize = 'label', animateEntry = true }: PageLayoutProps) {
   const pageRef = useRef<HTMLDivElement>(null);
   useContentMotion(pageRef, `${title}:${motionRevision ?? ''}`, animateEntry);
   return (
-    <div ref={pageRef} className={styles.page} data-fit={fit || undefined}>
+    <div ref={pageRef} className={styles.page}>
       <header className={styles.header} data-size={titleSize}>
         <h1>{title}{titleExtra?.map((line, index) => <span key={index}>{line}</span>)}</h1>
         {subtitle && <p>{subtitle}</p>}

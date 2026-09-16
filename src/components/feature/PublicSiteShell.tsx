@@ -204,8 +204,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     <PublicMotionInputContext value={motionInputRef}>
     <div ref={shellRef} className={styles.shell}>
       <PublicAmbientBackground paused={mobileMenuOpen} />
-      <div inert={mobileMenuOpen || undefined} className={styles.document}
-        data-fit={['/', '/about', '/music', '/contact', '/link'].includes(pathname) || undefined}>
+      <div inert={mobileMenuOpen || undefined} className={styles.document}>
         <a href="#main-content" className={styles.skipLink}>{skipLinkLabel}</a>
         <header className={styles.header}>
           <Link ref={brandRef} href="/" className={styles.brand}>{artistName}</Link>

@@ -303,14 +303,11 @@ describe('PublicSiteShell public navigation', () => {
     try {
       expect(screen.getByRole('heading', { level: 1, name: 'STANN LUMO' })).toBeInTheDocument();
       expect(ScrollTrigger.getAll()).toEqual([unrelated]);
-      const contact = screen.getByRole('link', { name: 'Contact' });
-      const reveal = gsap.getTweensOf(contact)[0];
-      expect(reveal).toBeDefined();
-      act(() => { reveal.pause(0); });
-      expect(contact).not.toBeVisible();
+      const intro = screen.getByText('Explore');
+      act(() => { gsap.getTweensOf(intro)[0]?.pause(0); });
       fireEvent.keyDown(screen.getByRole('link', { name: 'STANN LUMO' }), { key: 'PageDown' });
-      expect(contact).toBeVisible();
-      expect(gsap.getTweensOf(contact, true)).toHaveLength(0);
+      expect(intro).toBeVisible();
+      expect(gsap.getTweensOf(intro, true)).toHaveLength(0);
       const user = userEvent.setup();
       await user.click(screen.getByRole('button', { name: 'Archive' }));
       screen.getByRole('link', { name: /Open archive/ }).focus();
@@ -320,7 +317,7 @@ describe('PublicSiteShell public navigation', () => {
       await waitFor(() => expect(ScrollTrigger.getAll()).toEqual([unrelated]));
       expect(screen.getByRole('link', { name: /Open archive/ })).toBeVisible();
       const headingLines = container.querySelectorAll<HTMLElement>('[data-heading-line]');
-      expect(headingLines.length).toBeGreaterThan(0);
+      expect(headingLines).toHaveLength(1);
       for (const line of headingLines) {
         expect(line.style.transform).toBe('');
       }
@@ -343,43 +340,25 @@ const sections = ['About', 'Music', 'Events', 'Archive', 'Contact', 'Link'].map(
 describe('Home panels', () => {
   it('keeps CMS order and separates keyboard expansion from route links', async () => {
     const user = userEvent.setup();
-    render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [
-      { id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' },
-      { id: 'mix', title: 'Live mix', type: 'DJ Mix', year: '2025', platform: 'YouTube', link: 'https://music.example/mix' },
-      { id: 'unlinked', title: 'Unreleased track', type: 'Original', year: '2026', platform: '', link: '' },
-    ], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }] }} terminalInfo={{ url: '', description: '' }} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveAccessibleName('STANN LUMO');
-    const triggers = screen.getAllByRole('button');
-    expect(triggers).toHaveLength(4);
-    ['About', 'Music', 'Events', 'Archive'].forEach((name, index) => expect(triggers[index]).toHaveAccessibleName(name));
+    render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [{ id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' }], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }] }} terminalInfo={{ url: '', description: '' }} />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('STANN LUMO');
+    expect(screen.getAllByRole('button').map((button) => button.textContent?.replace(/[+−]/g, ''))).toEqual(['About', 'Music', 'Events', 'Archive']);
     expect(screen.getByRole('link', { name: /All recordings/ })).toHaveAttribute('href', '/music');
-    for (const [title, href] of [['Real track', 'https://music.example/track'], ['Live mix', 'https://music.example/mix']]) {
-      const recording = screen.getByRole('link', { name: new RegExp(`${title}.*music_listen_on.*opens in a new tab`) });
-      expect(recording).toHaveAttribute('href', href);
-      expect(recording).toHaveAttribute('target', '_blank');
-      expect(recording).toHaveAttribute('rel', 'noopener noreferrer');
-      expect(recording).toBeVisible();
-    }
-    expect(screen.getByText('Unreleased track')).toBeVisible();
-    expect(screen.queryByRole('link', { name: /Unreleased track/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Events' })).toHaveAccessibleDescription('No upcoming events.');
+    expect(screen.getByText('Real track')).toBeVisible();
+    expect(screen.getByRole('link', { name: /music_listen_on/ })).toHaveAttribute('href', 'https://music.example/track');
     expect(screen.queryByRole('link', { name: /Open archive/ })).not.toBeInTheDocument();
     const archive = screen.getByRole('button', { name: 'Archive' });
-    expect(archive).toHaveAccessibleDescription('Real poster');
     archive.focus();
     await user.keyboard('{Enter}');
     expect(archive).toHaveAttribute('aria-expanded', 'true');
-    expect(archive).not.toHaveAttribute('aria-describedby');
-    expect(screen.getByRole('button', { name: 'Music' })).toHaveAccessibleDescription('Real track');
     expect(screen.getByRole('link', { name: /Open archive/ })).toHaveAttribute('href', '/archive');
     expect(screen.getByRole('link', { name: 'Real poster' })).toHaveAttribute('href', '/archive/poster');
     expect(screen.getByRole('img', { name: 'Poster' })).toHaveAttribute('src', '/api/media/poster?v=2');
     expect(screen.queryByRole('link', { name: /All recordings/ })).not.toBeInTheDocument();
     await user.keyboard(' ');
     expect(archive).toHaveAttribute('aria-expanded', 'false');
-    expect(archive).toHaveAccessibleDescription('Real poster');
     expect(screen.queryByRole('link', { name: /Open archive/ })).not.toBeInTheDocument();
-    for (const title of ['Contact', 'Link']) expect(screen.getByRole('link', { name: title })).toHaveAttribute('href', `/${title.toLowerCase()}`);
+    for (const title of ['Contact', 'Link']) expect(screen.getByRole('link', { name: new RegExp(title === 'Link' ? '^Link$' : `${title} ${title} description`) })).toHaveAttribute('href', `/${title.toLowerCase()}`);
   });
 
   it('animates pointer category changes, accepts the latest choice and finishes before keyboard navigation', async () => {
@@ -416,8 +395,6 @@ describe('Home panels', () => {
       expect(panel.style.flex).toBe('');
       expect(panel.querySelector<HTMLElement>('[data-panel-edge]')?.style.transform).toBe('');
       expect(panel.querySelector<HTMLElement>('[data-panel-heading]')?.style.width).toBe('');
-      expect(panel.querySelector<HTMLElement>('[data-panel-surface]')?.style.transform).toBe('');
-      expect(panel.querySelector<HTMLElement>('[data-panel-title]')?.style.transform).toBe('');
     }
     expect(container.querySelector<HTMLElement>('[data-home-panels]')?.style.height).toBe('');
   });

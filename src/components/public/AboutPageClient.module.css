@@ -1,22 +1,17 @@
-.about { display: grid; flex: 1; min-height: 0; grid-template-columns: minmax(9rem, 1fr) minmax(0, 3fr); gap: 2rem; border-top: 1px solid var(--color-muted); padding-top: 1rem; }
+.about { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(0, 3fr); gap: 3rem clamp(2rem, 6vw, 7rem); border-top: 1px solid var(--color-muted); padding-top: 2rem; }
 .facts { align-self: start; }
-.facts > div { margin-bottom: 1rem; }
-.facts dt { font: .7rem 'JetBrains Mono', monospace; color: var(--color-secondary); margin-bottom: .35rem; }
-.facts dd { font-size: 1rem; font-weight: 500; overflow-wrap: anywhere; }
-.prose { display: flex; flex-direction: column; max-width: 74ch; min-width: 0; min-height: 0; }
-.prose section + section { margin-top: .75rem; }
-.prose .artistName { flex-shrink: 0; font-size: clamp(1.5rem, 2.5vw, 2.5rem); line-height: 1.1; letter-spacing: -.045em; font-weight: 800; margin-bottom: 1rem; }
-.prose h3:not(:global(.sr-only)) { font-size: 1rem; line-height: 1.25; font-weight: 600; margin-bottom: .75rem; }
-.prose p { font-size: 1rem; line-height: 1.55; color: var(--color-secondary); overflow-wrap: anywhere; white-space: pre-line; }
-.prose blockquote { font-size: 1.25rem; line-height: 1.4; letter-spacing: -.025em; padding-left: 1rem; border-left: 2px solid var(--color-accent); margin-bottom: .75rem; overflow-wrap: anywhere; }
-.references { display: flex; flex-shrink: 0; gap: 2rem; border-top: 1px solid var(--color-muted); margin-top: .5rem; font-size: .8rem; }
+.facts > div { margin-bottom: 2rem; }
+.facts dt { font: .8rem 'JetBrains Mono', monospace; color: var(--color-secondary); margin-bottom: .5rem; }
+.facts dd { font-size: 1.25rem; font-weight: 500; overflow-wrap: anywhere; }
+.prose { max-width: 65ch; }
+.prose section + section { margin-top: 4rem; }
+.prose .artistName { font-size: clamp(2rem, 4.5vw, 5rem); line-height: 1.05; letter-spacing: -.045em; font-weight: 800; margin-bottom: 2rem; }
+.prose h3:not(:global(.sr-only)) { font-size: 1.25rem; line-height: 1.25; font-weight: 600; margin-bottom: 1.5rem; }
+.prose p { font-size: 1.125rem; line-height: 1.8; color: var(--color-secondary); overflow-wrap: anywhere; white-space: pre-line; }
+.prose p + p { margin-top: 1.5rem; }
+.philosophy + .philosophy { margin-top: 3rem; }
+.philosophy blockquote { font-size: clamp(1.5rem, 2.5vw, 2.25rem); line-height: 1.5; letter-spacing: -.025em; padding-left: 1.25rem; border-left: 2px solid var(--color-accent); margin-bottom: 1.5rem; overflow-wrap: anywhere; }
+.references { display: flex; gap: 2rem; border-top: 1px solid var(--color-muted); padding-top: 1rem; margin-top: 2rem; }
 .references a { display: inline-flex; align-items: center; min-height: 44px; }
 .references a:hover { color: var(--color-accent); }
-@media (max-width: 699px) {
-  .about { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: .75rem; padding-top: .75rem; }
-  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-  .facts > div { margin: 0; }
-  .facts dd { font-size: .875rem; }
-  .prose p { font-size: .875rem; line-height: 1.55; }
-  .prose .artistName { margin-bottom: .75rem; }
-}
+@media (max-width: 699px) { .about { grid-template-columns: minmax(0, 1fr); } .facts { display: flex; flex-wrap: wrap; gap: 1.5rem 3rem; } .facts > div { margin: 0; } }

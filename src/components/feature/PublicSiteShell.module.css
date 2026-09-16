@@ -1,7 +1,7 @@
 .shell {
   composes: root from '../../styles/designV2.module.css';
-  --page-gutter: clamp(1.25rem, 3vw, 3.5rem);
-  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --page-gutter: clamp(1.25rem, 4vw, 5rem);
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   min-height: 100svh;
   position: relative;
   isolation: isolate;
@@ -24,7 +24,7 @@
 .navList { display: flex; align-items: center; gap: 1.25rem; }
 .navList a { position: relative; display: flex; align-items: center; min-height: 44px; font-size: .8rem; font-weight: 600; }
 .navList a[aria-current] { text-decoration: underline; text-decoration-color: var(--color-accent); text-underline-offset: .6rem; text-decoration-thickness: 2px; }
-.navList a:hover, .externalLinks a:hover { color: var(--color-accent); }
+.navList a:hover, .externalLinks a:hover { color: var(--color-secondary); }
 .languages { display: flex; }
 .languages button { min-width: 44px; min-height: 44px; font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--color-secondary); }
 .languages button[aria-pressed='true'] { color: var(--color-primary); text-decoration: underline; text-underline-offset: .4rem; }
@@ -34,19 +34,6 @@
 .footer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 2rem; border-top: 1px solid var(--color-muted); padding: 2rem var(--page-gutter); }
 .externalLinks { display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: .8rem; }
 .externalLinks a { display: inline-flex; align-items: center; min-height: 44px; }
-.document[data-fit] { height: 100svh; }
-.document[data-fit] .header, .document[data-fit] .footer { flex-shrink: 0; }
-.document[data-fit] .main, .document[data-fit] .main > div { display: flex; flex: 1; min-height: 0; min-width: 0; }
-.document[data-fit] .footer { align-items: center; padding-block: .25rem; gap: 1rem; }
-.document[data-fit] .footer nav { flex-direction: row; align-items: center; gap: 1rem; }
-.document[data-fit] .externalLinks { display: none; }
-@media (max-width: 899px) {
-  .document[data-fit] .header { min-height: calc(3.5rem + env(safe-area-inset-top, 0px)); }
-  .document[data-fit] .footer { justify-content: center; }
-  .document[data-fit] .footer nav { flex-direction: column; gap: 0; }
-  .document[data-fit] .footer nav > span:last-child { gap: .5rem; }
-  .document[data-fit] .footer nav :is(span, a) { font-size: .6rem; letter-spacing: .02em; }
-}
 .skipLink { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: 1rem; background: black; transform: translateY(-200%); }
 .skipLink:focus { transform: none; }
 .menuLayer { position: fixed; inset: 0; z-index: 60; overscroll-behavior: none; }
@@ -62,9 +49,6 @@
   .desktopNav .navList a:not([aria-current]):hover::after { transform: scaleX(1); }
 }
 .desktopNav .navList a:focus-visible::after { transform: scaleX(1); transition: none; }
-@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
-  .desktopNav .navList a::after { transition: transform 280ms var(--motion-ease-out); }
-}
 @media (hover: hover) and (pointer: fine) {
   .shell, .shell :is(a, button, label, input[type='radio'], input[type='checkbox']) { cursor: crosshair; }
   .shell :is(button, input):disabled { cursor: not-allowed; }

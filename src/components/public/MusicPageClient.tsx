@@ -3,7 +3,7 @@
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
 import PageLayout from "@/components/feature/PageLayout";
-import ScreenPages from "@/components/feature/ScreenPages";
+import InfiniteList from "@/components/feature/InfiniteList";
 import Link from '../feature/PublicLink';
 import type { MusicPageMeta, Track } from "@/capabilities/content/content";
 import styles from "./MusicPageClient.module.css";
@@ -37,11 +37,9 @@ export default function MusicPageClient({ musicMeta, tracks }: MusicPageClientPr
   const isKorean = language === 'ko';
   const newTabLabel = isKorean ? ' (새 창)' : ' (opens in a new tab)';
   return (
-    <PageLayout title={musicMeta.title || t("music_title")} subtitle={musicMeta.subtitle} fit>
-      {tracks.length ? <ScreenPages key={language} items={tracks} pageSize={9} compactPageSize={5} label={musicMeta.title || t('music_title')}
-        renderPage={(items, offset) => <ul className={styles.tracks} aria-label={musicMeta.title || t('music_title')}>
-          {items.map((track, index) => <li key={track.id}><TrackRow track={track} featured={offset + index === 0} /></li>)}
-        </ul>} />
+    <PageLayout title={musicMeta.title || t("music_title")} subtitle={musicMeta.subtitle}>
+      {tracks.length ? <InfiniteList key={language} items={tracks} pageSize={10} className={styles.tracks} label={musicMeta.title || t('music_title')}
+        renderItem={(track, index) => <TrackRow track={track} featured={index === 0} />} />
         : <p className={styles.empty}>{isKorean ? '등록된 음악이 없습니다.' : 'No music has been added yet.'}</p>}
       <footer className={styles.footer}>
         <Link href="/contact">{t('music_licensing')}</Link>

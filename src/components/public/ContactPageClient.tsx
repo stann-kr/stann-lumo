@@ -12,17 +12,17 @@ export default function ContactPageClient({ bookingInfo, contactInfo, contactMet
   const { t } = useTranslation();
   const isBookingAddressListed = contactInfo.some((item) => item.value.trim().toLowerCase() === bookingInfo.contactEmail.trim().toLowerCase());
   return (
-    <PageLayout title={contactMeta.title || t("contact_title")} subtitle={/guestbook|방명록/i.test(contactMeta.subtitle) ? undefined : contactMeta.subtitle} fit>
+    <PageLayout title={contactMeta.title || t("contact_title")} subtitle={/guestbook|방명록/i.test(contactMeta.subtitle) ? undefined : contactMeta.subtitle}>
       <section className={styles.direct}>
         <h2 className="sr-only">{contactMeta.directTitle || t("contact_direct")}</h2>
         {contactInfo.map((item, index) => (
-          <div key={index} className={styles.contact} data-reveal>
+          <div key={index} className={styles.contact}>
             <h3>{item.label}</h3>
             {item.value.includes('@') ? <a href={`mailto:${item.value}`} data-hover><span className={styles.address} data-hover-label>{item.value}</span><i className={styles.linkRule} data-hover-rule aria-hidden="true" /></a> : <p>{item.value}</p>}
           </div>
         ))}
       </section>
-      <section className={styles.booking} data-reveal>
+      <section className={styles.booking}>
         <h2>{contactMeta.bookingTitle || t("contact_booking_info")}</h2>
         <div className={styles.details}>
           {!!bookingInfo.setDurations.length && <div><h3>{t("events_set_duration")}</h3><ul>{bookingInfo.setDurations.map((duration, index) => <li key={index}>{duration}</li>)}</ul></div>}

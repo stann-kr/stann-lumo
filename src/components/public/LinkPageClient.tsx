@@ -16,16 +16,16 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
   const { language } = useLanguage();
   const newTabLabel = language === 'ko' ? '새 창에서 열기' : 'Opens in a new tab';
   return (
-    <PageLayout title={linkMeta.title || t("link_title")} subtitle={linkMeta.subtitle} fit>
+    <PageLayout title={linkMeta.title || t("link_title")} subtitle={linkMeta.subtitle}>
       <ul className={styles.platforms}>
-        {linkPlatforms.map((link) => <li key={link.id} data-reveal="row">
+        {linkPlatforms.map((link) => <li key={link.id}>
           <a href={link.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>
             <h2 data-hover-label>{link.platform}</h2><p>{['platform description', `${SITE_NAME} ${link.platform}`.toLowerCase(), link.platform.toLowerCase()].includes(link.description.trim().toLowerCase()) ? '' : link.description}</p><span className="sr-only">{newTabLabel}</span>
             <i className={styles.rowRule} data-hover-rule aria-hidden="true" />
           </a>
         </li>)}
       </ul>
-      {terminalInfo.url && <section className={styles.terminal} data-reveal>
+      {terminalInfo.url && <section className={styles.terminal}>
         <p>{t("link_side_project")}</p>
         <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>
           <h2 data-hover-label>{linkMeta.terminalTitle || 'Terminal'}</h2><p>{/^terminal platform$/i.test(terminalInfo.description.trim()) ? '' : terminalInfo.description}</p><span className="sr-only">{newTabLabel}</span>
