@@ -89,12 +89,10 @@ export function useContentMotion(rootRef: RefObject<HTMLElement | null>, revisio
     media.add('(prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine)', () => {
       const cleanups: Array<() => void> = [];
       root.querySelectorAll<HTMLElement>('[data-hover]').forEach((surface) => {
-        const arrow = surface.querySelector<HTMLElement>('[data-hover-arrow]');
         const rule = surface.querySelector<HTMLElement>('[data-hover-rule]');
-        if (!arrow && !rule) return;
+        if (!rule) return;
         const hover = gsap.timeline({ paused: true, defaults: { duration: PUBLIC_MOTION.feedback, ease: PUBLIC_MOTION.ease } });
-        if (arrow) hover.to(arrow, { x: 2, y: arrow.textContent?.includes('↗') ? -2 : 0 }, 0);
-        if (rule) hover.fromTo(rule, { scaleX: 0 }, { scaleX: 1, transformOrigin: '0% 50%' }, 0);
+        hover.fromTo(rule, { scaleX: 0 }, { scaleX: 1, transformOrigin: '0% 50%' }, 0);
 
         const enter = (event: PointerEvent) => { if (event.pointerType !== 'touch') hover.timeScale(1).play(); };
         const leave = () => { hover.timeScale(1.5).reverse(); };

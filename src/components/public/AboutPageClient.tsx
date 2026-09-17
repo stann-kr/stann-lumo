@@ -35,7 +35,7 @@ export default function AboutPageClient({ artistInfo, aboutSections }: AboutPage
               ))}
             </section>;
           })}
-          <nav className={styles.references} aria-label={t('about_work_links')}><Link href="/music">{t('nav_music')} →</Link><Link href="/events">{t('nav_events')} →</Link></nav>
+          <nav className={styles.references} aria-label={t('about_work_links')}><Link href="/music">{t('nav_music')}</Link><Link href="/events">{t('nav_events')}</Link></nav>
         </div>
       </div>
     </PageLayout>

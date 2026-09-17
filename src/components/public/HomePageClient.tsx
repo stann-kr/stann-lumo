@@ -63,7 +63,7 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
                   {previews.tracks.map((track, trackIndex) => <li key={track.id} data-featured={trackIndex === 0}>
                     <span>{[track.type, track.year].filter(Boolean).join(' / ')}</span>
                     <strong>{track.title}</strong>
-                    {trackIndex === 0 && track.link && <a href={track.link} target="_blank" rel="noopener noreferrer">{t('music_listen_on', { platform: track.platform })}<span aria-hidden="true"> ↗</span><span className="sr-only">{newTabLabel}</span></a>}
+                    {trackIndex === 0 && track.link && <a href={track.link} target="_blank" rel="noopener noreferrer">{t('music_listen_on', { platform: track.platform })}<span className="sr-only">{newTabLabel}</span></a>}
                   </li>)}
                 </ul>}
                 {section.path === '/events' && !!previews?.events.length && <div className={styles.eventPreview}>
@@ -84,8 +84,7 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
                     : section.path === '/events' ? (language === 'ko' ? '전체 공연' : 'All events')
                     : section.path === '/archive' ? (language === 'ko' ? '아카이브 열기' : 'Open archive')
                     : section.path === '/about' ? (language === 'ko' ? '소개 읽기' : 'Read biography')
-                    : section.title}</span><span data-hover-arrow aria-hidden="true">→</span>
-                  <i className={styles.linkRule} data-hover-rule aria-hidden="true" />
+                    : section.title}</span>
                 </Link>
               </div>
             </section>
@@ -95,8 +94,8 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
       {homeSections.length > 4 && (
         <div className={styles.secondary}>
           {homeSections.slice(4).map((section, index) => (
-            <Link key={`${section.path}-${index}`} href={section.path} data-hover>
-              <h2 data-hover-label>{section.title}</h2>{section.path !== '/link' && <p>{section.description}</p>}<span data-hover-arrow aria-hidden="true">→</span>
+            <Link key={`${section.path}-${index}`} href={section.path}>
+              <h2 data-hover-label>{section.title}</h2>{section.path !== '/link' && <p>{section.description}</p>}
             </Link>
           ))}
         </div>
@@ -107,8 +106,8 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
             <h2 id={`${panelId}-terminal`}>{t("home_terminal_side_project")}</h2>
             {!/^terminal platform$/i.test(terminalInfo.description.trim()) && <p>{terminalInfo.description}</p>}
             <div className={styles.terminalLinks}>
-              <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{language === "ko" ? "뮤직 허브" : "Music hub"}<span aria-hidden="true"> ↗</span><span className="sr-only">{newTabLabel}</span></a>
-              <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">Terminal<span aria-hidden="true"> ↗</span><span className="sr-only">{newTabLabel}</span></a>
+              <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{language === "ko" ? "뮤직 허브" : "Music hub"}<span className="sr-only">{newTabLabel}</span></a>
+              <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">Terminal<span className="sr-only">{newTabLabel}</span></a>
             </div>
           </div>
           {!!terminalInfo.customFields?.length && (

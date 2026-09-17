@@ -62,7 +62,7 @@ export default {
   // Music page
   music_title: 'MUSIC',
   music_listen_on: 'Listen on {{platform}}',
-  music_licensing: 'Licensing enquiries →',
+  music_licensing: 'Licensing enquiries',
   music_subtitle: 'TRACKS & MIXES',
   music_note: 'All tracks are available for streaming on Multiple Platforms. For licensing inquiries, please visit the Booking section.',
   music_col_id: 'ID',

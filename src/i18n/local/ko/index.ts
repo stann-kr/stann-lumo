@@ -62,7 +62,7 @@ export default {
   // Music page
   music_title: '음악',
   music_listen_on: '{{platform}}에서 듣기',
-  music_licensing: '라이선스 문의 →',
+  music_licensing: '라이선스 문의',
   music_subtitle: '트랙 & 믹스',
   music_note: '모든 트랙은 SoundCloud 및 Mixcloud에서 스트리밍할 수 있습니다. 라이선스 문의는 Booking 섹션을 방문해주세요.',
   music_col_id: 'ID',

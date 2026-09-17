@@ -33,7 +33,7 @@
 .pendingContent { visibility: hidden; }
 .footer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 2rem; border-top: 1px solid var(--color-muted); padding: 2rem var(--page-gutter); }
 .externalLinks { display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: .8rem; }
-.externalLinks a { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; }
+.externalLinks a { display: inline-flex; align-items: center; min-height: 44px; }
 .skipLink { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: 1rem; background: black; transform: translateY(-200%); }
 .skipLink:focus { transform: none; }
 .menuLayer { position: fixed; inset: 0; z-index: 60; overscroll-behavior: none; }

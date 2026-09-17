@@ -18,7 +18,7 @@ export default function EventDetailPageClient({ event, posterPhoto }: { event: P
   const showStatus = event.status === 'Cancelled' || performanceDate(event.date) >= performanceToday();
   return (
     <PageLayout title={event.title} titleSize="display">
-      <Link href="/events" className={styles.back}><span aria-hidden="true">←</span> {t('events_title')}</Link>
+      <Link href="/events" className={styles.back}>{t('events_title')}</Link>
       <div className={styles.detail}>
         <aside className={styles.facts} aria-label={isKorean ? '공연 정보' : 'Event information'}>
           <dl>
@@ -27,7 +27,7 @@ export default function EventDetailPageClient({ event, posterPhoto }: { event: P
             {showStatus && <div><dt>{isKorean ? '상태' : 'Status'}</dt><dd>{event.status}</dd></div>}
             {event.lineup && <div><dt>{isKorean ? '라인업' : 'Lineup'}</dt><dd className={styles.lineup}>{event.lineup}</dd></div>}
           </dl>
-          {event.raEventLink && <a href={event.raEventLink} target="_blank" rel="noopener noreferrer" className={styles.external}>{isKorean ? 'Resident Advisor에서 보기' : 'View on Resident Advisor'} <span aria-hidden="true">↗</span><span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span></a>}
+          {event.raEventLink && <a href={event.raEventLink} target="_blank" rel="noopener noreferrer" className={styles.external}>{isKorean ? 'Resident Advisor에서 보기' : 'View on Resident Advisor'}<span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span></a>}
         </aside>
         {posterPhoto && <div className={styles.poster}><LoadingImage src={getPublicImageUrl(posterPhoto.id)} alt={posterPhoto.altText || event.title} loading="eager" natural /></div>}
       </div>

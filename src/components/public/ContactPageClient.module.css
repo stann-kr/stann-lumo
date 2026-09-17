@@ -1,9 +1,8 @@
 .booking > h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 2rem; }
 .contact { border-top: 1px solid var(--color-muted); padding-block: 1.5rem 2.5rem; }
 .contact h3 { font: .8rem 'JetBrains Mono', monospace; color: var(--color-secondary); margin-bottom: 1.5rem; }
-.contact a { position: relative; display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; min-height: 44px; padding-bottom: .35em; font-size: clamp(1.5rem, 4.4vw, 4rem); font-weight: 600; letter-spacing: -.04em; line-height: 1.25; overflow-wrap: anywhere; }
+.contact a { position: relative; display: flex; align-items: baseline; min-height: 44px; padding-bottom: .35em; font-size: clamp(1.5rem, 4.4vw, 4rem); font-weight: 600; letter-spacing: -.04em; line-height: 1.25; overflow-wrap: anywhere; }
 .contact a:hover { color: var(--color-secondary); }
-.contact a > span:last-of-type { display: inline-block; font-size: 1.5rem; flex-shrink: 0; }
 .address { min-width: 0; }
 .linkRule { position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
 .contact a:focus-visible { color: var(--color-accent); }

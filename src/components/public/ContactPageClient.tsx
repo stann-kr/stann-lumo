@@ -18,7 +18,7 @@ export default function ContactPageClient({ bookingInfo, contactInfo, contactMet
         {contactInfo.map((item, index) => (
           <div key={index} className={styles.contact}>
             <h3>{item.label}</h3>
-            {item.value.includes('@') ? <a href={`mailto:${item.value}`} data-hover><span className={styles.address} data-hover-label>{item.value}</span><span data-hover-arrow aria-hidden="true">↗</span><i className={styles.linkRule} data-hover-rule aria-hidden="true" /></a> : <p>{item.value}</p>}
+            {item.value.includes('@') ? <a href={`mailto:${item.value}`} data-hover><span className={styles.address} data-hover-label>{item.value}</span><i className={styles.linkRule} data-hover-rule aria-hidden="true" /></a> : <p>{item.value}</p>}
           </div>
         ))}
       </section>
