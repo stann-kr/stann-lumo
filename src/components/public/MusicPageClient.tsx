@@ -10,6 +10,9 @@ import styles from "./MusicPageClient.module.css";
 
 interface MusicPageClientProps { musicMeta: MusicPageMeta; tracks: Track[]; }
 
+// Imported tracks without a known length carry a zero placeholder.
+const hasDuration = (duration?: string) => !!duration && !/^0{1,2}:00(:00)?$/.test(duration.trim());
+
 function TrackRow({ track, featured }: { track: Track; featured: boolean }) {
   const { t } = useTranslation();
   const { language } = useLanguage();
@@ -20,7 +23,7 @@ function TrackRow({ track, featured }: { track: Track; featured: boolean }) {
       <h2 data-hover-label>{track.title}</h2>
       {track.link && <span className={styles.listen}>{t('music_listen_on', { platform: track.platform })}</span>}
     </div>
-    <div className={styles.meta}><span>{track.type}</span>{track.duration && <span className={styles.duration}>{track.duration}</span>}</div>
+    <div className={styles.meta}><span>{track.type}</span>{hasDuration(track.duration) && <span className={styles.duration}>{track.duration}</span>}</div>
     {track.link && <i className={styles.rowRule} aria-hidden="true" />}
   </>;
 

@@ -30,7 +30,8 @@
 .languages button[aria-pressed='true'] { color: var(--color-primary); text-decoration: underline; text-underline-offset: .4rem; }
 .menuButton { display: none; min-height: 44px; align-items: center; gap: 1rem; flex-shrink: 0; }
 .main { flex: 1; min-width: 0; scroll-margin-top: 5.5rem; }
-.pendingContent { visibility: hidden; }
+.pendingContent { animation: pending-hide 0s linear 180ms both; }
+@keyframes pending-hide { from { visibility: visible; } to { visibility: hidden; } }
 .footer { position: relative; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 2rem; border-top: 1px solid var(--color-muted); padding: 2rem var(--page-gutter); }
 .externalLinks { display: flex; flex-wrap: wrap; gap: 1.5rem; font-size: .8rem; }
 .externalLinks a { display: inline-flex; align-items: center; min-height: 44px; }

@@ -47,6 +47,13 @@ export function extractYouTubeId(url: string): string | null {
   return null;
 }
 
+/** Flyer captions often already end with the event date; avoid printing it twice. */
+export function captionIncludesDate(caption: string, date?: string): boolean {
+  if (!date) return false;
+  const normalize = (value: string) => value.replace(/[./]/g, '-');
+  return normalize(caption).includes(normalize(date));
+}
+
 // Bypass incomplete image responses retained under the original immutable URLs.
 export function getPublicImageUrl(id: string): string {
   return `/api/media/${encodeURIComponent(id)}?v=2`;

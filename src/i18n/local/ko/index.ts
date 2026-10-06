@@ -106,6 +106,7 @@ export default {
   contact_guestbook: '방명록',
   contact_direct: '직접 연락',
   contact_booking_info: '예약 정보',
+  contact_response_time: '응답 시간',
   contact_form_name: '이름 / 별명',
   contact_form_email: '이메일',
   contact_form_email_optional: '(선택)',
@@ -127,7 +128,7 @@ export default {
   link_visit: '방문',
   link_enter: '입장',
   link_footer_note: '모든 플랫폼은 활발히 운영 중입니다. 직접 문의는',
-  link_footer_contact: '연락 페이지',
+  link_footer_contact: '연락 및 예약 문의',
   
   // Admin
   admin_login_title: '관리자 로그인',

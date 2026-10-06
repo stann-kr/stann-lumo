@@ -1,6 +1,6 @@
 'use client';
 
-import { getPublicImageUrl } from '@/capabilities/media/media';
+import { captionIncludesDate, getPublicImageUrl } from '@/capabilities/media/media';
 
 import Link from '../feature/PublicLink';
 import { useCallback, useRef } from 'react';
@@ -34,7 +34,7 @@ function GridItem({ photo, browse }: { photo: GalleryPhoto; browse: ArchiveBrows
         </div>
         {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
       </Link>
-      {photo.eventDate && <time className={styles.date} dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
+      {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time className={styles.date} dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
     </article>
   );
 }

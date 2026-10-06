@@ -106,6 +106,7 @@ export default {
   contact_guestbook: 'GUESTBOOK',
   contact_direct: 'DIRECT CONTACT',
   contact_booking_info: 'BOOKING INFO',
+  contact_response_time: 'RESPONSE TIME',
   contact_form_name: 'NAME / ALIAS',
   contact_form_email: 'EMAIL',
   contact_form_email_optional: '(optional)',
@@ -127,7 +128,7 @@ export default {
   link_visit: 'VISIT',
   link_enter: 'ENTER',
   link_footer_note: 'All platforms are actively maintained. For direct inquiries, visit the',
-  link_footer_contact: 'contact page',
+  link_footer_contact: 'Contact & booking',
   
   // Admin
   admin_login_title: 'Admin Login',

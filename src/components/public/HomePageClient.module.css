@@ -10,7 +10,7 @@
 .panel h2 { flex: 1; min-width: 0; }
 .panel[data-expanded='true'] h2 { flex: none; }
 .panel h2 button { position: relative; display: flex; align-items: start; width: 100%; height: 100%; min-height: 9rem; padding: 3.25rem 2rem 2rem; text-align: left; }
-.panelTitle { font-size: clamp(2rem, 4.5vw, 5rem); font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; padding-right: 1rem; }
+.panelTitle { text-transform: uppercase; font-size: clamp(2rem, 4.5vw, 5rem); font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; padding-right: 1rem; }
 .panel[data-expanded='false'] .panelTitle { writing-mode: vertical-rl; transform: rotate(180deg); margin: auto; padding: 1rem 0; }
 .toggle { position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; font-weight: 400; }
 .panel[data-expanded='true'] .toggle { color: var(--color-accent); }
@@ -21,7 +21,7 @@
 .secondary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--color-muted); }
 .secondary a { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: .5rem; padding: 2rem; border-right: 1px solid var(--color-muted); }
 .secondary a:nth-child(even) { border-right: 0; }
-.secondary h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em; }
+.secondary h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em; text-transform: uppercase; }
 .secondary p { grid-column: 1; color: var(--color-secondary); overflow-wrap: anywhere; }
 .terminal { margin-top: 4rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem 4rem; }
 .terminal h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }

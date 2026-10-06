@@ -11,7 +11,9 @@
   z-index: 30;
   min-height: 0;
   touch-action: none;
+  animation: pending-show 0s linear 180ms both;
 }
+@keyframes pending-show { from { visibility: hidden; } to { visibility: visible; } }
 .indicator { display: grid; justify-items: center; gap: 1.25rem; }
 .label { font: .75rem/1.6 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
 .track { display: block; width: 10rem; height: 1px; overflow: hidden; background: var(--color-muted); }

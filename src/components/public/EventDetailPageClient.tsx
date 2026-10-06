@@ -17,8 +17,7 @@ export default function EventDetailPageClient({ event, posterPhoto }: { event: P
   const location = performanceLocation(event);
   const showStatus = event.status === 'Cancelled' || performanceDate(event.date) >= performanceToday();
   return (
-    <PageLayout title={event.title} titleSize="display">
-      <Link href="/events" className={styles.back}>{t('events_title')}</Link>
+    <PageLayout title={event.title} titleSize="display" eyebrow={<Link href="/events">{t('events_title')}</Link>}>
       <div className={styles.detail}>
         <aside className={styles.facts} aria-label={isKorean ? '공연 정보' : 'Event information'}>
           <dl>
