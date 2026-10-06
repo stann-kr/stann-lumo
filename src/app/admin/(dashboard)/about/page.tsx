@@ -21,7 +21,8 @@ import type {
   DynamicSectionType,
   PhilosophyItem,
 } from "@/capabilities/content/content";
-import { createBorderFaint } from "@/utils/colorMix";
+import AdminEditorItem from "@/capabilities/admin/AdminEditorItem";
+import collection from "@/capabilities/admin/AdminCollection.module.css";
 import { runSave } from "@/capabilities/admin/saveResult";
 
 type PendingDelete =
@@ -29,7 +30,7 @@ type PendingDelete =
   | { kind: "section"; id: string; name: string };
 
 const AdminAboutPage = () => {
-  const { allContent, updateContent, currentEditLanguage } = useContent();
+  const { allContent, updateContent, currentEditLanguage, isLoading } = useContent();
   const content = allContent[currentEditLanguage];
   const [saveError, setSaveError] = useState("");
 
@@ -38,7 +39,7 @@ const AdminAboutPage = () => {
       setSaveError("");
       let saveErrorMessage = "";
       const saved = await runSave(
-        ["ARTIST INFO", "ABOUT SECTIONS"],
+        ["아티스트 정보", "소개 섹션"],
         [
           apiUpdateArtistInfo(currentEditLanguage, data.artistInfo),
           apiUpdateAboutSections(currentEditLanguage, data.aboutSections),
@@ -59,7 +60,8 @@ const AdminAboutPage = () => {
   const { formData, updateField, saveForm, isSaving, showSuccess } =
     useAdminForm(content, handleSave);
 
-  const [addSectionOpen, setAddSectionOpen] = useState(false);
+  const [newSectionType, setNewSectionType] = useState<DynamicSectionType>("paragraphs");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
 
   // ──────────────────────────────────────────
@@ -103,9 +105,9 @@ const AdminAboutPage = () => {
   const addSection = (type: DynamicSectionType) => {
     const newSection: DynamicSection = {
       id: crypto.randomUUID(),
-      title: "NEW SECTION",
+      title: "",
       type,
-      order: sections.length,
+      order: Math.max(-1, ...sections.map((section) => section.order)) + 1,
       paragraphs: type === "paragraphs" ? [""] : undefined,
       items:
         type === "philosophy-items"
@@ -116,7 +118,7 @@ const AdminAboutPage = () => {
       ...(formData.aboutSections ?? []),
       newSection,
     ]);
-    setAddSectionOpen(false);
+    setExpandedId(newSection.id);
   };
 
   const removeSection = (id: string) => {
@@ -151,18 +153,16 @@ const AdminAboutPage = () => {
     updateField(
       "aboutSections",
       (formData.aboutSections ?? []).map((s) =>
-        s.id === id
+        s.id === id && s.type !== type
           ? {
               ...s,
               type,
-              paragraphs:
-                type === "paragraphs" ? (s.paragraphs ?? [""]) : undefined,
-              items:
-                type === "philosophy-items"
-                  ? (s.items ?? [
-                      { id: crypto.randomUUID(), quote: "", description: "" },
-                    ])
-                  : undefined,
+              paragraphs: type === "paragraphs"
+                ? (s.items ?? []).flatMap((item) => [item.quote, item.description].filter(Boolean))
+                : undefined,
+              items: type === "philosophy-items"
+                ? (s.paragraphs ?? []).map((description) => ({ id: crypto.randomUUID(), quote: "", description }))
+                : undefined,
             }
           : s,
       ),
@@ -278,311 +278,78 @@ const AdminAboutPage = () => {
     );
   };
 
-  return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        title="ABOUT SECTION"
-        description={`아티스트 정보, 약력, 철학 편집 (${currentEditLanguage.toUpperCase()})`}
-        onSave={saveForm}
-        isSaving={isSaving}
-      />
-
-      <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
-      <SaveErrorMessage message={saveError} />
-      {pendingDelete && (
-        <DeleteConfirmModal
-          show={true}
-          itemName={pendingDelete.name}
-          onConfirm={confirmDelete}
-          onCancel={() => setPendingDelete(null)}
-        />
-      )}
-
-      {/* Artist Info — 동적 key-value 리스트 */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider">
-            ARTIST INFO
-          </h2>
-          <button
-            type="button"
-            onClick={addArtistInfoItem}
-            className="flex items-center gap-2 px-4 py-2 text-xs tracking-widest font-medium border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-[var(--color-bg)] transition-colors cursor-pointer whitespace-nowrap"
-          >
-            <i className="ri-add-line" />
-            ADD FIELD
-          </button>
+  return <div className="space-y-8">
+    <AdminSectionHeader title="소개" description="아티스트 정보와 소개 글의 내용, 순서, 형식을 관리합니다."
+      onSave={saveForm} isSaving={isSaving} isSaveDisabled={isLoading} />
+    <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+    <SaveErrorMessage message={saveError} />
+    <fieldset disabled={isSaving || isLoading} className="space-y-8">
+      <section aria-labelledby="artist-info-title">
+        <div className={collection.sectionHeader}>
+          <h2 id="artist-info-title">아티스트 정보</h2>
+          <button type="button" className={collection.button} onClick={addArtistInfoItem}>정보 추가</button>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {artistInfoItems.map((item) => (
-            <AdminCard key={item.id}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-[var(--color-accent)] tracking-widest font-medium">
-                  FIELD
-                </span>
-                {artistInfoItems.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setPendingDelete({
-                      kind: "artist",
-                      id: item.id,
-                      name: item.key || "FIELD",
-                    })}
-                    className="flex items-center gap-1 px-3 py-1 text-xs tracking-widest border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    <i className="ri-delete-bin-line" />
-                    DELETE
-                  </button>
-                )}
-              </div>
-              <div className="space-y-3">
-                <FormInput
-                  label="LABEL"
-                  value={item.key}
-                  onChange={(value) =>
-                    updateArtistInfoItem(item.id, "key", value)
-                  }
-                />
-                <FormInput
-                  label="VALUE"
-                  value={item.value}
-                  onChange={(value) =>
-                    updateArtistInfoItem(item.id, "value", value)
-                  }
-                />
-              </div>
-            </AdminCard>
-          ))}
+        <div className={collection.list}>
+          {artistInfoItems.map((item, index) => <AdminCard key={item.id}>
+            <div className={collection.fields}>
+              <FormInput label={`정보 ${index + 1} 이름`} value={item.key} onChange={(value) => updateArtistInfoItem(item.id, "key", value)} placeholder="이름, 활동 지역, 장르" />
+              <FormInput label={`정보 ${index + 1} 내용`} value={item.value} onChange={(value) => updateArtistInfoItem(item.id, "value", value)} />
+            </div>
+            {artistInfoItems.length > 1 && <div className="mt-4 flex justify-end">
+              <button type="button" className={collection.dangerButton} aria-label={`${item.key || `정보 ${index + 1}`} 삭제`}
+                onClick={() => setPendingDelete({ kind: "artist", id: item.id, name: item.key || "아티스트 정보" })}>삭제</button>
+            </div>}
+          </AdminCard>)}
+          {!artistInfoItems.length && <p className={collection.empty}>이름, 활동 지역 등 아티스트 정보를 추가하세요.</p>}
         </div>
-      </div>
-
-      {/* 동적 섹션 관리 */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider">
-            ABOUT SECTIONS
-          </h2>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setAddSectionOpen((prev) => !prev)}
-              className="flex items-center gap-2 px-4 py-2 text-xs tracking-widest font-medium border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-[var(--color-bg)] transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <i className="ri-add-line" />
-              ADD SECTION ▼
-            </button>
-            {addSectionOpen && (
-              <div
-                className="absolute right-0 mt-1 w-48 bg-[var(--color-bg)] border shadow-lg z-50"
-                style={createBorderFaint()}
-              >
-                <button
-                  type="button"
-                  onClick={() => addSection("paragraphs")}
-                  className="w-full px-4 py-3 text-xs tracking-widest text-left text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors cursor-pointer"
-                >
-                  Paragraphs
-                </button>
-                <button
-                  type="button"
-                  onClick={() => addSection("philosophy-items")}
-                  className="w-full px-4 py-3 text-xs tracking-widest text-left text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors cursor-pointer"
-                >
-                  Philosophy Items
-                </button>
-              </div>
-            )}
+      </section>
+      <section aria-labelledby="about-sections-title">
+        <div className={collection.sectionHeader}>
+          <h2 id="about-sections-title">소개 섹션</h2>
+          <div className="flex flex-wrap items-end gap-3">
+            <FormSelect label="새 섹션 형식" value={newSectionType} onChange={(value) => setNewSectionType(value as DynamicSectionType)}>
+              <option value="paragraphs">문단</option><option value="philosophy-items">인용과 설명</option>
+            </FormSelect>
+            <button type="button" className={collection.button} onClick={() => addSection(newSectionType)}>섹션 추가</button>
           </div>
         </div>
-
-        <div className="space-y-4">
-          {sections.map((section, index) => (
-            <AdminCard key={section.id}>
-              {/* 섹션 헤더 */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col gap-1">
-                    <button
-                      type="button"
-                      onClick={() => moveSectionUp(index)}
-                      disabled={index === 0}
-                      className="w-6 h-6 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                      style={createBorderFaint()}
-                      title="위로 이동"
-                    >
-                      <i className="ri-arrow-up-line text-xs" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveSectionDown(index)}
-                      disabled={index === sections.length - 1}
-                      className="w-6 h-6 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                      style={createBorderFaint()}
-                      title="아래로 이동"
-                    >
-                      <i className="ri-arrow-down-line text-xs" />
-                    </button>
-                  </div>
-                  <span className="text-xs text-[var(--color-accent)] tracking-widest font-medium">
-                    SECTION #{index + 1}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {/* 타입 선택 */}
-                  <FormSelect
-                    id={`about-section-type-${section.id}`}
-                    name={`aboutSectionType-${section.id}`}
-                    label="SECTION TYPE"
-                    labelClassName="sr-only"
-                    value={section.type}
-                    onChange={(value) =>
-                      updateSectionType(
-                        section.id,
-                        value as DynamicSectionType,
-                      )
-                    }
-                    className="bg-[var(--color-bg)] border border-[var(--color-secondary)]/30 text-[var(--color-secondary)] text-xs tracking-wider px-3 py-1.5 focus:outline-none focus:border-[var(--color-accent)] cursor-pointer"
-                  >
-                    <option value="paragraphs">paragraphs</option>
-                    <option value="philosophy-items">philosophy-items</option>
-                  </FormSelect>
-
-                  {sections.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setPendingDelete({
-                        kind: "section",
-                        id: section.id,
-                        name: section.title || "SECTION",
-                      })}
-                      className="flex items-center gap-1 px-3 py-1.5 text-xs tracking-widest border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      <i className="ri-delete-bin-line" />
-                      DELETE
-                    </button>
-                  )}
-                </div>
+        <div className={collection.list}>
+          {sections.map((section, index) => <AdminEditorItem key={section.id} title={section.title || '제목 없는 섹션'}
+            summary={section.type === 'paragraphs' ? `문단 ${(section.paragraphs ?? []).length}개` : `인용과 설명 ${(section.items ?? []).length}개`}
+            position={index + 1} expanded={expandedId === section.id} onToggle={() => setExpandedId(expandedId === section.id ? null : section.id)}
+            onMoveUp={index > 0 ? () => moveSectionUp(index) : undefined}
+            onMoveDown={index < sections.length - 1 ? () => moveSectionDown(index) : undefined}
+            onDelete={sections.length > 1 ? () => setPendingDelete({ kind: "section", id: section.id, name: section.title || "소개 섹션" }) : undefined}>
+            <div className={collection.stack}>
+              <div className={collection.fields}>
+                <FormInput label="섹션 제목" value={section.title} onChange={(value) => updateSectionTitle(section.id, value)} />
+                <FormSelect label="섹션 형식" value={section.type} onChange={(value) => updateSectionType(section.id, value as DynamicSectionType)}>
+                  <option value="paragraphs">문단</option><option value="philosophy-items">인용과 설명</option>
+                </FormSelect>
               </div>
-
-              {/* 섹션 타이틀 */}
-              <div className="mb-4">
-                <FormInput
-                  label="TITLE"
-                  value={section.title}
-                  onChange={(value) => updateSectionTitle(section.id, value)}
-                />
-              </div>
-
-              {/* paragraphs 타입 */}
-              {section.type === "paragraphs" && (
-                <div className="space-y-3">
-                  <label className="block text-xs text-[var(--color-accent)] tracking-widest">
-                    PARAGRAPHS
-                  </label>
-                  {(section.paragraphs ?? []).map((para, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <FormTextarea
-                        label=""
-                        value={para}
-                        onChange={(value) =>
-                          updateParagraph(section.id, idx, value)
-                        }
-                        rows={3}
-                      />
-                      {(section.paragraphs ?? []).length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeParagraph(section.id, idx)}
-                          className="mt-1 w-7 h-7 flex items-center justify-center border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer shrink-0"
-                        >
-                          <i className="ri-close-line text-xs" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addParagraph(section.id)}
-                    className="text-xs text-[var(--color-accent)] tracking-widest hover:underline cursor-pointer"
-                  >
-                    + ADD PARAGRAPH
-                  </button>
-                </div>
-              )}
-
-              {/* philosophy-items 타입 */}
-              {section.type === "philosophy-items" && (
-                <div className="space-y-4">
-                  <label className="block text-xs text-[var(--color-accent)] tracking-widest">
-                    ITEMS
-                  </label>
-                  {(section.items ?? []).map((item: PhilosophyItem) => (
-                    <div
-                      key={item.id}
-                      className="border p-4 space-y-3"
-                      style={createBorderFaint()}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-[var(--color-accent)] tracking-widest">
-                          ITEM
-                        </span>
-                        {(section.items ?? []).length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removePhilosophyItem(section.id, item.id)
-                            }
-                            className="flex items-center gap-1 px-2 py-1 text-xs border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                          >
-                            <i className="ri-close-line" />
-                          </button>
-                        )}
-                      </div>
-                      <FormTextarea
-                        label="QUOTE"
-                        value={item.quote}
-                        onChange={(value) =>
-                          updatePhilosophyItem(
-                            section.id,
-                            item.id,
-                            "quote",
-                            value,
-                          )
-                        }
-                        rows={2}
-                      />
-                      <FormTextarea
-                        label="DESCRIPTION"
-                        value={item.description}
-                        onChange={(value) =>
-                          updatePhilosophyItem(
-                            section.id,
-                            item.id,
-                            "description",
-                            value,
-                          )
-                        }
-                        rows={3}
-                      />
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addPhilosophyItem(section.id)}
-                    className="text-xs text-[var(--color-accent)] tracking-widest hover:underline cursor-pointer"
-                  >
-                    + ADD ITEM
-                  </button>
-                </div>
-              )}
-            </AdminCard>
-          ))}
+              {section.type === 'paragraphs' && <div className={collection.stack}>
+                {(section.paragraphs ?? []).map((paragraph, paragraphIndex) => <div key={paragraphIndex} className={collection.inlineItem}>
+                  <FormTextarea label={`문단 ${paragraphIndex + 1}`} value={paragraph} onChange={(value) => updateParagraph(section.id, paragraphIndex, value)} rows={5} />
+                  {(section.paragraphs ?? []).length > 1 && <button type="button" className={collection.dangerButton} aria-label={`문단 ${paragraphIndex + 1} 삭제`} onClick={() => removeParagraph(section.id, paragraphIndex)}>삭제</button>}
+                </div>)}
+                <button type="button" className={collection.button} onClick={() => addParagraph(section.id)}>문단 추가</button>
+              </div>}
+              {section.type === 'philosophy-items' && <div className={collection.stack}>
+                {(section.items ?? []).map((item, itemIndex) => <div key={item.id} className={collection.stack}>
+                  <FormTextarea label={`인용 ${itemIndex + 1}`} value={item.quote} onChange={(value) => updatePhilosophyItem(section.id, item.id, 'quote', value)} rows={2} />
+                  <FormTextarea label={`설명 ${itemIndex + 1}`} value={item.description} onChange={(value) => updatePhilosophyItem(section.id, item.id, 'description', value)} rows={4} />
+                  {(section.items ?? []).length > 1 && <button type="button" className={collection.dangerButton} aria-label={`인용과 설명 ${itemIndex + 1} 삭제`} onClick={() => removePhilosophyItem(section.id, item.id)}>이 항목 삭제</button>}
+                </div>)}
+                <button type="button" className={collection.button} onClick={() => addPhilosophyItem(section.id)}>인용과 설명 추가</button>
+              </div>}
+            </div>
+          </AdminEditorItem>)}
+          {!sections.length && <p className={collection.empty}>소개 섹션을 추가해 글을 작성하세요.</p>}
         </div>
-      </div>
-    </div>
-  );
+      </section>
+      {pendingDelete && <DeleteConfirmModal show itemName={pendingDelete.name} onConfirm={confirmDelete} onCancel={() => setPendingDelete(null)} />}
+    </fieldset>
+  </div>;
 };
 
 export default AdminAboutPage;

@@ -1,0 +1,21 @@
+.item { min-width: 0; border: 1px solid color-mix(in srgb, var(--color-secondary) 22%, transparent); }
+.header { display: flex; align-items: center; gap: 12px; padding: 8px 12px; }
+.toggle { flex: 1; min-width: 0; min-height: 60px; display: flex; align-items: center; gap: 16px; text-align: left; }
+.position { flex-shrink: 0; color: var(--color-secondary); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.identity { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.identity strong { color: var(--color-primary); font-size: 1rem; font-weight: 500; overflow-wrap: anywhere; }
+.identity > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-secondary); font-size: .8125rem; }
+.state { color: var(--color-accent); font-size: .75rem; flex-shrink: 0; }
+.actions { display: flex; flex-shrink: 0; gap: 4px; }
+.actions button { min-width: 44px; min-height: 44px; border: 1px solid color-mix(in srgb, var(--color-secondary) 22%, transparent); font-size: .8125rem; }
+.actions button:hover:not(:disabled), .toggle:hover { background: color-mix(in srgb, var(--color-secondary) 5%, transparent); }
+.actions button:disabled { opacity: .3; cursor: not-allowed; }
+.delete { color: var(--color-accent); padding-inline: 10px; }
+.editor { padding: 24px; border-top: 1px solid color-mix(in srgb, var(--color-secondary) 22%, transparent); }
+.editor[hidden] { display: none; }
+@media (max-width: 640px) {
+  .header { flex-wrap: wrap; gap: 0; }
+  .toggle { flex-basis: 100%; }
+  .actions { margin: 4px 0 8px auto; }
+  .editor { padding: 16px; }
+}

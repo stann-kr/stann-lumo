@@ -10,7 +10,7 @@ import SaveErrorMessage from '@/components/base/SaveErrorMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
-import { createBorderFaint, createBorderMid } from '@/utils/colorMix';
+import collection from '@/capabilities/admin/AdminCollection.module.css';
 import { runSave } from '@/capabilities/admin/saveResult';
 import {
   updateContactInfo as apiUpdateContactInfo,
@@ -20,27 +20,6 @@ import { updateEventsInfo as apiUpdateEventsInfo } from '@/capabilities/events/e
 import type { ContactItem, PageMeta } from '@/capabilities/content/content';
 import type { EventsInfo } from '@/capabilities/events/events';
 
-const AVAILABLE_ICONS = [
-  { value: 'ri-mail-line', label: 'Email' },
-  { value: 'ri-calendar-line', label: 'Calendar' },
-  { value: 'ri-time-line', label: 'Time' },
-  { value: 'ri-phone-line', label: 'Phone' },
-  { value: 'ri-map-pin-line', label: 'Location' },
-  { value: 'ri-user-line', label: 'User' },
-  { value: 'ri-message-line', label: 'Message' },
-  { value: 'ri-global-line', label: 'Global' },
-  { value: 'ri-links-line', label: 'Link' },
-  { value: 'ri-information-line', label: 'Info' },
-  { value: 'ri-instagram-line', label: 'Instagram' },
-  { value: 'ri-facebook-line', label: 'Facebook' },
-  { value: 'ri-twitter-line', label: 'Twitter' },
-  { value: 'ri-linkedin-line', label: 'LinkedIn' },
-  { value: 'ri-youtube-line', label: 'YouTube' },
-  { value: 'ri-soundcloud-line', label: 'SoundCloud' },
-  { value: 'ri-spotify-line', label: 'Spotify' },
-  { value: 'ri-briefcase-line', label: 'Briefcase' },
-];
-
 const AdminContactPage = () => {
   const { allContent, updateContent, currentEditLanguage, isLoading } = useContent();
   const content = allContent[currentEditLanguage];
@@ -49,7 +28,6 @@ const AdminContactPage = () => {
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [iconSelectorOpen, setIconSelectorOpen] = useState<number | null>(null);
   const [deleteContactIndex, setDeleteContactIndex] = useState<number | null>(null);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
 
@@ -109,11 +87,12 @@ const AdminContactPage = () => {
   };
 
   const saveChanges = async () => {
+    if (isSaving || isLoading) return;
     setIsSaving(true);
     setSaveError('');
     try {
       await runSave(
-        ['CONTACT INFO', 'BOOKING INFO', 'PAGE SETTINGS'],
+        ['연락처', '부킹 안내', '페이지 문구'],
         [
           apiUpdateContactInfo(currentEditLanguage, contactInfo),
           apiUpdateEventsInfo(currentEditLanguage, eventsInfo),
@@ -133,231 +112,61 @@ const AdminContactPage = () => {
     }
   };
 
-  return (
-    <div className="space-y-8">
-        <AdminSectionHeader
-          title="CONTACT SECTION"
-          description={`연락처 정보 편집 (${currentEditLanguage.toUpperCase()})`}
-          onSave={saveChanges}
-          isSaving={isSaving}
-        />
-
-      <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
-      <SaveErrorMessage message={saveError} />
-      {deleteContactIndex !== null && (
-        <DeleteConfirmModal
-          show={true}
-          itemName={contactInfo[deleteContactIndex]?.label || 'CONTACT ITEM'}
-          onConfirm={() => {
-            deleteContactItem(deleteContactIndex);
-            setDeleteContactIndex(null);
-          }}
-          onCancel={() => setDeleteContactIndex(null)}
-        />
-      )}
-
-        {/* PAGE SETTINGS */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            PAGE SETTINGS
-          </h2>
-          <AdminCard>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormInput
-                label="PAGE TITLE"
-                value={pageMeta.contact.title}
-                onChange={(value) => updatePageMetaField('title', value)}
-                placeholder="CONTACT"
-              />
-              <FormInput
-                label="PAGE SUBTITLE"
-                value={pageMeta.contact.subtitle}
-                onChange={(value) => updatePageMetaField('subtitle', value)}
-                placeholder="GUESTBOOK & DIRECT CONTACT"
-              />
-              <FormInput
-                label="GUESTBOOK SECTION TITLE"
-                value={pageMeta.contact.guestbookTitle}
-                onChange={(value) => updatePageMetaField('guestbookTitle', value)}
-                placeholder="GUESTBOOK"
-              />
-              <FormInput
-                label="DIRECT CONTACT SECTION TITLE"
-                value={pageMeta.contact.directTitle}
-                onChange={(value) => updatePageMetaField('directTitle', value)}
-                placeholder="DIRECT CONTACT"
-              />
-              <FormInput
-                label="BOOKING SECTION TITLE"
-                value={pageMeta.contact.bookingTitle}
-                onChange={(value) => updatePageMetaField('bookingTitle', value)}
-                placeholder="BOOKING INFO"
-              />
-            </div>
-          </AdminCard>
+  return <div className="space-y-8">
+    <AdminSectionHeader title="연락처" description="연락 방법과 공연 부킹에 필요한 안내를 관리합니다."
+      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={isLoading} />
+    <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+    <SaveErrorMessage message={saveError} />
+    <fieldset disabled={isSaving || isLoading} className="space-y-8">
+      <section aria-labelledby="contact-methods-title">
+        <div className={collection.sectionHeader}>
+          <h2 id="contact-methods-title">연락 방법</h2>
+          <button type="button" className={collection.button} onClick={addContactItem}>연락처 추가</button>
         </div>
-
-        {/* Contact Information */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            CONTACT INFORMATION
-          </h2>
-          <AdminCard>
-            <div className="space-y-4">
-              {contactInfo.map((item, index) => (
-                <div key={index} className="bg-[var(--color-secondary)]/5 border p-4" style={createBorderFaint()}>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                    {/* Icon Selector */}
-                    <div className="md:col-span-2">
-                      <label className="block text-xs text-[var(--color-accent)] mb-2 tracking-wider">ICON</label>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setIconSelectorOpen(iconSelectorOpen === index ? null : index)}
-                          className="w-full bg-[var(--color-bg)] border text-[var(--color-secondary)] px-3 py-2 text-sm focus:outline-none cursor-pointer flex items-center justify-between"
-                          style={createBorderFaint()}
-                        >
-                          <div className="flex items-center gap-2">
-                            <i className={`${item.icon} text-lg text-[var(--color-accent)]`}></i>
-                            <span className="text-xs">{AVAILABLE_ICONS.find(ic => ic.value === item.icon)?.label}</span>
-                          </div>
-                          <i className="ri-arrow-down-s-line text-[var(--color-muted)]"></i>
-                        </button>
-
-                        {/* Icon Grid Popup */}
-                        {iconSelectorOpen === index && (
-                          <div className="absolute z-50 mt-1 w-64 bg-[var(--color-bg)] border shadow-lg p-3" style={createBorderFaint()}>
-                            <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
-                              {AVAILABLE_ICONS.map((icon) => (
-                                <button
-                                  key={icon.value}
-                                  type="button"
-                                  onClick={() => {
-                                    updateContactItemField(index, 'icon', icon.value);
-                                    setIconSelectorOpen(null);
-                                  }}
-                                  className={`w-10 h-10 flex items-center justify-center border transition-colors cursor-pointer ${
-                                    item.icon === icon.value
-                                      ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]'
-                                      : 'hover:bg-[var(--color-secondary)]/10'
-                                  }`}
-                                  style={createBorderFaint()}
-                                  title={icon.label}
-                                >
-                                  <i className={`${icon.value} text-lg text-[var(--color-accent)]`}></i>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Label */}
-                    <div className="md:col-span-3">
-                      <FormInput
-                        label="LABEL"
-                        value={item.label}
-                        onChange={(value) => updateContactItemField(index, 'label', value)}
-                      />
-                    </div>
-
-                    {/* Value */}
-                    <div className="md:col-span-5">
-                      <FormInput
-                        label="VALUE"
-                        value={item.value}
-                        onChange={(value) => updateContactItemField(index, 'value', value)}
-                      />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="md:col-span-2 flex items-end gap-2 pt-6">
-                      <button
-                        onClick={() => moveContactItem(index, 'up')}
-                        disabled={index === 0}
-                        className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                        style={createBorderFaint()}
-                        title="위로 이동"
-                      >
-                        <i className="ri-arrow-up-line"></i>
-                      </button>
-                      <button
-                        onClick={() => moveContactItem(index, 'down')}
-                        disabled={index === contactInfo.length - 1}
-                        className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                        style={createBorderFaint()}
-                        title="아래로 이동"
-                      >
-                        <i className="ri-arrow-down-line"></i>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteContactIndex(index)}
-                        aria-label={`연락처 ${item.label || index + 1} 삭제`}
-                        className="w-8 h-8 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer"
-                        title="삭제"
-                      >
-                        <i className="ri-delete-bin-line"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Add Button */}
-              <button
-                onClick={addContactItem}
-                className="w-full px-4 py-3 border border-dashed text-[var(--color-accent)] hover:bg-[var(--color-accent)]/5 transition-colors text-sm tracking-wider cursor-pointer whitespace-nowrap"
-                style={createBorderMid()}
-              >
-                <i className="ri-add-line mr-2"></i>
-                ADD ITEM
-              </button>
+        <div className={collection.list}>
+          {contactInfo.map((item, index) => <AdminCard key={index}>
+            <div className={collection.fields}>
+              <FormInput label={`연락처 ${index + 1} 이름`} value={item.label} onChange={(value) => updateContactItemField(index, 'label', value)} placeholder="부킹 문의" />
+              <FormInput label={`연락처 ${index + 1} 내용`} value={item.value} onChange={(value) => updateContactItemField(index, 'value', value)} placeholder="booking@example.com" />
             </div>
-          </AdminCard>
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
+              <button type="button" className={collection.button} aria-label={`연락처 ${index + 1} 위로 이동`} disabled={index === 0} onClick={() => moveContactItem(index, 'up')}>위로</button>
+              <button type="button" className={collection.button} aria-label={`연락처 ${index + 1} 아래로 이동`} disabled={index === contactInfo.length - 1} onClick={() => moveContactItem(index, 'down')}>아래로</button>
+              <button type="button" className={collection.dangerButton} aria-label={`연락처 ${item.label || index + 1} 삭제`} onClick={() => setDeleteContactIndex(index)}>삭제</button>
+            </div>
+          </AdminCard>)}
+          {!contactInfo.length && <p className={collection.empty}>연락처 추가로 이메일이나 연락 방법을 등록하세요.</p>}
         </div>
-
-        {/* Booking Info */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            BOOKING INFO
-          </h2>
-          <AdminCard className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ListItemEditor
-                label="SET DURATIONS"
-                items={eventsInfo.setDurations}
-                onUpdate={(index, value) => updateListItem('setDurations', index, value)}
-                onAdd={() => addListItem('setDurations')}
-                onRemove={(index) => removeListItem('setDurations', index)}
-              />
-              <ListItemEditor
-                label="TECHNICAL REQUIREMENTS"
-                items={eventsInfo.technicalRequirements}
-                onUpdate={(index, value) => updateListItem('technicalRequirements', index, value)}
-                onAdd={() => addListItem('technicalRequirements')}
-                onRemove={(index) => removeListItem('technicalRequirements', index)}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t" style={createBorderFaint()}>
-              <FormInput
-                label="CONTACT EMAIL"
-                value={eventsInfo.contactEmail}
-                onChange={(value) => updateEventsInfoField('contactEmail', value)}
-                placeholder="booking@example.com"
-              />
-              <FormInput
-                label="RESPONSE TIME"
-                value={eventsInfo.responseTime}
-                onChange={(value) => updateEventsInfoField('responseTime', value)}
-                placeholder="Within 48 hours"
-              />
-            </div>
-          </AdminCard>
-        </div>
-    </div>
-  );
+      </section>
+      <section aria-labelledby="booking-title">
+        <div className={collection.sectionHeader}><h2 id="booking-title">부킹 안내</h2></div>
+        <AdminCard className={collection.stack}>
+          <div className={collection.fields}>
+            <FormInput label="부킹 이메일" type="email" value={eventsInfo.contactEmail} onChange={(value) => updateEventsInfoField('contactEmail', value)} />
+            <FormInput label="응답 시간 안내" value={eventsInfo.responseTime} onChange={(value) => updateEventsInfoField('responseTime', value)} placeholder="48시간 이내 회신" />
+          </div>
+          <div className={collection.fields}>
+            <ListItemEditor label="공연 시간" items={eventsInfo.setDurations}
+              onUpdate={(index, value) => updateListItem('setDurations', index, value)}
+              onAdd={() => addListItem('setDurations')} onRemove={(index) => removeListItem('setDurations', index)} />
+            <ListItemEditor label="기술 요구사항" items={eventsInfo.technicalRequirements}
+              onUpdate={(index, value) => updateListItem('technicalRequirements', index, value)}
+              onAdd={() => addListItem('technicalRequirements')} onRemove={(index) => removeListItem('technicalRequirements', index)} />
+          </div>
+        </AdminCard>
+      </section>
+      <details className={collection.disclosure}><summary>페이지 문구</summary>
+        <AdminCard><div className={collection.fields}>
+          <FormInput label="페이지 제목" value={pageMeta.contact.title} onChange={(value) => updatePageMetaField('title', value)} />
+          <FormInput label="페이지 부제" value={pageMeta.contact.subtitle} onChange={(value) => updatePageMetaField('subtitle', value)} />
+          <FormInput label="연락처 영역 이름" value={pageMeta.contact.directTitle} onChange={(value) => updatePageMetaField('directTitle', value)} />
+          <FormInput label="부킹 영역 제목" value={pageMeta.contact.bookingTitle} onChange={(value) => updatePageMetaField('bookingTitle', value)} />
+        </div></AdminCard>
+      </details>
+      {deleteContactIndex !== null && <DeleteConfirmModal show itemName={contactInfo[deleteContactIndex]?.label || '연락처'}
+        onConfirm={() => { deleteContactItem(deleteContactIndex); setDeleteContactIndex(null); }} onCancel={() => setDeleteContactIndex(null)} />}
+    </fieldset>
+  </div>;
 };
 
 export default AdminContactPage;

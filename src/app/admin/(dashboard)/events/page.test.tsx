@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -24,6 +25,7 @@ const mocks = vi.hoisted(() => ({
   runRaSync: vi.fn(),
   updatePageMeta: vi.fn(),
   updateContent: vi.fn(),
+  uploadEventPoster: vi.fn(),
   showNotification: vi.fn(),
 }));
 
@@ -78,7 +80,7 @@ vi.mock("@/capabilities/events/eventsAdmin.client", () => ({
   fetchRaSyncStatus: mocks.fetchRaSyncStatus,
   updatePerformances: mocks.updatePerformances,
   updateRaApiConfig: mocks.updateRaApiConfig,
-  uploadEventPoster: vi.fn(),
+  uploadEventPoster: mocks.uploadEventPoster,
   deleteEventPoster: vi.fn(),
   runRaSync: mocks.runRaSync,
   restoreRaEventExclusion: vi.fn(),
@@ -101,13 +103,17 @@ const DirtyState = () => {
   return <output data-testid="dirty-state">{String(isDirty)}</output>;
 };
 
-const renderPage = () =>
-  render(
+const renderPage = () => {
+  const view = render(
     <AdminEditGuardProvider>
       <AdminEventsPage />
       <DirtyState />
     </AdminEditGuardProvider>,
   );
+  fireEvent.click(screen.getByText("RA 연결 설정"));
+  fireEvent.click(screen.getByText("공연 페이지 문구"));
+  return view;
+};
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -214,11 +220,12 @@ describe("AdminEventsPage performance snapshots", () => {
       error: { code: "CONFLICT", message: "stale" },
     });
     renderPage();
-    const title = await screen.findByLabelText("TITLE");
+    fireEvent.click(await screen.findByRole("button", { name: "상세 편집 Original" }));
+    const title = await screen.findByLabelText("공연 제목");
     fireEvent.change(title, { target: { value: "My draft" } });
-    fireEvent.click(screen.getByRole("button", { name: "SAVE CHANGES" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await screen.findByText(/현재 입력은 유지됩니다/);
-    expect(screen.getByLabelText("TITLE")).toHaveValue("My draft");
+    expect(screen.getByLabelText("공연 제목")).toHaveValue("My draft");
     expect(
       screen.getByRole("button", { name: /최신 이벤트 목록/ }),
     ).toBeInTheDocument();
@@ -241,19 +248,19 @@ describe("AdminEventsPage performance snapshots", () => {
 
   it("keeps the edit guard dirty while a page setting draft refreshes events through manual sync", async () => {
     renderPage();
-    const title = await screen.findByLabelText("PAGE TITLE");
+    const title = await screen.findByLabelText("페이지 제목");
     fireEvent.change(title, { target: { value: "Draft title" } });
     await waitFor(() =>
       expect(screen.getByTestId("dirty-state")).toHaveTextContent("true"),
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "SYNC RA NOW" }));
+    fireEvent.click(screen.getByRole("button", { name: "RA 정보 가져오기" }));
     await waitFor(() => expect(mocks.runRaSync).toHaveBeenCalledTimes(1));
     await screen.findByText("0개 추가됨");
     await waitFor(() =>
       expect(mocks.fetchPerformancesSnapshot).toHaveBeenCalledTimes(2),
     );
-    expect(screen.getByLabelText("PAGE TITLE")).toHaveValue("Draft title");
+    expect(screen.getByLabelText("페이지 제목")).toHaveValue("Draft title");
     await waitFor(() =>
       expect(screen.getByTestId("dirty-state")).toHaveTextContent("true"),
     );
@@ -271,8 +278,8 @@ describe("AdminEventsPage performance snapshots", () => {
     mocks.fetchRaApiConfig.mockReturnValue(pending.promise);
     const view = renderPage();
 
-    expect(screen.getByRole("button", { name: "SAVE CHANGES" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "SYNC RA NOW" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "변경 사항 저장" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "RA 정보 가져오기" })).toBeDisabled();
     expect(mocks.fetchRaApiConfig).toHaveBeenCalledTimes(1);
 
     await act(async () => {
@@ -281,7 +288,7 @@ describe("AdminEventsPage performance snapshots", () => {
     });
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: "SAVE CHANGES" }),
+        screen.getByRole("button", { name: "변경 사항 저장" }),
       ).toBeEnabled(),
     );
     const apiKeyInput = screen.getByLabelText("events_api_key");
@@ -308,7 +315,7 @@ describe("AdminEventsPage performance snapshots", () => {
     });
     renderPage();
     await screen.findByText(/RA API 설정을 불러오지 못했습니다/);
-    fireEvent.click(screen.getByRole("button", { name: "SAVE CHANGES" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await waitFor(() => {
       expect(mocks.updatePerformances).toHaveBeenCalledTimes(1);
       expect(mocks.updatePageMeta).toHaveBeenCalledTimes(1);
@@ -340,14 +347,14 @@ describe("AdminEventsPage performance snapshots", () => {
     });
     renderPage();
     const syncButton = await screen.findByRole("button", {
-      name: "SYNC RA NOW",
+      name: "RA 정보 가져오기",
     });
     expect(syncButton).toBeDisabled();
     fireEvent.change(screen.getByLabelText("events_api_key"), {
       target: { value: "test-only-key" },
     });
     expect(syncButton).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "SAVE CHANGES" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await waitFor(() =>
       expect(mocks.updateRaApiConfig).toHaveBeenCalledWith({
         userId: "user-fixture",
@@ -375,7 +382,7 @@ describe("AdminEventsPage performance snapshots", () => {
     });
     renderPage();
     await screen.findByText("저장된 API 키 없음");
-    fireEvent.click(screen.getByRole("button", { name: "SAVE CHANGES" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await waitFor(() =>
       expect(mocks.updatePerformances).toHaveBeenCalledTimes(1),
     );
@@ -391,7 +398,7 @@ describe("AdminEventsPage performance snapshots", () => {
     fireEvent.change(screen.getByLabelText("events_api_key"), {
       target: { value: "test-only-key" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "SAVE CHANGES" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await waitFor(() =>
       expect(mocks.updateRaApiConfig).toHaveBeenCalledTimes(1),
     );
@@ -401,7 +408,7 @@ describe("AdminEventsPage performance snapshots", () => {
     expect(
       screen.getByRole("checkbox", { name: "저장된 API 키 제거" }),
     ).toBeDisabled();
-    expect(screen.getByRole("button", { name: "SYNC RA NOW" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "RA 정보 가져오기" })).toBeDisabled();
 
     await act(async () => {
       pending.resolve({
@@ -431,10 +438,65 @@ describe("AdminEventsPage performance snapshots", () => {
     fireEvent.change(screen.getByLabelText("events_api_option"), {
       target: { value: "3" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "SAVE CHANGES" }));
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await screen.findByText(/RA API CONFIG 저장에 실패했습니다/);
     expect(mocks.showNotification).not.toHaveBeenCalled();
     expect(mocks.updateContent).not.toHaveBeenCalled();
     expect(screen.getByLabelText("events_api_option")).toHaveValue("3");
   });
+  it("edits the selected filtered event and saves the entire snapshot", async () => {
+    const items = [
+      { id: "first", title: "Unchanged", date: "2026-10-01", venue: "A", status: "Announced", posterImageId: "poster-a" },
+      { id: "second", title: "Target", date: "2026-10-02", venue: "B", status: "Announced" },
+    ];
+    mocks.fetchPerformancesSnapshot.mockResolvedValue({ success: true, data: { revision: 3, items } });
+    renderPage();
+    await screen.findByRole("article", { name: "Target" });
+    fireEvent.click(screen.getByRole("button", { name: "포스터 없음" }));
+    expect(screen.queryByRole("article", { name: "Unchanged" })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("공연 검색"), { target: { value: "Target" } });
+    fireEvent.click(screen.getByRole("button", { name: "상세 편집 Target" }));
+    fireEvent.change(screen.getByLabelText("공연 제목"), { target: { value: "Edited target" } });
+    // The search result remains stable while the user changes its matching text.
+    expect(screen.getByLabelText("공연 제목")).toHaveValue("Edited target");
+    expect(screen.getByLabelText("Edited target 포스터 업로드")).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
+    await waitFor(() => expect(mocks.updatePerformances).toHaveBeenCalledWith([
+      items[0], { ...items[1], title: "Edited target" },
+    ], 3));
+  });
+
+  it("uploads and replaces a poster for the selected event without changing metadata", async () => {
+    const original = { id: "ra-1", title: "Original", date: "2026-09-01", venue: "Venue", status: "Announced" };
+    const pending = deferred<{ success: true }>();
+    mocks.uploadEventPoster.mockReturnValueOnce(pending.promise).mockResolvedValue({ success: true });
+    mocks.fetchPerformancesSnapshot.mockResolvedValueOnce({ success: true, data: { revision: 3, items: [original] } })
+      .mockResolvedValue({ success: true, data: { revision: 4, items: [{ ...original, posterImageId: "uploaded" }] } });
+    renderPage();
+    const input = await screen.findByLabelText("Original 포스터 업로드");
+    const file = new File(["poster"], "poster.jpg", { type: "image/jpeg" });
+    fireEvent.change(input, { target: { files: [file] } });
+    await waitFor(() => expect(mocks.uploadEventPoster).toHaveBeenCalledWith("ra-1", file));
+    expect(screen.getByRole("button", { name: "변경 사항 저장" })).toBeDisabled();
+    await act(async () => { pending.resolve({ success: true }); await pending.promise; });
+    const replacement = await screen.findByLabelText("Original 포스터 교체");
+    expect(within(screen.getByRole("article", { name: "Original" })).getByAltText("")).toHaveAttribute("src", "/api/media/uploaded");
+    fireEvent.change(replacement, { target: { files: [file] } });
+    await waitFor(() => expect(mocks.uploadEventPoster).toHaveBeenCalledTimes(2));
+    expect(mocks.updatePerformances).not.toHaveBeenCalled();
+  });
+
+  it("validates files before upload and reports a rejected upload without losing the event", async () => {
+    mocks.uploadEventPoster.mockResolvedValue({ success: false });
+    renderPage();
+    const input = await screen.findByLabelText("Original 포스터 업로드");
+    fireEvent.change(input, { target: { files: [new File(["text"], "bad.txt", { type: "text/plain" })] } });
+    await screen.findByText(/최대 10MB만 지원/);
+    expect(mocks.uploadEventPoster).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { files: [new File(["jpeg"], "poster.jpg", { type: "image/jpeg" })] } });
+    await screen.findByText(/포스터 변경에 실패/);
+    expect(screen.getByRole("article", { name: "Original" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Original 포스터 업로드")).toBeEnabled();
+  });
+
 });

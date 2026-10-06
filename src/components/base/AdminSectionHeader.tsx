@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import SaveButton from './SaveButton';
+import { useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
 import styles from './AdminSectionHeader.module.css';
 
 /**
@@ -54,6 +55,7 @@ export default function AdminSectionHeader({
   className = '',
 }: AdminSectionHeaderProps) {
   const actionContent = actions || action;
+  const { isDirty } = useAdminEditGuard();
   
   return (
     <div className={`${styles.header} ${className}`}>
@@ -72,6 +74,9 @@ export default function AdminSectionHeader({
         )}
       </div>
       <div className={styles.actions}>
+        {showSaveButton && onSave && <span className={styles.status} data-dirty={isDirty} role="status">
+          {isSaving ? '저장 중…' : isDirty ? '저장 전' : '변경 사항 없음'}
+        </span>}
         {actionContent}
         {showSaveButton && onSave && (
           <SaveButton
