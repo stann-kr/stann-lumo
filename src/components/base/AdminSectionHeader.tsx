@@ -83,6 +83,8 @@ export default function AdminSectionHeader({
             onClick={onSave}
             isSaving={isSaving}
             disabled={isSaveDisabled}
+            // Saving stays available (some settings are not tracked as edits); it only steps back visually.
+            emphasized={isDirty || isSaving}
           />
         )}
       </div>

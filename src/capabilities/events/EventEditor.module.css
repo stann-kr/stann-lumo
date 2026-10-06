@@ -10,7 +10,8 @@
 .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 12px; }
 .status { font-size: .75rem; color: var(--color-secondary); }
 .upload, .expand { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 12px; font-size: .8125rem; cursor: pointer; }
-.upload { position: relative; border: 1px solid color-mix(in srgb, var(--color-secondary) 35%, transparent); }
+.upload, .expand { border: 1px solid color-mix(in srgb, var(--color-secondary) 35%, transparent); }
+.upload { position: relative; }
 .upload:hover, .expand:hover { background: color-mix(in srgb, var(--color-secondary) 8%, transparent); }
 .upload:focus-within { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 .upload[data-disabled='true'] { opacity: .5; cursor: not-allowed; }
