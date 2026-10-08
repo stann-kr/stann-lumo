@@ -291,14 +291,14 @@ const AdminAboutPage = () => {
         </div>
         <div className={collection.list}>
           {artistInfoItems.map((item, index) => <AdminCard key={item.id}>
-            <div className={collection.fields}>
+            <div className={collection.pairRow}>
               <FormInput label={`정보 ${index + 1} 이름`} value={item.key} onChange={(value) => updateArtistInfoItem(item.id, "key", value)} placeholder="이름, 활동 지역, 장르" />
               <FormInput label={`정보 ${index + 1} 내용`} value={item.value} onChange={(value) => updateArtistInfoItem(item.id, "value", value)} />
+              <div className={collection.pairActions}>
+                {artistInfoItems.length > 1 && <button type="button" className={collection.dangerButton} aria-label={`${item.key || `정보 ${index + 1}`} 삭제`}
+                  onClick={() => setPendingDelete({ kind: "artist", id: item.id, name: item.key || "아티스트 정보" })}>삭제</button>}
+              </div>
             </div>
-            {artistInfoItems.length > 1 && <div className="mt-4 flex justify-end">
-              <button type="button" className={collection.dangerButton} aria-label={`${item.key || `정보 ${index + 1}`} 삭제`}
-                onClick={() => setPendingDelete({ kind: "artist", id: item.id, name: item.key || "아티스트 정보" })}>삭제</button>
-            </div>}
           </AdminCard>)}
           {!artistInfoItems.length && <p className={collection.empty}>이름, 활동 지역 등 아티스트 정보를 추가하세요.</p>}
         </div>

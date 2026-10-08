@@ -480,7 +480,7 @@ describe("AdminEventsPage performance snapshots", () => {
     expect(screen.getByRole("button", { name: "변경 사항 저장" })).toBeDisabled();
     await act(async () => { pending.resolve({ success: true }); await pending.promise; });
     const replacement = await screen.findByLabelText("Original 포스터 교체");
-    expect(within(screen.getByRole("article", { name: "Original" })).getByAltText("")).toHaveAttribute("src", "/api/media/uploaded");
+    expect(within(screen.getByRole("article", { name: "Original" })).getByAltText("")).toHaveAttribute("src", "/api/media/uploaded?v=2");
     fireEvent.change(replacement, { target: { files: [file] } });
     await waitFor(() => expect(mocks.uploadEventPoster).toHaveBeenCalledTimes(2));
     expect(mocks.updatePerformances).not.toHaveBeenCalled();

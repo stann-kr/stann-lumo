@@ -21,6 +21,13 @@
 .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .stack { display: grid; gap: 20px; }
 .inlineItem { display: flex; align-items: flex-end; gap: 12px; }
+/* A label/value pair whose row actions sit on the input line instead of a separate footer. */
+.pairRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 16px 20px; }
+.pairActions { display: flex; gap: 8px; }
+.pairActions .button { min-width: 44px; padding-inline: 12px; }
 .inlineItem > :first-child { flex: 1; min-width: 0; }
 .inlineItem > button { flex-shrink: 0; }
-@media (max-width: 640px) { .fields { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) {
+  .fields, .pairRow { grid-template-columns: minmax(0, 1fr); }
+  .pairActions { justify-content: flex-end; }
+}

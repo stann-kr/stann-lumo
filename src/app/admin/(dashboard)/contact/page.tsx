@@ -125,14 +125,14 @@ const AdminContactPage = () => {
         </div>
         <div className={collection.list}>
           {contactInfo.map((item, index) => <AdminCard key={index}>
-            <div className={collection.fields}>
+            <div className={collection.pairRow}>
               <FormInput label={`연락처 ${index + 1} 이름`} value={item.label} onChange={(value) => updateContactItemField(index, 'label', value)} placeholder="부킹 문의" />
               <FormInput label={`연락처 ${index + 1} 내용`} value={item.value} onChange={(value) => updateContactItemField(index, 'value', value)} placeholder="booking@example.com" />
-            </div>
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
-              <button type="button" className={collection.button} aria-label={`연락처 ${index + 1} 위로 이동`} disabled={index === 0} onClick={() => moveContactItem(index, 'up')}>위로</button>
-              <button type="button" className={collection.button} aria-label={`연락처 ${index + 1} 아래로 이동`} disabled={index === contactInfo.length - 1} onClick={() => moveContactItem(index, 'down')}>아래로</button>
-              <button type="button" className={collection.dangerButton} aria-label={`연락처 ${item.label || index + 1} 삭제`} onClick={() => setDeleteContactIndex(index)}>삭제</button>
+              <div className={collection.pairActions}>
+                <button type="button" className={collection.button} aria-label={`연락처 ${index + 1} 위로 이동`} disabled={index === 0} onClick={() => moveContactItem(index, 'up')}>↑</button>
+                <button type="button" className={collection.button} aria-label={`연락처 ${index + 1} 아래로 이동`} disabled={index === contactInfo.length - 1} onClick={() => moveContactItem(index, 'down')}>↓</button>
+                <button type="button" className={collection.dangerButton} aria-label={`연락처 ${item.label || index + 1} 삭제`} onClick={() => setDeleteContactIndex(index)}>삭제</button>
+              </div>
             </div>
           </AdminCard>)}
           {!contactInfo.length && <p className={collection.empty}>연락처 추가로 이메일이나 연락 방법을 등록하세요.</p>}

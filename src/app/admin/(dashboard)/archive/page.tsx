@@ -16,7 +16,8 @@ import { createBorderFaint } from '@/utils/colorMix';
 import { runSave } from '@/capabilities/admin/saveResult';
 import type { Performance } from '@/capabilities/events/events';
 import { fetchPerformances } from '@/capabilities/events/eventsAdmin.client';
-import { extractYouTubeId, type GalleryPhoto } from '@/capabilities/media/media';
+import { extractYouTubeId, getPublicImageUrl, type GalleryPhoto } from '@/capabilities/media/media';
+import LoadingImage from '@/capabilities/media/LoadingImage';
 import {
   addYouTubeGalleryVideo,
   deleteGalleryPhoto,
@@ -63,7 +64,7 @@ function FocalPicker({ photoId, focalX, focalY, onFocalChange }: FocalPickerProp
       title="클릭하여 포컬 포인트 설정"
     >
       <img
-        src={`/api/media/${photoId}`}
+        src={getPublicImageUrl(photoId)}
         alt=""
         className="w-full h-full object-cover"
         style={{ objectPosition: `${focalX}% ${focalY}%` }}
@@ -192,14 +193,14 @@ const AdminGalleryPage = () => {
     setSaveError('');
     try {
       await runSave(
-        ['ARCHIVE LAYOUT'],
+        ['아카이브 목록'],
         [updateGalleryPhotos(photos)],
         () => {
           setSavedPhotos(photos);
           showNotification();
         },
         () => {
-          setSaveError('ARCHIVE LAYOUT 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.');
+          setSaveError('아카이브 목록 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.');
         },
       );
     } finally {
@@ -273,14 +274,14 @@ const AdminGalleryPage = () => {
     try {
       const result = await deleteGalleryPhoto(photo.id);
       if (!result.success) {
-        setSaveError('MEDIA DELETE에 실패했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
+        setSaveError('미디어를 삭제하지 못했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
         return;
       }
       setPhotos((prev) => prev.filter((_, i) => i !== index));
       setSavedPhotos((prev) => prev.filter((_, i) => i !== index));
       setSelectedId(null);
     } catch {
-      setSaveError('MEDIA DELETE에 실패했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
+      setSaveError('미디어를 삭제하지 못했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
     } finally { setIsDeleting(false); }
   };
 
@@ -335,8 +336,8 @@ const AdminGalleryPage = () => {
               onConfirm={() => confirmDelete(() => void handleDeletePhoto(index))} onCancel={closeConfirm} /> : <>
               <div className={styles.row}>
                 <div className={styles.thumbnail}>
-                  {photo.mediaType === 'image' ? <img src={`/api/media/${photo.id}`} alt="" loading="lazy" /> :
-                    photo.mediaType === 'video_youtube' ? <img src={photo.videoThumbnailUrl ?? ''} alt="" loading="lazy" /> : <span>VIDEO</span>}
+                  {photo.mediaType === 'image' ? <LoadingImage src={getPublicImageUrl(photo.id)} alt="" quiet /> :
+                    photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt="" quiet /> : <span>영상</span>}
                 </div>
                 <button type="button" className={styles.summary} aria-expanded={selectedId === photo.id} aria-controls={`media-editor-${photo.id}`}
                   onClick={() => setSelectedId(selectedId === photo.id ? null : photo.id)}>

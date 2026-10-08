@@ -127,7 +127,10 @@ const AdminLinkPage = () => {
               <FormInput label="링크 이름" value={platform.platform} onChange={(value) => updatePlatformField(platform.id, 'platform', value)} placeholder="SoundCloud" />
               <FormInput label="연결 주소" type="url" value={platform.url} onChange={(value) => updatePlatformField(platform.id, 'url', value)} placeholder="https://" />
             </div>
-            <FormInput label="링크 설명" value={platform.description} onChange={(value) => updatePlatformField(platform.id, 'description', value)} />
+            <div className="space-y-2">
+              <FormInput label="링크 설명" value={platform.description} onChange={(value) => updatePlatformField(platform.id, 'description', value)} />
+              <p className="text-xs text-[var(--color-secondary)]">비워 두거나 링크 이름만 적으면 공개 페이지에는 연결 주소가 표시됩니다.</p>
+            </div>
           </div>
         </AdminEditorItem>)}
         {!linkPlatforms.length && <p className={collection.empty}>아직 등록한 링크가 없습니다. 링크 추가로 시작하세요.</p>}

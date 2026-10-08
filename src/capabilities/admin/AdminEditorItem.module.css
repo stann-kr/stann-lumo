@@ -5,7 +5,8 @@
 .identity { flex: 1; min-width: 0; display: grid; gap: 4px; }
 .identity strong { color: var(--color-primary); font-size: 1rem; font-weight: 500; overflow-wrap: anywhere; }
 .identity > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-secondary); font-size: .8125rem; }
-.state { color: var(--color-accent); font-size: .75rem; flex-shrink: 0; }
+.state { color: var(--color-secondary); font-size: .75rem; flex-shrink: 0; }
+.toggle[aria-expanded='true'] .state, .toggle:hover .state { color: var(--color-primary); }
 .actions { display: flex; flex-shrink: 0; gap: 4px; }
 .actions button { min-width: 44px; min-height: 44px; border: 1px solid color-mix(in srgb, var(--color-secondary) 22%, transparent); font-size: .8125rem; }
 .actions button:hover:not(:disabled), .toggle:hover { background: color-mix(in srgb, var(--color-secondary) 5%, transparent); }

@@ -16,7 +16,7 @@ import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
 import { runSave } from '@/capabilities/admin/saveResult';
 import { updateTracks, updatePageMeta } from '@/capabilities/content/contentAdmin.client';
-import type { Track, PageMeta } from '@/capabilities/content/content';
+import { hasKnownDuration, type Track, type PageMeta } from '@/capabilities/content/content';
 
 const TRACK_TYPES = ['Original', 'Live Set', 'DJ Mix', 'Remix'];
 const PLATFORMS = ['SoundCloud', 'Bandcamp', 'Spotify', 'Mixcloud', 'YouTube'];
@@ -82,7 +82,7 @@ export default function AdminMusicPage() {
         {isFiltered && <p className={collection.notice}>순서를 바꾸려면 검색과 종류 필터를 해제하세요.</p>}
         <div className={collection.list}>
           {visibleTracks.map(({ track, index }) => <AdminEditorItem key={track.id} title={track.title || '제목 없는 음악'}
-            summary={[track.type, track.platform, track.year, track.duration].filter(Boolean).join(' · ')} position={index + 1}
+            summary={[track.type, track.platform, track.year, hasKnownDuration(track.duration) && track.duration].filter(Boolean).join(' · ')} position={index + 1}
             expanded={expandedId === track.id} onToggle={() => setExpandedId(expandedId === track.id ? null : track.id)}
             onMoveUp={!isFiltered && index > 0 ? () => moveUp(index) : undefined}
             onMoveDown={!isFiltered && index < tracks.length - 1 ? () => moveDown(index) : undefined}
