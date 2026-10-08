@@ -93,12 +93,13 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
         <li key={`pending-${index}`} ref={index === 0 ? sentinelRef : undefined} aria-hidden="true">{skeleton}</li>
       ))}
     </ul>
-    <div className={styles.tail}>
+    {/* A list that fits in one batch needs no visible counter; screen readers still get the status. */}
+    <div className={!hasMore && !failed && total <= PUBLIC_BATCH_SIZE ? 'sr-only' : styles.tail}>
       <p role="status" aria-atomic="true" className={styles.count}>
         {t(failed ? 'list_load_error' : loading ? 'list_loading' : hasMore ? 'list_visible_count' : 'list_complete_count', { count: items.length, total })}
       </p>
       {hasMore && <button type="button" aria-controls={id} aria-disabled={loading} className={styles.more} onClick={() => { void load(true); }}>
-        {t(failed ? 'list_retry' : 'list_load_more')}<span aria-hidden="true">↓</span>
+        {t(failed ? 'list_retry' : 'list_load_more')}
       </button>}
     </div>
   </>;

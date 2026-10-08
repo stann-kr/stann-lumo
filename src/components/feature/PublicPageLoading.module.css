@@ -15,7 +15,7 @@
 }
 @keyframes pending-show { from { visibility: hidden; } to { visibility: visible; } }
 .indicator { display: grid; justify-items: center; gap: 1.25rem; }
-.label { font: .75rem/1.6 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+.label { font: .75rem/1.6 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); letter-spacing: .12em; text-transform: uppercase; }
 .track { display: block; width: 10rem; height: 1px; overflow: hidden; background: var(--color-muted); }
 .track > span { display: block; width: 40%; height: 100%; background: var(--color-accent); }
 @media (prefers-reduced-motion: no-preference) {

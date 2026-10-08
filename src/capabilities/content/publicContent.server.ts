@@ -338,7 +338,7 @@ export interface HomeProjection {
 export const getHomeProjection = cache(async (locale: PublicLocale): Promise<HomeProjection> => {
   const db = getPublicDB();
 
-  const [artistRows, metaRows, homeRows, terminalInfo, trackRows, eventRows, photoRows] = await Promise.all([
+  const [artistRows, metaRows, homeRows, terminalInfo, trackRows, eventRows, photoRows, platformRows] = await Promise.all([
     localizedRows<ArtistInfoRow>(db, 'SELECT id, key, value FROM artist_info WHERE lang = ? ORDER BY sort_order', locale),
     localizedMetaRows(db, locale),
     localizedRows<HomeSectionRow>(db, 'SELECT title, description, path, icon FROM home_sections WHERE lang = ? ORDER BY sort_order', locale),
@@ -346,6 +346,7 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
     localizedRows<TrackRow>(db, 'SELECT id, title, type, year, platform, link FROM tracks WHERE lang = ? ORDER BY sort_order LIMIT 3', locale),
     rows<PerformanceRow>(db, "SELECT id, title, date, venue, status, poster_image_id FROM performances WHERE REPLACE(date, '.', '-') >= date('now', '+9 hours') ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 2"),
     rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 3"),
+    localizedRows<{ platform: string }>(db, 'SELECT platform FROM link_platforms WHERE lang = ? ORDER BY sort_order LIMIT 4', locale),
   ]);
   const projection = {
     artistInfo: mapArtistInfo(artistRows),
@@ -356,6 +357,7 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
       tracks: trackRows.map(({ id, title, type, year, platform, link }) => ({ id, title, type, year, platform, link })),
       events: eventRows.map(({ id, title, date, venue, status, poster_image_id }) => ({ id, title, date, venue, status: status as Performance['status'], ...(poster_image_id && { posterImageId: poster_image_id }) })),
       photos: photoRows.map(({ id, caption, alt_text }) => ({ id, caption, altText: alt_text })),
+      platforms: platformRows.map(({ platform }) => platform),
     },
   };
   assertPublicPayloadSafe(projection);

@@ -33,6 +33,8 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
   const homeRef = useRef<HTMLDivElement>(null);
   const preparePanelTransition = useHomeMotion(homeRef, selectedPath, isMotionEnabled);
   const artistName = artistInfo.find((item) => item.key === "Name" || item.key === "이름")?.value || SITE_NAME;
+  const secondarySections = homeSections.slice(4);
+  const terminalDescription = terminalInfo.description.trim();
   const newTabLabel = language === "ko" ? " (새 창)" : " (opens in a new tab)";
 
   return (
@@ -67,10 +69,15 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
                   </li>)}
                 </ul>}
                 {section.path === '/events' && !!previews?.events.length && <div className={styles.eventPreview}>
-                  {previews.events.map((event) => <Link key={event.id} href={`/events/${event.id}`}>
-                    {event.posterImageId && <img src={getPublicImageUrl(event.posterImageId)} alt="" loading="lazy" />}
-                    <div><time dateTime={event.date.replace(/\./g, '-')}>{event.date.replace(/\./g, '-')}</time><strong>{event.title}</strong><span>{event.venue}{event.status === 'Cancelled' ? ` / ${event.status}` : ''}</span></div>
-                  </Link>)}
+                  {previews.events.map((event) => {
+                    const date = event.date.replace(/\./g, '-');
+                    const time = <time dateTime={date}>{date}</time>;
+                    // Without a poster the date takes the image column, like the meta column of tracks.
+                    return <Link key={event.id} href={`/events/${event.id}`} data-poster={Boolean(event.posterImageId)}>
+                      {event.posterImageId ? <img src={getPublicImageUrl(event.posterImageId)} alt="" loading="lazy" /> : time}
+                      <div>{event.posterImageId && time}<strong>{event.title}</strong><span>{event.venue}{event.status === 'Cancelled' ? ` / ${event.status}` : ''}</span></div>
+                    </Link>;
+                  })}
                 </div>}
                 {section.path === '/events' && !previews?.events.length && <p>{language === 'ko' ? '예정된 공연이 없습니다.' : 'No upcoming events.'}</p>}
                 {section.path === '/archive' && !!previews?.photos.length && <div className={styles.photoPreview}>
@@ -91,25 +98,28 @@ export default function HomePageClient({ artistInfo, homeMeta, homeSections, ter
           );
         })}
       </div>
-      {homeSections.length > 4 && (
+      {(secondarySections.length > 0 || terminalInfo.url) && (
         <div className={styles.secondary}>
-          {homeSections.slice(4).map((section, index) => (
+          {secondarySections.map((section, index) => (
             <Link key={`${section.path}-${index}`} href={section.path}>
-              <h2 data-hover-label>{section.title}</h2>{section.path !== '/link' && <p>{section.description}</p>}
+              <h2 data-hover-label>{section.title}</h2>
+              {/* The CMS default for Link is filler; the real destinations say more. */}
+              {section.path === '/link'
+                ? !!previews?.platforms.length && <p>{previews.platforms.join(' · ')}</p>
+                : section.description && <p>{section.description}</p>}
             </Link>
           ))}
+          {terminalInfo.url && (
+            <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">
+              <h2 data-hover-label>Terminal</h2>
+              <p>{terminalDescription && !/^terminal platform$/i.test(terminalDescription) ? terminalDescription : t("home_terminal_side_project")}</p>
+              <span className="sr-only">{newTabLabel}</span>
+            </a>
+          )}
         </div>
       )}
-      {terminalInfo.url && (
-        <section className={styles.terminal} aria-labelledby={`${panelId}-terminal`}>
-          <div className={styles.terminalIntro}>
-            <h2 id={`${panelId}-terminal`}>{t("home_terminal_side_project")}</h2>
-            {!/^terminal platform$/i.test(terminalInfo.description.trim()) && <p>{terminalInfo.description}</p>}
-            <div className={styles.terminalLinks}>
-              <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{language === "ko" ? "뮤직 허브" : "Music hub"}<span className="sr-only">{newTabLabel}</span></a>
-              <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">Terminal<span className="sr-only">{newTabLabel}</span></a>
-            </div>
-          </div>
+      {terminalInfo.url && (!!terminalInfo.customFields?.length || terminalInfo.style?.showEmbed) && (
+        <section className={styles.terminal} aria-label="Terminal">
           {!!terminalInfo.customFields?.length && (
             <dl className={styles.fields}>
               {terminalInfo.customFields.map((field) => (

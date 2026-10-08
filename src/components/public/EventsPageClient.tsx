@@ -22,7 +22,8 @@ interface EventsPageClientProps {
 
 function EventRow({ event, featured = false, past = false }: { event: Performance; featured?: boolean; past?: boolean }) {
   const location = performanceLocation(event);
-  const showStatus = !past || event.status === 'Cancelled';
+  // Every RA listing starts as 'Announced'; show only cancellations and still-open TBA dates.
+  const showStatus = event.status === 'Cancelled' || (!past && event.status === 'TBA');
   return (
     <Link href={`/events/${event.id}`} prefetch={false} className={styles.row} data-featured={featured} data-past={past}>
       <div className={styles.date}><time dateTime={performanceDate(event.date)}>{performanceDate(event.date)}</time>{event.time && <span>{event.time}</span>}</div>

@@ -168,7 +168,10 @@ describe('PublicSiteShell public navigation', () => {
     const lastControl = within(dialog).getByRole('button', { name: '언어를 한국어로 전환' });
     lastControl.focus();
     await user.tab();
-    expect(firstLink).toHaveFocus();
+    const closeButton = within(dialog).getByRole('button', { name: 'Close menu' });
+    expect(closeButton).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(lastControl).toHaveFocus();
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -340,7 +343,7 @@ const sections = ['About', 'Music', 'Events', 'Archive', 'Contact', 'Link'].map(
 describe('Home panels', () => {
   it('keeps CMS order and separates keyboard expansion from route links', async () => {
     const user = userEvent.setup();
-    render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [{ id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' }], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }] }} terminalInfo={{ url: '', description: '' }} />);
+    render(<HomePageClient artistInfo={[]} homeMeta={{ navTitle: 'Explore' }} homeSections={sections} previews={{ tracks: [{ id: 'track', title: 'Real track', type: 'Original', year: '2026', platform: 'Bandcamp', link: 'https://music.example/track' }], events: [], photos: [{ id: 'poster', caption: 'Real poster', altText: 'Poster' }], platforms: [] }} terminalInfo={{ url: '', description: '' }} />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('STANN LUMO');
     expect(screen.getAllByRole('button').map((button) => button.textContent?.replace(/[+−]/g, ''))).toEqual(['About', 'Music', 'Events', 'Archive']);
     expect(screen.getByRole('link', { name: /All recordings/ })).toHaveAttribute('href', '/music');

@@ -45,7 +45,7 @@ export default {
   home_section_contact_desc: 'Contact & booking',
   home_section_link_title: 'LINK',
   home_section_link_desc: 'External connections',
-  home_terminal_side_project: 'SIDE PROJECT',
+  home_terminal_side_project: 'Side project',
   home_terminal_enter: 'ENTER',
   
   // About page
@@ -75,11 +75,11 @@ export default {
   // Events page
   events_title: 'EVENTS',
   events_subtitle: 'PERFORMANCE SCHEDULE & INFORMATION',
-  events_upcoming: 'UPCOMING EVENTS',
-  events_past: 'PAST EVENTS',
-  events_set_duration: 'SET DURATION',
-  events_technical: 'TECHNICAL',
-  events_contact: 'CONTACT',
+  events_upcoming: 'UPCOMING',
+  events_past: 'PAST',
+  events_set_duration: 'Set duration',
+  events_technical: 'Technical rider',
+  events_contact: 'Booking email',
   events_view_on_ra: 'VIEW ON RA',
   events_load_more: 'MORE',
   
@@ -106,7 +106,7 @@ export default {
   contact_guestbook: 'GUESTBOOK',
   contact_direct: 'DIRECT CONTACT',
   contact_booking_info: 'BOOKING INFO',
-  contact_response_time: 'RESPONSE TIME',
+  contact_response_time: 'Response time',
   contact_form_name: 'NAME / ALIAS',
   contact_form_email: 'EMAIL',
   contact_form_email_optional: '(optional)',

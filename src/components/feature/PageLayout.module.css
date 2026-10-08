@@ -6,5 +6,5 @@
 .header[data-size='display'] h1 { max-width: 26ch; font-size: clamp(2rem, 4.5vw, 5rem); font-weight: 800; letter-spacing: -.045em; }
 .header p { margin-top: .75rem; max-width: 65ch; font-size: .95rem; color: var(--color-secondary); overflow-wrap: anywhere; }
 .eyebrow { margin-bottom: 1rem; }
-.eyebrow a { display: inline-flex; align-items: center; min-height: 44px; font: .75rem/1.6 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--color-secondary); }
+.eyebrow a { display: inline-flex; align-items: center; min-height: 44px; font: .75rem/1.6 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); letter-spacing: .08em; text-transform: uppercase; color: var(--color-secondary); }
 @media (hover: hover) and (pointer: fine) { .eyebrow a:hover { color: var(--color-accent); } }

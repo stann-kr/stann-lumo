@@ -39,11 +39,13 @@
 .skipLink:focus { transform: none; }
 .menuLayer { position: fixed; inset: 0; z-index: 60; overscroll-behavior: none; }
 .backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 75%); touch-action: none; }
-.dialog { position: relative; max-height: 100dvh; overflow-y: auto; overscroll-behavior-y: contain; background: black; border-bottom: 1px solid var(--color-muted); padding: calc(1rem + env(safe-area-inset-top, 0px)) var(--page-gutter) 1rem; }
+.dialog { position: relative; max-height: 100dvh; overflow-y: auto; overscroll-behavior-y: contain; background: black; border-bottom: 1px solid var(--color-muted); padding: 0 var(--page-gutter) 1rem; }
+.dialogBar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: calc(4.5rem + env(safe-area-inset-top, 0px)); margin: 0 calc(var(--page-gutter) * -1) .5rem; padding: env(safe-area-inset-top, 0px) var(--page-gutter) 0; border-bottom: 2px solid var(--color-accent); }
+.closeButton { display: flex; align-items: center; gap: 1rem; min-height: 44px; flex-shrink: 0; }
+.closeButton span { color: var(--color-accent); }
 .dialog .navList { display: block; }
 .dialog .navList a { padding: .6rem 0; border-bottom: 1px solid var(--color-muted); font-size: clamp(1.25rem, 5vw, 2rem); }
-.dialogControls { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
-.dialogControls > button { min-height: 44px; }
+.dialogControls { display: flex; justify-content: flex-end; align-items: center; margin-top: 1rem; }
 @media (max-width: 1199px) { .desktopNav { display: none; } .menuButton { display: flex; } }
 .desktopNav .navList a::after { content: ''; position: absolute; bottom: .4rem; left: 0; width: 100%; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
 @media (hover: hover) and (pointer: fine) {
@@ -56,4 +58,4 @@
 }
 .dialog .navList { counter-reset: navigation; }
 .dialog .navList a { justify-content: space-between; gap: 1.5rem; padding-block: .85rem; }
-.dialog .navList a::after { counter-increment: navigation; content: counter(navigation, decimal-leading-zero) / ''; font: .65rem 'JetBrains Mono', monospace; color: var(--color-secondary); }
+.dialog .navList a::after { counter-increment: navigation; content: counter(navigation, decimal-leading-zero) / ''; display: inline-block; font: .65rem 'JetBrains Mono', monospace; color: var(--color-secondary); }

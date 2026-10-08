@@ -2,7 +2,7 @@
 .frame > img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .frame[data-load-state='loading'] > img, .frame[data-load-state='error'] > img { opacity: 0; }
 .placeholder { position: absolute; inset: 0; display: grid; place-items: center; border: 1px solid var(--color-muted); background: linear-gradient(110deg, var(--color-bg), var(--color-muted), var(--color-bg)); background-size: 200% 100%; }
-.placeholder > span { padding: .5rem; color: var(--color-text-muted); font: .7rem/1.6 'JetBrains Mono', monospace; text-align: center; }
+.placeholder > span { padding: .5rem; color: var(--color-text-muted); font: .7rem/1.6 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); text-align: center; }
 .natural { height: auto; }
 .natural > img { height: auto; }
 .natural[data-load-state='loading'], .natural[data-load-state='error'] { min-height: clamp(12rem, 45svh, 32rem); }

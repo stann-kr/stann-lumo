@@ -61,7 +61,8 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
             : <LoadingImage src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.filename} loading="eager" natural />}
         </div>
         <div className={styles.info}>
-          <p className={styles.type}>{photo.mediaType === 'video_youtube' ? 'YouTube' : photo.mediaType === 'video_file' ? (isKorean ? '영상' : 'Video') : (isKorean ? '이미지' : 'Image')}</p>
+          {/* Nearly every item is an image; only a video needs its kind spelled out. */}
+          {photo.mediaType !== 'image' && <p className={styles.type}>{photo.mediaType === 'video_youtube' ? 'YouTube' : (isKorean ? '영상' : 'Video')}</p>}
           {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
           {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
           {photo.linkedEventId && <Link href={`/events/${photo.linkedEventId}`} className={styles.event}>{isKorean ? '공연 보기' : 'View event'}</Link>}

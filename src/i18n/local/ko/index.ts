@@ -75,11 +75,11 @@ export default {
   // Events page
   events_title: '이벤트',
   events_subtitle: '공연 일정 & 정보',
-  events_upcoming: '예정된 이벤트',
-  events_past: '지난 이벤트',
+  events_upcoming: '다가오는 일정',
+  events_past: '지난 일정',
   events_set_duration: '세트 시간',
   events_technical: '기술 요구사항',
-  events_contact: '연락처',
+  events_contact: '부킹 이메일',
   events_view_on_ra: 'RA에서 보기',
   events_load_more: '더보기',
   

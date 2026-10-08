@@ -13,7 +13,7 @@ const SignalNet = () => {
       <span className="text-xs font-mono text-[var(--color-text-muted)] uppercase tracking-widest">
         SIGNAL_NET
       </span>
-      <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+      <span className="flex flex-col items-start sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-3 sm:gap-y-1">
         {SIGNAL_NET.map((node) =>
           node.id === SELF_NODE_ID ? (
             <span
