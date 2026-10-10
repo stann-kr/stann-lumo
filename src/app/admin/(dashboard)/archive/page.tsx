@@ -16,7 +16,7 @@ import { createBorderFaint } from '@/utils/colorMix';
 import { runSave } from '@/capabilities/admin/saveResult';
 import type { Performance } from '@/capabilities/events/events';
 import { fetchPerformances } from '@/capabilities/events/eventsAdmin.client';
-import { extractYouTubeId, getPublicImageUrl, type GalleryPhoto } from '@/capabilities/media/media';
+import { extractYouTubeId, GALLERY_UPLOAD_TYPES, getPublicImageUrl, splitUploadFiles, type GalleryPhoto } from '@/capabilities/media/media';
 import LoadingImage from '@/capabilities/media/LoadingImage';
 import {
   addYouTubeGalleryVideo,
@@ -118,6 +118,7 @@ const AdminGalleryPage = () => {
   const [saveError, setSaveError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [uploadNotice, setUploadNotice] = useState('');
 
   const [performances, setPerformances] = useState<Performance[]>([]);
 
@@ -211,20 +212,29 @@ const AdminGalleryPage = () => {
   // ─── 파일 업로드 ─────────────────────────────────────────────────────────
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0 || controlsDisabled || hasPhotoEdits) return;
-    setIsUploading(true);
+    // Dropped files bypass the input's accept list; say which ones the server would silently skip.
+    const { accepted, rejected } = splitUploadFiles(Array.from(files));
     setUploadError('');
+    setUploadNotice('');
+    if (accepted.length === 0) {
+      setUploadError(`${rejected.join(', ')} — 이미지·동영상 파일만, 파일당 10MB까지 올릴 수 있습니다.`);
+      return;
+    }
+    setIsUploading(true);
     try {
-      const result = await uploadGalleryFiles(files);
+      const result = await uploadGalleryFiles(accepted);
       const uploadedPhotos = result.data;
       if (result.success && uploadedPhotos && uploadedPhotos.length > 0) {
-        setPhotos((prev) => [...prev, ...uploadedPhotos]);
-        setSavedPhotos((prev) => [...prev, ...uploadedPhotos]);
+        // New uploads are stored ahead of the current first item, so show them where a reload would.
+        setPhotos((prev) => [...uploadedPhotos, ...prev]);
+        setSavedPhotos((prev) => [...uploadedPhotos, ...prev]);
         showNotification();
+        if (rejected.length > 0) setUploadNotice(`${uploadedPhotos.length}개를 올렸습니다. 형식이나 용량(10MB) 때문에 제외한 파일: ${rejected.join(', ')}`);
       } else {
-        setUploadError(result.error?.message ?? '업로드 실패. 다시 시도해 주세요.');
+        setUploadError('파일을 올리지 못했습니다. 다시 시도해 주세요.');
       }
     } catch {
-      setUploadError('업로드 중 오류가 발생했습니다');
+      setUploadError('파일을 올리지 못했습니다. 다시 시도해 주세요.');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -304,13 +314,14 @@ const AdminGalleryPage = () => {
     {loadError && <div role="alert"><p>{loadError}</p><button type="button" className={styles.uploadAction} onClick={() => void fetchData()}>다시 불러오기</button></div>}
     <fieldset disabled={controlsDisabled} className="space-y-6">
       <input ref={fileInputRef} type="file" multiple aria-label="미디어 파일 선택"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime"
+        accept={GALLERY_UPLOAD_TYPES.join(',')}
         className="sr-only" disabled={controlsDisabled || hasPhotoEdits} onChange={(event) => void handleUpload(event.target.files)} />
       <button type="button" className={styles.dropzone} disabled={controlsDisabled || hasPhotoEdits}
         onDrop={handleDrop} onDragOver={(event) => event.preventDefault()} onClick={() => fileInputRef.current?.click()}>
         <strong>사진·영상 파일을 여기에 놓거나 선택하세요</strong><span>이미지·동영상 · 파일당 최대 10MB · 업로드 즉시 반영</span>
       </button>
       {uploadError && <p role="alert">{uploadError}</p>}
+      {uploadNotice && <p role="status">{uploadNotice}</p>}
       {hasPhotoEdits && <p className={collection.notice}>편집한 내용을 먼저 저장하면 파일 추가·삭제를 할 수 있습니다.</p>}
       <details className={collection.disclosure}>
         <summary>YouTube 영상 추가</summary>

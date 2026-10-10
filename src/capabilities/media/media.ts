@@ -32,6 +32,24 @@ export interface GalleryData {
   photos: GalleryPhoto[];
 }
 
+/** Upload rules shared by the admin picker and the upload routes; the server stays authoritative. */
+export const GALLERY_UPLOAD_TYPES: readonly string[] = [
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+  'video/mp4', 'video/webm', 'video/quicktime',
+];
+export const POSTER_UPLOAD_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+export function splitUploadFiles(files: readonly File[]): { accepted: File[]; rejected: string[] } {
+  const accepted: File[] = [];
+  const rejected: string[] = [];
+  for (const file of files) {
+    if (GALLERY_UPLOAD_TYPES.includes(file.type) && file.size <= MAX_UPLOAD_BYTES) accepted.push(file);
+    else rejected.push(file.name);
+  }
+  return { accepted, rejected };
+}
+
 export function extractYouTubeId(url: string): string | null {
   const patterns = [
     /youtu\.be\/([a-zA-Z0-9_-]{11})/,

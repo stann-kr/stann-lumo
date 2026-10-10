@@ -1,65 +1,49 @@
 'use client';
-import { useEffect, useCallback, useState, type ReactElement } from 'react';
-import { useRouter } from 'next/navigation';
-import { checkSession } from '@/capabilities/auth/auth.client';
-
-/** 세션 재검증 주기 (ms) — 5분 */
-const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { adminLoginHref, getAdminSessionState, type AdminSessionState } from '@/capabilities/auth/auth.client';
+import styles from './ProtectedRoute.module.css';
 
 /**
- * 어드민 세션 쿠키 검증 기반 라우트 보호 컴포넌트
- *
- * - 초기 마운트: /api/auth/session 유효성 확인
- * - 이후 5분 간격 주기적 재검증 → 만료 시 /admin 자동 리다이렉트
- * - 미인증 시 /admin 으로 리다이렉트
+ * 어드민 진입 시 세션을 한 번 확인한다.
+ * - 서버가 미인증이라고 답하면 현재 화면으로 돌아올 수 있게 로그인으로 보낸다.
+ * - 응답을 받지 못하면(오프라인·서버 오류) 로그인으로 보내지 않고 다시 시도할 수 있게 한다.
+ * 편집 중 만료 감지는 편집 상태를 아는 AdminLayout이 맡는다.
  */
 const ProtectedRoute = ({ children }: { children: ReactElement }) => {
   const router = useRouter();
-  const [checked, setChecked] = useState(false);
-  const [authenticated, setAuthenticated] = useState(false);
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  const [state, setState] = useState<'checking' | 'ready' | 'unreachable'>('checking');
 
-  // setState 없이 인증 여부만 반환 — 상태 변경은 호출자 책임
-  const verifySession = useCallback(async (): Promise<boolean> => {
-    try {
-      return await checkSession();
-    } catch {
-      // 네트워크 오류 — 인증 불명확
-      return false;
-    }
-  }, []);
+  useEffect(() => { pathnameRef.current = pathname; }, [pathname]);
 
-  // 초기 세션 확인
+  const applySession = useCallback((session: AdminSessionState) => {
+    if (session === 'authenticated') setState('ready');
+    else if (session === 'unauthenticated') router.replace(adminLoginHref(pathnameRef.current));
+    else setState('unreachable');
+  }, [router]);
+
   useEffect(() => {
-    let cancelled = false;
-    verifySession().then((isAuth) => {
-      if (cancelled) return;
-      if (isAuth) {
-        setAuthenticated(true);
-        setChecked(true);
-      } else {
-        router.replace('/admin');
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [verifySession, router]);
+    let active = true;
+    void getAdminSessionState().then((session) => { if (active) applySession(session); });
+    return () => { active = false; };
+  }, [applySession]);
 
-  // 주기적 세션 재검증 (만료 감지)
-  useEffect(() => {
-    if (!authenticated) return;
-
-    const intervalId = setInterval(() => {
-      verifySession().then((isAuth) => {
-        if (!isAuth) router.replace('/admin');
-      });
-    }, SESSION_CHECK_INTERVAL);
-
-    return () => clearInterval(intervalId);
-  }, [authenticated, verifySession, router]);
-
-  if (!checked || !authenticated) return null;
-  return children;
+  if (state === 'ready') return children;
+  if (state === 'unreachable') {
+    return (
+      <main className={styles.gate}>
+        <section role="alert" className={styles.panel}>
+          <p className={styles.brand}>STANN LUMO</p>
+          <h1>관리자 화면에 연결하지 못했습니다.</h1>
+          <p>네트워크 연결을 확인한 뒤 다시 시도해 주세요.</p>
+          <button type="button" onClick={() => { setState('checking'); void getAdminSessionState().then(applySession); }}>다시 시도</button>
+        </section>
+      </main>
+    );
+  }
+  return <p role="status" aria-live="polite" className="sr-only">로그인 상태를 확인하는 중…</p>;
 };
 
 export default ProtectedRoute;

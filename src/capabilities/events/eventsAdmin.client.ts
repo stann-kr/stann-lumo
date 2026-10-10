@@ -1,5 +1,6 @@
 import { apiGet, apiPost, apiPut, apiRequest } from "@/services/apiClient";
 import type { ApiResponse } from "@/services/apiClient";
+import { notifyAdminUnauthorized } from "@/capabilities/auth/adminSessionEvents";
 import type { ContentLocale } from "@/capabilities/content/content";
 import type { EventsInfo, Performance } from "./events";
 import type { RAApiConfigUpdate, RAApiConfigView } from "./raConfig";
@@ -22,6 +23,7 @@ async function requestEventsApi<T>(
         ...init?.headers,
       },
     });
+    notifyAdminUnauthorized(url, response.status);
     const body: unknown = await response.json();
 
     if (

@@ -1,26 +1,11 @@
 import 'server-only';
 
 import type { D1Database, D1Result, R2Bucket } from '@/lib/db';
-import type { GalleryPhoto } from './media';
+import { GALLERY_UPLOAD_TYPES, MAX_UPLOAD_BYTES, POSTER_UPLOAD_TYPES, type GalleryPhoto } from './media';
 
-const ALLOWED_MEDIA_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/avif',
-  'video/mp4',
-  'video/webm',
-  'video/quicktime',
-]);
-const ALLOWED_POSTER_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/avif',
-  'image/gif',
-]);
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_MEDIA_TYPES = new Set(GALLERY_UPLOAD_TYPES);
+const ALLOWED_POSTER_TYPES = new Set(POSTER_UPLOAD_TYPES);
+const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 export type MediaLifecycleErrorCode =
   | 'EVENT_NOT_FOUND'

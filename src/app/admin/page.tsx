@@ -1,17 +1,31 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authenticateAdmin } from '@/capabilities/auth/auth.client';
+import { adminReturnPath, authenticateAdmin, getAdminSessionState } from '@/capabilities/auth/auth.client';
 import FormInput from '@/components/base/FormInput';
 import styles from './page.module.css';
+
+/** Read at use time so the statically rendered login page needs no search-param Suspense boundary. */
+function returnPath() {
+  return adminReturnPath(new URLSearchParams(window.location.search).get('next'));
+}
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // An editor that is still signed in (for example a second tab) goes straight back to work.
+  useEffect(() => {
+    let active = true;
+    void getAdminSessionState().then((session) => {
+      if (active && session === 'authenticated') router.replace(returnPath());
+    });
+    return () => { active = false; };
+  }, [router]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -20,7 +34,7 @@ export default function AdminLoginPage() {
     setError('');
     try {
       const result = await authenticateAdmin(password);
-      if (result.isAuthenticated) router.push('/admin/events');
+      if (result.isAuthenticated) router.replace(returnPath());
       else { setError(result.errorMessage ?? '비밀번호를 확인해 주세요.'); setPassword(''); }
     } catch { setError('연결하지 못했습니다. 다시 시도해 주세요.'); }
     finally { setLoading(false); }

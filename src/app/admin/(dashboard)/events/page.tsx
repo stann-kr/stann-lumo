@@ -36,17 +36,10 @@ import {
   uploadEventPoster,
 } from "@/capabilities/events/eventsAdmin.client";
 import EventEditor from "@/capabilities/events/EventEditor";
+import { MAX_UPLOAD_BYTES, POSTER_UPLOAD_TYPES } from "@/capabilities/media/media";
 import collection from "@/capabilities/admin/AdminCollection.module.css";
 import { createBorderFaint } from "@/utils/colorMix";
 
-const POSTER_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/gif",
-];
-const POSTER_MAX_BYTES = 10 * 1024 * 1024;
 const EMPTY_CONFIG: RAApiConfigView = {
   userId: "",
   djId: "",
@@ -385,7 +378,7 @@ export default function AdminEventsPage() {
     }
     if (
       file &&
-      (!POSTER_TYPES.includes(file.type) || file.size > POSTER_MAX_BYTES)
+      (!POSTER_UPLOAD_TYPES.includes(file.type) || file.size > MAX_UPLOAD_BYTES)
     ) {
       setPosterError((previous) => ({
         ...previous,

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import FormInput from '@/components/base/FormInput';
 import FormSelect from '@/components/base/FormSelect';
 import LoadingImage from '@/capabilities/media/LoadingImage';
-import { getPublicImageUrl } from '@/capabilities/media/media';
+import { getPublicImageUrl, POSTER_UPLOAD_TYPES } from '@/capabilities/media/media';
 import type { Performance } from './events';
 import styles from './EventEditor.module.css';
 
@@ -38,7 +38,7 @@ export default function EventEditor({ event, isNew, posterBusy, posterError, has
         <span className={styles.status}>{event.status === 'Cancelled' ? '취소' : event.status === 'TBA' ? '미정' : '공개'}{event.raEventId ? ' · RA' : ''}</span>
         <label className={styles.upload} htmlFor={uploadId} data-disabled={posterDisabled}>
           {posterBusy ? '처리 중…' : event.posterImageId ? '포스터 교체' : '포스터 업로드'}
-          <input id={uploadId} type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
+          <input id={uploadId} type="file" accept={POSTER_UPLOAD_TYPES.join(',')}
             aria-label={`${event.title || '새 공연'} 포스터 ${event.posterImageId ? '교체' : '업로드'}`}
             aria-describedby={hasEventEdits ? 'event-poster-draft-help' : undefined}
             disabled={posterDisabled} onChange={(inputEvent) => {
