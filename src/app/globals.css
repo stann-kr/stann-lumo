@@ -59,6 +59,10 @@ html {
   color: var(--color-bg);
 }
 
+/* Headings break into even lines and body copy avoids one-word last lines; components can still override. */
+:where(h1, h2, h3, h4) { text-wrap: balance; }
+:where(p, li, dd, blockquote) { text-wrap: pretty; }
+
 /* 포커스 가시화 — STANN OS 불변 글루 (web canon: 2px accent, offset 2px) */
 :focus-visible {
   outline: 2px solid var(--color-accent);

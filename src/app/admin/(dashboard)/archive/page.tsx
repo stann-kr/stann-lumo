@@ -320,8 +320,8 @@ const AdminGalleryPage = () => {
         onDrop={handleDrop} onDragOver={(event) => event.preventDefault()} onClick={() => fileInputRef.current?.click()}>
         <strong>사진·영상 파일을 여기에 놓거나 선택하세요</strong><span>이미지·동영상 · 파일당 최대 10MB · 업로드 즉시 반영</span>
       </button>
-      {uploadError && <p role="alert">{uploadError}</p>}
-      {uploadNotice && <p role="status">{uploadNotice}</p>}
+      {uploadError && <p role="alert" className={styles.uploadError}>{uploadError}</p>}
+      {uploadNotice && <p role="status" className={styles.uploadNotice}>{uploadNotice}</p>}
       {hasPhotoEdits && <p className={collection.notice}>편집한 내용을 먼저 저장하면 파일 추가·삭제를 할 수 있습니다.</p>}
       <details className={collection.disclosure}>
         <summary>YouTube 영상 추가</summary>

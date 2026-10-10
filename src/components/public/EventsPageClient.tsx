@@ -39,7 +39,7 @@ function EventRow({ event, featured = false, past = false }: { event: Performanc
 function EventList({ total, section, today, label }: { total: number; section: 'upcoming' | 'past'; today: string; label: string }) {
   const loadPage = useCallback((offset: number, signal: AbortSignal) => fetchPublicPage<Performance>(`/api/events?section=${section}&today=${today}&offset=${offset}`, signal), [section, today]);
   return <PagedList total={total} label={label} loadPage={loadPage}
-    skeleton={<div className={styles.skeleton}><span /><span /><span /></div>}
+    skeleton={<div className={styles.skeleton} data-past={section === 'past'}><span /><span /><span /><span /></div>}
     renderItem={(event, index) => <EventRow event={event} featured={section === 'upcoming' && index === 0} past={section === 'past'} />} />;
 }
 

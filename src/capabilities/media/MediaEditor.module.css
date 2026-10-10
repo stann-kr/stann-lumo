@@ -1,5 +1,7 @@
 .uploadAction { min-height: 44px; padding: 10px 16px; border: 1px solid color-mix(in srgb, var(--color-secondary) 30%, transparent); font-size: .8125rem; white-space: nowrap; }
 .uploadAction:hover { background: color-mix(in srgb, var(--color-secondary) 8%, transparent); }
+.uploadError { font-size: .875rem; color: var(--color-accent); }
+.uploadNotice { font-size: .875rem; color: var(--color-secondary); }
 .uploadAction:disabled, .itemActions button:disabled { opacity: .45; cursor: not-allowed; }
 .dropzone { width: 100%; padding: 24px; text-align: left; border: 1px dashed color-mix(in srgb, var(--color-secondary) 35%, transparent); display: grid; gap: 6px; }
 .dropzone:disabled { opacity: .5; cursor: not-allowed; }

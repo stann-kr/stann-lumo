@@ -71,7 +71,7 @@
 .trackPreview, .eventPreview, .artistPreview { display: grid; gap: 1.5rem; }
 .trackPreview li, .eventPreview a, .artistPreview > div { display: grid; grid-template-columns: var(--preview-columns); align-items: start; column-gap: var(--preview-gap); row-gap: .5rem; }
 .trackPreview strong, .trackPreview a, .eventPreview a > div, .artistPreview dd { grid-column: 2 / -1; min-width: 0; }
-.trackPreview strong, .eventPreview strong { display: block; line-height: 1.35; overflow-wrap: anywhere; }
+.trackPreview strong, .eventPreview strong { display: block; line-height: 1.35; overflow-wrap: anywhere; text-wrap: balance; }
 .trackPreview > li > span, .eventPreview span, .eventPreview time, .artistPreview dt { display: block; font: .75rem/1.6 'JetBrains Mono', monospace; color: var(--color-secondary); overflow-wrap: anywhere; }
 .trackPreview li[data-featured='true'] strong { font-size: clamp(1.5rem, 2.6vw, 2.75rem); font-weight: 600; letter-spacing: -.035em; line-height: 1.18; }
 .trackPreview a { display: inline-flex; justify-self: start; align-items: center; min-height: 44px; color: var(--color-accent); }
