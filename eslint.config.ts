@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint'
 import nextPlugin from 'eslint-config-next'
 
 export default [
-  { ignores: ['dist', 'node_modules', '.next'] },
+  { ignores: ['**/.worktrees/**', 'dist', 'node_modules', '.next'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   // eslint-config-next v16+는 배열을 반환하며 react-hooks 플러그인 포함

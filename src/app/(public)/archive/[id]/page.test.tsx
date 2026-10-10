@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactNode } from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { GalleryPhoto } from '@/capabilities/media/media';
@@ -12,10 +12,13 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ href, children, ...props }: ComponentProps<'a'> & { href: string }) => (
-    <a href={href} {...props}>{children}</a>
-  ),
+  default: ({ href, children, ...props }: ComponentProps<'a'> & { href: string; scroll?: boolean }) => {
+    delete props.scroll;
+    return <a href={href} {...props}>{children}</a>;
+  },
 }));
+
+vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: 'en' }) }));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -104,10 +107,41 @@ describe('GalleryPhotoPage', () => {
     await user.keyboard('{ArrowRight}');
     expect(push).toHaveBeenCalledWith('/archive/middle');
     await user.keyboard('{Escape}');
-    expect(push).toHaveBeenLastCalledWith('/archive');
+    expect(push).toHaveBeenLastCalledWith('/archive', { scroll: false });
 
     for (const icon of container.querySelectorAll('i')) {
       expect(icon).toHaveAttribute('aria-hidden', 'true');
     }
   });
+  it('keeps seeded neighbours and restores the original collection point with Escape', () => {
+    render(<ArchiveDetailPageClient photo={photos[1]} previous={photos[0]} next={photos[2]} index={25} total={53}
+      browse={{ sort: 'random', seed: 42, page: 2, from: 'first' }} />);
+    expect(screen.getByRole('link', { name: 'Next archive item' })).toHaveAttribute('href', '/archive/last?sort=random&seed=42&page=2&from=first');
+    const back = '/archive?sort=random&seed=42&page=2#archive-item-first';
+    expect(screen.getByRole('link', { name: 'gallery_title' })).toHaveAttribute('href', back);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(push).toHaveBeenLastCalledWith(back, { scroll: false });
+  });
+  it('leaves player, editing, modal and modified keys with their owning control', () => {
+    const { container } = render(<>
+      <ArchiveDetailPageClient photo={{ ...photos[1], mediaType: 'video_file' }} previous={photos[0]} next={photos[2]} index={1} total={3} />
+      <input aria-label="Search" />
+      <div role="dialog" aria-label="Menu"><button type="button">Close</button></div>
+    </>);
+    const video = container.querySelector('video')!;
+    expect(video).toHaveAttribute('controls');
+    for (const target of [video, screen.getByRole('textbox'), screen.getByRole('button', { name: 'Close' })]) {
+      for (const key of ['ArrowRight', 'ArrowLeft', 'Escape']) fireEvent.keyDown(target, { key });
+    }
+    fireEvent.keyDown(window, { key: 'ArrowRight', altKey: true });
+    expect(push).not.toHaveBeenCalled();
+    const article = screen.getByRole('article');
+    article.setAttribute('inert', '');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(push).not.toHaveBeenCalled();
+    article.removeAttribute('inert');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(push).toHaveBeenCalledWith('/archive/last');
+  });
+
 });

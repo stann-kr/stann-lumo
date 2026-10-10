@@ -10,42 +10,10 @@ import SaveErrorMessage from '@/components/base/SaveErrorMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
-import { createBorderFaint } from '@/utils/colorMix';
+import AdminEditorItem from '@/capabilities/admin/AdminEditorItem';
+import collection from '@/capabilities/admin/AdminCollection.module.css';
 import { runSave } from '@/capabilities/admin/saveResult';
 
-const AVAILABLE_ICONS = [
-  { value: 'ri-soundcloud-line',   label: 'SoundCloud' },
-  { value: 'ri-spotify-line',      label: 'Spotify' },
-  { value: 'ri-youtube-line',      label: 'YouTube' },
-  { value: 'ri-instagram-line',    label: 'Instagram' },
-  { value: 'ri-facebook-line',     label: 'Facebook' },
-  { value: 'ri-twitter-x-line',    label: 'X (Twitter)' },
-  { value: 'ri-twitter-line',      label: 'Twitter' },
-  { value: 'ri-tiktok-line',       label: 'TikTok' },
-  { value: 'ri-linkedin-line',     label: 'LinkedIn' },
-  { value: 'ri-github-line',       label: 'GitHub' },
-  { value: 'ri-bandcamp-line',     label: 'Bandcamp' },
-  { value: 'ri-mixcloud-line',     label: 'Mixcloud' },
-  { value: 'ri-twitch-line',       label: 'Twitch' },
-  { value: 'ri-discord-line',      label: 'Discord' },
-  { value: 'ri-telegram-line',     label: 'Telegram' },
-  { value: 'ri-calendar-line',     label: 'Calendar' },
-  { value: 'ri-calendar-event-line', label: 'Event' },
-  { value: 'ri-map-pin-line',      label: 'Location' },
-  { value: 'ri-global-line',       label: 'Website' },
-  { value: 'ri-links-line',        label: 'Link' },
-  { value: 'ri-link-line',         label: 'Link Alt' },
-  { value: 'ri-mail-line',         label: 'Email' },
-  { value: 'ri-store-line',        label: 'Store' },
-  { value: 'ri-music-line',        label: 'Music' },
-  { value: 'ri-headphone-line',    label: 'Headphone' },
-  { value: 'ri-radio-line',        label: 'Radio' },
-  { value: 'ri-film-line',         label: 'Film' },
-  { value: 'ri-image-line',        label: 'Image' },
-  { value: 'ri-star-line',         label: 'Star' },
-  { value: 'ri-heart-line',        label: 'Heart' },
-  { value: 'ri-user-line',         label: 'Profile' },
-];
 import {
   updateLinkPlatforms as apiUpdateLinkPlatforms,
   updatePageMeta as apiUpdatePageMeta,
@@ -60,7 +28,7 @@ const AdminLinkPage = () => {
   const [terminalInfo, setTerminalInfo] = useState(content.terminalInfo);
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
-  const [iconSelectorOpen, setIconSelectorOpen] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
@@ -71,20 +39,24 @@ const AdminLinkPage = () => {
     setPageMeta(allContent[currentEditLanguage].pageMeta);
   }, [currentEditLanguage, allContent]);
 
+  useEffect(() => { setExpandedId(null); setShowDeleteModal(null); }, [currentEditLanguage]);
+
   const { markSaved } = useUnsavedChanges(
     { linkPlatforms, pageMeta, terminalInfo },
     `${currentEditLanguage}:${isLoading}`,
   );
 
   const addNewPlatform = () => {
+    const id = crypto.randomUUID();
+    setExpandedId(id);
     setLinkPlatforms([
       ...linkPlatforms,
       {
-        id: crypto.randomUUID(),
-        platform: 'New Platform',
-        url: 'https://',
+        id,
+        platform: '',
+        url: '',
         icon: 'ri-link-line',
-        description: 'Platform description',
+        description: '',
       },
     ]);
   };
@@ -111,11 +83,12 @@ const AdminLinkPage = () => {
   };
 
   const saveChanges = async () => {
+    if (isSaving || isLoading) return;
     setIsSaving(true);
     setSaveError('');
     try {
       await runSave(
-        ['LINK PLATFORMS', 'PAGE SETTINGS', 'TERMINAL INFO'],
+        ['링크 목록', '페이지 문구', 'Terminal 정보'],
         [
           apiUpdateLinkPlatforms(currentEditLanguage, linkPlatforms),
           apiUpdatePageMeta(currentEditLanguage, pageMeta),
@@ -135,197 +108,51 @@ const AdminLinkPage = () => {
     }
   };
 
-  return (
-    <div className="space-y-8">
-        <AdminSectionHeader
-          title="LINK SECTION"
-          description={`소셜 미디어 및 플랫폼 링크 관리 (${currentEditLanguage.toUpperCase()})`}
-          onSave={saveChanges}
-          isSaving={isSaving}
-          action={
-            <button
-              onClick={addNewPlatform}
-              className="px-6 py-3 border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors whitespace-nowrap cursor-pointer text-sm tracking-wider"
-              style={createBorderFaint()}
-            >
-              <i className="ri-add-line mr-2"></i>ADD PLATFORM
-            </button>
-          }
-        />
-
-        <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
-        <SaveErrorMessage message={saveError} />
-
-        {/* PAGE SETTINGS */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            PAGE SETTINGS
-          </h2>
-          <AdminCard>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormInput
-                label="PAGE TITLE"
-                value={pageMeta.link.title}
-                onChange={(value) => updatePageMetaField('title', value)}
-                placeholder="CONNECT"
-              />
-              <FormInput
-                label="PAGE SUBTITLE"
-                value={pageMeta.link.subtitle}
-                onChange={(value) => updatePageMetaField('subtitle', value)}
-                placeholder="SOCIAL MEDIA & PLATFORMS"
-              />
-              <FormInput
-                label="TERMINAL CARD TITLE"
-                value={pageMeta.link.terminalTitle}
-                onChange={(value) => updatePageMetaField('terminalTitle', value)}
-                placeholder="TERMINAL.STANN.KR"
-              />
+  return <div className="space-y-8">
+    <AdminSectionHeader title="링크" description="외부 사이트와 소셜 링크의 내용과 순서를 관리합니다."
+      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={isLoading}
+      action={<button type="button" className={collection.button} disabled={isSaving || isLoading} onClick={addNewPlatform}>링크 추가</button>} />
+    <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+    <SaveErrorMessage message={saveError} />
+    <fieldset disabled={isSaving || isLoading} className="space-y-8">
+      <section aria-label="외부 링크 목록" className={collection.list}>
+        {linkPlatforms.map((platform, index) => <AdminEditorItem key={platform.id} title={platform.platform || '이름 없는 링크'}
+          summary={platform.url || '연결 주소를 입력하세요'} position={index + 1} expanded={expandedId === platform.id}
+          onToggle={() => setExpandedId(expandedId === platform.id ? null : platform.id)}
+          onMoveUp={index > 0 ? () => movePlatform(index, 'up') : undefined}
+          onMoveDown={index < linkPlatforms.length - 1 ? () => movePlatform(index, 'down') : undefined}
+          onDelete={() => setShowDeleteModal(platform.id)}>
+          <div className={collection.stack}>
+            <div className={collection.fields}>
+              <FormInput label="링크 이름" value={platform.platform} onChange={(value) => updatePlatformField(platform.id, 'platform', value)} placeholder="SoundCloud" />
+              <FormInput label="연결 주소" type="url" value={platform.url} onChange={(value) => updatePlatformField(platform.id, 'url', value)} placeholder="https://" />
             </div>
-          </AdminCard>
-        </div>
-
-        {/* Terminal Section */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            TERMINAL PROJECT
-          </h2>
-          <AdminCard>
-            <div className="space-y-4">
-              <FormInput
-                label="URL"
-                value={terminalInfo.url}
-                onChange={(value) => setTerminalInfo({ ...terminalInfo, url: value })}
-              />
-              <FormTextarea
-                label="DESCRIPTION"
-                value={terminalInfo.description}
-                onChange={(value) => setTerminalInfo({ ...terminalInfo, description: value })}
-                rows={3}
-              />
+            <div className="space-y-2">
+              <FormInput label="링크 설명" value={platform.description} onChange={(value) => updatePlatformField(platform.id, 'description', value)} />
+              <p className="text-xs text-[var(--color-secondary)]">비워 두거나 링크 이름만 적으면 공개 페이지에는 연결 주소가 표시됩니다.</p>
             </div>
-          </AdminCard>
-        </div>
-
-        {/* Platform Links */}
-        <div>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            PLATFORM LINKS
-          </h2>
-          <div className="space-y-4">
-            {linkPlatforms.map((platform, index) => (
-              <AdminCard key={platform.id}>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs text-[var(--color-accent)] tracking-widest">
-                    PLATFORM #{index + 1}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => movePlatform(index, 'up')}
-                      disabled={index === 0}
-                      className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                      style={createBorderFaint()}
-                    >
-                      <i className="ri-arrow-up-line"></i>
-                    </button>
-                    <button
-                      onClick={() => movePlatform(index, 'down')}
-                      disabled={index === linkPlatforms.length - 1}
-                      className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                      style={createBorderFaint()}
-                    >
-                      <i className="ri-arrow-down-line"></i>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteModal(platform.id)}
-                      aria-label={`플랫폼 ${platform.platform} 삭제`}
-                      className="w-8 h-8 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer"
-                    >
-                      <i className="ri-delete-bin-line"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormInput
-                      label="PLATFORM NAME"
-                      value={platform.platform}
-                      onChange={(value) => updatePlatformField(platform.id, 'platform', value)}
-                    />
-                    {/* Icon Selector */}
-                    <div>
-                      <label className="block text-xs text-[var(--color-accent)] mb-2 tracking-wider">ICON</label>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={() => setIconSelectorOpen(iconSelectorOpen === platform.id ? null : platform.id)}
-                          className="w-full bg-[var(--color-bg)] border text-[var(--color-secondary)] px-3 py-2 text-sm focus:outline-none cursor-pointer flex items-center justify-between"
-                          style={createBorderFaint()}
-                        >
-                          <div className="flex items-center gap-2">
-                            <i className={`${platform.icon} text-lg text-[var(--color-accent)]`}></i>
-                            <span className="text-xs">{AVAILABLE_ICONS.find(ic => ic.value === platform.icon)?.label ?? platform.icon}</span>
-                          </div>
-                          <i className="ri-arrow-down-s-line text-[var(--color-muted)]"></i>
-                        </button>
-
-                        {iconSelectorOpen === platform.id && (
-                          <div className="absolute z-50 mt-1 w-72 bg-[var(--color-bg)] border shadow-lg p-3" style={createBorderFaint()}>
-                            <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
-                              {AVAILABLE_ICONS.map((icon) => (
-                                <button
-                                  key={icon.value}
-                                  type="button"
-                                  onClick={() => {
-                                    updatePlatformField(platform.id, 'icon', icon.value);
-                                    setIconSelectorOpen(null);
-                                  }}
-                                  className={`w-10 h-10 flex items-center justify-center border transition-colors cursor-pointer ${
-                                    platform.icon === icon.value
-                                      ? 'bg-[var(--color-accent)]/20 border-[var(--color-accent)]'
-                                      : 'hover:bg-[var(--color-secondary)]/10'
-                                  }`}
-                                  style={createBorderFaint()}
-                                  title={icon.label}
-                                >
-                                  <i className={`${icon.value} text-lg text-[var(--color-accent)]`}></i>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <FormInput
-                    label="URL"
-                    value={platform.url}
-                    onChange={(value) => updatePlatformField(platform.id, 'url', value)}
-                  />
-                  <FormInput
-                    label="DESCRIPTION"
-                    value={platform.description}
-                    onChange={(value) => updatePlatformField(platform.id, 'description', value)}
-                  />
-                </div>
-              </AdminCard>
-            ))}
           </div>
-        </div>
-
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
-          <DeleteConfirmModal
-            show={true}
-            itemName={linkPlatforms.find((p) => p.id === showDeleteModal)?.platform || ''}
-            onConfirm={() => deletePlatform(showDeleteModal)}
-            onCancel={() => setShowDeleteModal(null)}
-          />
-        )}
-    </div>
-  );
+        </AdminEditorItem>)}
+        {!linkPlatforms.length && <p className={collection.empty}>아직 등록한 링크가 없습니다. 링크 추가로 시작하세요.</p>}
+      </section>
+      <details className={collection.disclosure}><summary>Terminal 연결</summary>
+        <AdminCard><div className={collection.stack}>
+          <p className={collection.notice}>연결 주소와 설명은 홈에도 함께 적용됩니다.</p>
+          <FormInput label="Terminal 제목" value={pageMeta.link.terminalTitle} onChange={(value) => updatePageMetaField('terminalTitle', value)} />
+          <FormInput label="Terminal 주소" type="url" value={terminalInfo.url} onChange={(url) => setTerminalInfo({ ...terminalInfo, url })} />
+          <FormTextarea label="Terminal 설명" value={terminalInfo.description} onChange={(description) => setTerminalInfo({ ...terminalInfo, description })} rows={3} />
+        </div></AdminCard>
+      </details>
+      <details className={collection.disclosure}><summary>페이지 문구</summary>
+        <AdminCard><div className={collection.fields}>
+          <FormInput label="페이지 제목" value={pageMeta.link.title} onChange={(value) => updatePageMetaField('title', value)} />
+          <FormInput label="페이지 부제" value={pageMeta.link.subtitle} onChange={(value) => updatePageMetaField('subtitle', value)} />
+        </div></AdminCard>
+      </details>
+      {showDeleteModal && <DeleteConfirmModal show itemName={linkPlatforms.find((p) => p.id === showDeleteModal)?.platform || '이름 없는 링크'}
+        onConfirm={() => deletePlatform(showDeleteModal)} onCancel={() => setShowDeleteModal(null)} />}
+    </fieldset>
+  </div>;
 };
 
 export default AdminLinkPage;

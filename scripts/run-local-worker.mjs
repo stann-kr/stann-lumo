@@ -39,7 +39,7 @@ export function buildLocalPreviewArgs(envFilePath, ip) {
   ];
 }
 
-function runStep(label, command, args, environment) {
+export function runStep(label, command, args, environment) {
   process.stdout.write(`[local-worker] ${label}\n`);
   const result = spawnSync(command, args, {
     cwd: repositoryRoot,
@@ -50,7 +50,7 @@ function runStep(label, command, args, environment) {
   if (result.status !== 0) throw new Error(`${label} failed with exit code ${result.status ?? 'unknown'}`);
 }
 
-async function runLongLivedProcess(command, args, environment) {
+export async function runLongLivedProcess(command, args, environment) {
   const child = spawn(command, args, {
     cwd: repositoryRoot,
     env: environment,

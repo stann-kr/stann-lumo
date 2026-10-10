@@ -10,5 +10,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function EventsPage() {
   const projection = await getEventsProjection(await getRequestLocale());
-  return <EventsPageClient eventsMeta={projection.pageMeta.events} performances={projection.performances} />;
+  return <EventsPageClient eventsMeta={projection.pageMeta.events} schedule={projection.schedule} />;
 }

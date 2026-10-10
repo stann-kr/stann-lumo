@@ -1,0 +1,7 @@
+.root {
+  --font-display: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: var(--font-display);
+  background: var(--color-bg);
+  color: var(--color-primary);
+  line-height: 1.6;
+}

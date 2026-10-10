@@ -18,4 +18,22 @@ describe('createPublicMetadata', () => {
     });
     expect(metadata.twitter).toMatchObject({ card: 'summary', title: 'Night Signal | STANN LUMO' });
   });
+
+  it('does not repeat the site name for the home page share title', () => {
+    const metadata = createPublicMetadata({ title: 'STANN LUMO', description: 'TECHNO / SEOUL', path: '/' });
+
+    expect(metadata.openGraph).toMatchObject({ title: 'STANN LUMO' });
+    expect(metadata.twitter).toMatchObject({ title: 'STANN LUMO' });
+  });
+
+  it('uses a large share card when the route has its own image', () => {
+    const metadata = createPublicMetadata({
+      title: 'nacht', description: '2026-09-25 · Faust', path: '/events/ra-1',
+      image: { url: '/api/media/poster?v=2', alt: 'nacht poster' },
+    });
+
+    expect(metadata.openGraph).toMatchObject({ images: [{ url: '/api/media/poster?v=2', alt: 'nacht poster' }] });
+    expect(metadata.twitter).toMatchObject({ card: 'summary_large_image', images: [{ url: '/api/media/poster?v=2', alt: 'nacht poster' }] });
+  });
 });
+

@@ -1,0 +1,21 @@
+.detail { display: grid; grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr); gap: 3rem clamp(2rem, 6vw, 7rem); }
+.facts { align-self: start; }
+@media (min-width: 800px) and (min-height: 760px) { .detail[data-poster='true'] .facts { position: sticky; top: calc(4.5rem + env(safe-area-inset-top, 0px) + 2rem); } }
+.facts dl > div { border-top: 1px solid var(--color-muted); padding: 1.25rem 0; }
+.facts dt { margin-bottom: .75rem; font: .8rem 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); color: var(--color-secondary); }
+.facts dd { font-size: 1.2rem; overflow-wrap: anywhere; }
+.facts dd span { display: block; color: var(--color-secondary); font-size: 1rem; }
+.external { display: inline-flex; align-items: center; min-height: 44px; margin-top: .5rem; color: var(--color-accent); }
+@media (hover: hover) and (pointer: fine) { .external:hover { color: var(--color-primary); } }
+.poster { grid-column: 2; min-width: 0; }
+.poster img { width: 100%; max-height: 100svh; object-fit: contain; object-position: left top; }
+.facts .lineup { font-size: 1rem; white-space: pre-line; line-height: 1.8; }
+/* Without a poster the facts are the page: lay them out across the width instead of a narrow rail. */
+.detail[data-poster='false'] { grid-template-columns: minmax(0, 1fr); }
+.detail[data-poster='false'] .facts dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); column-gap: clamp(2rem, 4vw, 4rem); }
+.detail[data-poster='false'] .lineupItem { grid-column: 1 / -1; }
+.detail[data-poster='false'] .facts .lineup { max-width: 48ch; font-size: clamp(1.25rem, 2vw, 1.75rem); line-height: 1.5; letter-spacing: -.015em; }
+@media (max-width: 799px) {
+  .detail { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+  .poster { grid-column: 1; }
+}

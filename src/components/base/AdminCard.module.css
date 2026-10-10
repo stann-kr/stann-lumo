@@ -1,0 +1,1 @@
+.card { padding: clamp(16px, 2vw, 24px); border: 1px solid color-mix(in srgb, var(--color-secondary) 22%, transparent); background: color-mix(in srgb, var(--color-secondary) 2%, var(--color-bg)); min-width: 0; }

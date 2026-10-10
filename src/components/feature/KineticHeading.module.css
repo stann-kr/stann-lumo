@@ -1,0 +1,3 @@
+.line { display: block; overflow: clip; padding: .08em .03em; margin: -.08em -.03em; }
+.text { display: block; }
+@media (prefers-reduced-motion: reduce) { .line { overflow: visible; } }

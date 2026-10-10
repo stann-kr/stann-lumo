@@ -1,0 +1,8 @@
+/* Transparent so the public shell's ambient background continues behind 404 and error states without a seam. */
+.fallback { display: flex; flex-direction: column; align-items: start; justify-content: center; gap: 1.5rem; min-height: 70svh; padding: 4rem var(--page-gutter, 1.25rem); font-family: var(--font-display, 'Apple SD Gothic Neo', Arial, sans-serif); color: var(--color-primary, white); }
+.fallback h1 { max-width: 16ch; font-size: clamp(2.5rem, 6vw, 6rem); font-weight: 800; line-height: 1.05; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.fallback p { max-width: 60ch; color: var(--color-secondary); }
+.fallback .code { font: .8rem 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--color-accent); }
+.actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+.actions a, .actions button { display: inline-flex; align-items: center; min-height: 44px; padding: .75rem 1.25rem; border: 1px solid var(--color-muted); }
+@media (hover: hover) and (pointer: fine) { .actions a:hover, .actions button:hover { border-color: var(--color-accent); color: var(--color-accent); } }

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ADMIN_UNAUTHORIZED_EVENT } from '@/capabilities/auth/adminSessionEvents';
 import { apiRequest } from './apiClient';
 
 describe('apiRequest', () => {
@@ -32,6 +33,23 @@ describe('apiRequest', () => {
       success: false,
       error: { code: 'DB_UNAVAILABLE' },
     });
+  });
+
+  it('announces an admin 401 so the shell can re-check the session, but not other failures', async () => {
+    const browserWindow = new EventTarget();
+    const listener = vi.fn();
+    browserWindow.addEventListener(ADMIN_UNAUTHORIZED_EVENT, listener);
+    vi.stubGlobal('window', browserWindow);
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 401 })));
+    await apiRequest('/api/admin/tracks', { method: 'PUT', body: '{}' });
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 500 })));
+    await apiRequest('/api/admin/tracks');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 401 })));
+    await apiRequest('/api/auth/login', { method: 'POST', body: '{}' });
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
   it('does not set a JSON Content-Type for FormData uploads', async () => {

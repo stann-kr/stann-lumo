@@ -1,6 +1,6 @@
 import 'server-only';
 
-import type { D1Database, R2Bucket, R2ObjectBody } from '@/lib/db';
+import type { D1Database, R2Bucket, R2GetOptions, R2Object, R2ObjectBody } from '@/lib/db';
 import { extractYouTubeId, type GalleryPhoto } from './media';
 
 interface GalleryPhotoRow {
@@ -133,6 +133,28 @@ export async function addYouTubeGalleryVideo(
   };
 }
 
-export function fetchGalleryObject(r2: R2Bucket, id: string): Promise<R2ObjectBody | null> {
-  return r2.get(`gallery/${id}`);
+export function fetchGalleryObject(r2: R2Bucket, id: string, options?: R2GetOptions): Promise<R2ObjectBody | R2Object | null> {
+  return r2.get(`gallery/${id}`, options);
+}
+
+export function headGalleryObject(r2: R2Bucket, id: string): Promise<R2Object | null> {
+  return r2.head(`gallery/${id}`);
+}
+
+/**
+ * Resolves a single `bytes=` range against the object size (Safari only plays video that honours ranges).
+ * Returns null when the whole object should be sent (no header, multiple ranges, other units).
+ */
+export function resolveByteRange(header: string | null, size: number): { start: number; end: number } | 'unsatisfiable' | null {
+  const match = header?.trim().match(/^bytes=(\d*)-(\d*)$/);
+  if (!match || (!match[1] && !match[2])) return null;
+  if (!match[1]) {
+    const suffix = Number(match[2]);
+    if (suffix === 0 || size === 0) return 'unsatisfiable';
+    return { start: Math.max(0, size - suffix), end: size - 1 };
+  }
+  const start = Number(match[1]);
+  const end = match[2] ? Math.min(Number(match[2]), size - 1) : size - 1;
+  if (start >= size || end < start) return 'unsatisfiable';
+  return { start, end };
 }

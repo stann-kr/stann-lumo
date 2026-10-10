@@ -35,16 +35,11 @@ import {
   updateRaApiConfig,
   uploadEventPoster,
 } from "@/capabilities/events/eventsAdmin.client";
+import EventEditor from "@/capabilities/events/EventEditor";
+import { MAX_UPLOAD_BYTES, POSTER_UPLOAD_TYPES } from "@/capabilities/media/media";
+import collection from "@/capabilities/admin/AdminCollection.module.css";
 import { createBorderFaint } from "@/utils/colorMix";
 
-const POSTER_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-  "image/gif",
-];
-const POSTER_MAX_BYTES = 10 * 1024 * 1024;
 const EMPTY_CONFIG: RAApiConfigView = {
   userId: "",
   djId: "",
@@ -78,6 +73,9 @@ export default function AdminEventsPage() {
     updateItem,
     deleteItem,
   } = useListEditor<Performance>(EMPTY_PERFORMANCES);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [posterSuccess, setPosterSuccess] = useState("");
   const [savedItems, setSavedItems] = useState<Performance[]>([]);
   const [revision, setRevision] = useState<number | null>(null);
   const [isEventsLoading, setIsEventsLoading] = useState(true);
@@ -221,7 +219,9 @@ export default function AdminEventsPage() {
     }));
     setIsPageMetaDirty(true);
   };
-  const addEvent = () =>
+  const addEvent = () => {
+    setSearch("");
+    setFilter("all");
     setItems([
       {
         id: crypto.randomUUID(),
@@ -234,6 +234,7 @@ export default function AdminEventsPage() {
       },
       ...performances,
     ]);
+  };
 
   const save = async () => {
     if (revision === null || isPosterBusy) return;
@@ -377,7 +378,7 @@ export default function AdminEventsPage() {
     }
     if (
       file &&
-      (!POSTER_TYPES.includes(file.type) || file.size > POSTER_MAX_BYTES)
+      (!POSTER_UPLOAD_TYPES.includes(file.type) || file.size > MAX_UPLOAD_BYTES)
     ) {
       setPosterError((previous) => ({
         ...previous,
@@ -385,13 +386,16 @@ export default function AdminEventsPage() {
       }));
       return;
     }
+    setPosterError((previous) => ({ ...previous, [eventId]: "" }));
+    setPosterSuccess("");
     setPosterBusy((previous) => ({ ...previous, [eventId]: true }));
     try {
       const result = file
         ? await uploadEventPoster(eventId, file)
         : await deleteEventPoster(eventId);
       if (!result.success) throw new Error("poster");
-      await loadEvents();
+      const refreshed = await loadEvents();
+      if (refreshed) setPosterSuccess(file ? "포스터를 저장했습니다." : "포스터를 제거했습니다.");
     } catch {
       setPosterError((previous) => ({
         ...previous,
@@ -422,11 +426,21 @@ export default function AdminEventsPage() {
   const hasLocaleDraft =
     isPageMetaDirty && pageMetaLanguage !== currentEditLanguage;
 
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const visibleEvents = performances.map((item, index) => ({ item, index })).filter(({ item }) => {
+    // Search the saved text so an active editor stays visible while its title changes.
+    const searchable = savedItems.find((saved) => saved.id === item.id) ?? item;
+    const matchesSearch = [searchable.title, searchable.venue, searchable.location, searchable.date]
+      .some((value) => value?.toLowerCase().includes(search.trim().toLowerCase()));
+    return matchesSearch && (filter === "all" || (filter === "missing" && !item.posterImageId) ||
+      (filter === "upcoming" && item.date.replaceAll(".", "-") >= today) || (filter === "past" && item.date.replaceAll(".", "-") < today));
+  });
+
   return (
     <div className="space-y-8">
       <AdminSectionHeader
-        title="EVENTS SECTION"
-        description={`${t("admin_events_subtitle")} (${currentEditLanguage.toUpperCase()})`}
+        title="공연"
+        description="공연 정보는 RA에서 동기화하고, 포스터는 직접 업로드합니다."
         onSave={save}
         isSaving={isSaving}
         isSaveDisabled={
@@ -445,8 +459,8 @@ export default function AdminEventsPage() {
             className="px-6 py-3 border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors whitespace-nowrap cursor-pointer text-sm tracking-wider disabled:opacity-50"
             style={createBorderFaint()}
           >
-            <i className="ri-add-line mr-2" aria-hidden="true" />
-            ADD EVENT
+            <span className="mr-2" aria-hidden="true">+</span>
+            공연 추가
           </button>
         }
       />
@@ -471,43 +485,78 @@ export default function AdminEventsPage() {
         disabled={controlsDisabled}
         className="space-y-8 disabled:opacity-60"
       >
-        <section>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            PAGE SETTINGS
-          </h2>
+        <section aria-label="공연 목록">
+          <div className={collection.toolbar}>
+            <FormInput label="공연 검색" type="search" value={search} onChange={setSearch} placeholder="공연명, 장소, 지역, 날짜" />
+            <div className={collection.filters} role="group" aria-label="공연 필터">
+              {[["all", "전체"], ["missing", "포스터 없음"], ["upcoming", "예정"], ["past", "지난 공연"]].map(([value, label]) =>
+                <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
+            </div>
+          </div>
+          <p className={collection.count} role="status">{isEventsLoading ? "이벤트를 불러오는 중입니다." : `${visibleEvents.length}개 표시 / 전체 ${performances.length}개`}</p>
+          {hasEventEdits && <p id="event-poster-draft-help" className={collection.notice}>공연 변경 사항을 먼저 저장하면 포스터를 업로드할 수 있습니다.</p>}
+          {posterSuccess && <p role="status" className={collection.notice}>{posterSuccess}</p>}
+          <div className={collection.list}>
+            {visibleEvents.map(({ item, index }) => deleteConfirm.isOpen && deleteConfirm.pendingIndex === index ? (
+              <AdminCard key={item.id}><DeleteConfirmModal show itemName={item.title}
+                onConfirm={() => deleteConfirm.confirmDelete(deleteItem)} onCancel={deleteConfirm.closeConfirm} /></AdminCard>
+            ) : <EventEditor key={item.id} event={item} isNew={!savedItems.some((saved) => saved.id === item.id)}
+                posterBusy={Boolean(posterBusy[item.id])} posterError={posterError[item.id]} hasEventEdits={hasEventEdits}
+                onChange={(field, value) => updateField(index, field, value)}
+                onPosterChange={(file) => void changePoster(item.id, file)} onDelete={() => deleteConfirm.openConfirm(index)} />)}
+          </div>
+          {!isEventsLoading && visibleEvents.length === 0 && <div className={collection.empty}>
+            <p>{performances.length === 0 ? "등록된 공연이 없습니다. RA 동기화 또는 공연 추가로 시작하세요." : "조건에 맞는 공연이 없습니다."}</p>
+            {performances.length > 0 && <button type="button" onClick={() => { setSearch(""); setFilter("all"); }}>필터 초기화</button>}
+          </div>}
+        </section>
+        <details className={collection.disclosure} open>
+          <summary>RA 공연 정보 동기화</summary>
+          <div>              <RaSyncPanel
+                status={syncStatus}
+                isLoading={isSyncStatusLoading}
+                isRunning={isFetching}
+                error={syncError}
+                success={syncSuccess}
+                isRunDisabled={!canSync}
+                disabledReason={syncReason}
+                onRun={() => void runSync()}
+                onRestoreExclusion={restoreExclusion}
+              /></div>
+        </details>
+        <details className={collection.disclosure}>
+          <summary>공연 페이지 문구</summary>
           <AdminCard>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormInput
-                label="PAGE TITLE"
+                label="페이지 제목"
                 value={pageMeta.events.title}
                 onChange={(value) => updateMeta("title", value)}
                 placeholder="EVENTS"
               />
               <FormInput
-                label="PAGE SUBTITLE"
+                label="페이지 설명"
                 value={pageMeta.events.subtitle}
                 onChange={(value) => updateMeta("subtitle", value)}
                 placeholder="PERFORMANCE SCHEDULE & INFORMATION"
               />
               <FormInput
-                label="UPCOMING SECTION TITLE"
+                label="예정 공연 제목"
                 value={pageMeta.events.upcomingTitle}
                 onChange={(value) => updateMeta("upcomingTitle", value)}
                 placeholder="UPCOMING EVENTS"
               />
               <FormInput
-                label="PAST SECTION TITLE"
+                label="지난 공연 제목"
                 value={pageMeta.events.pastTitle}
                 onChange={(value) => updateMeta("pastTitle", value)}
                 placeholder="PAST EVENTS"
               />
             </div>
           </AdminCard>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            {t("events_ra_settings")}
-          </h2>
+        </details>
+        <details className={collection.disclosure}>
+          <summary>RA 연결 설정</summary>
           <AdminCard>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -594,196 +643,11 @@ export default function AdminEventsPage() {
                   비활성화됩니다.
                 </p>
               )}
-              <RaSyncPanel
-                status={syncStatus}
-                isLoading={isSyncStatusLoading}
-                isRunning={isFetching}
-                error={syncError}
-                success={syncSuccess}
-                isRunDisabled={!canSync}
-                disabledReason={syncReason}
-                onRun={() => void runSync()}
-                onRestoreExclusion={restoreExclusion}
-              />
+
             </div>
           </AdminCard>
-        </section>
-        <section>
-          <h2 className="text-xl font-bold text-[var(--color-secondary)] tracking-wider mb-4">
-            EVENTS
-          </h2>
-          {isEventsLoading ? (
-            <p
-              role="status"
-              className="text-sm text-[var(--color-secondary)]/70"
-            >
-              이벤트를 불러오는 중입니다.
-            </p>
-          ) : (
-            <div className="space-y-4">
-              {performances.map((item, index) => (
-                <AdminCard key={item.id}>
-                  {deleteConfirm.isOpen &&
-                  deleteConfirm.pendingIndex === index ? (
-                    <DeleteConfirmModal
-                      show
-                      itemName={
-                        performances[deleteConfirm.pendingIndex]?.venue || ""
-                      }
-                      onConfirm={() => deleteConfirm.confirmDelete(deleteItem)}
-                      onCancel={deleteConfirm.closeConfirm}
-                    />
-                  ) : (
-                    <div className="flex items-start gap-4">
-                      {item.posterImageId && (
-                        <div className="shrink-0 w-20 h-20 overflow-hidden">
-                          <img
-                            src={`/api/media/${item.posterImageId}`}
-                            alt={`${item.title} 포스터`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormInput
-                          label="TITLE"
-                          value={item.title}
-                          onChange={(value) =>
-                            updateField(index, "title", value)
-                          }
-                          placeholder="Performance Title"
-                        />
-                        <FormInput
-                          label="DATE"
-                          type="date"
-                          value={item.date}
-                          onChange={(value) =>
-                            updateField(index, "date", value)
-                          }
-                        />
-                        <FormInput
-                          label="TIME"
-                          type="time"
-                          value={item.time ?? ""}
-                          onChange={(value) =>
-                            updateField(index, "time", value)
-                          }
-                        />
-                        <FormInput
-                          label="VENUE"
-                          value={item.venue}
-                          onChange={(value) =>
-                            updateField(index, "venue", value)
-                          }
-                        />
-                        <FormInput
-                          label="LOCATION"
-                          value={item.location ?? ""}
-                          onChange={(value) =>
-                            updateField(index, "location", value)
-                          }
-                        />
-                        <div className="md:col-span-2">
-                          <FormSelect
-                            id={`performance-status-${item.id}`}
-                            name={`performanceStatus-${item.id}`}
-                            label="STATUS"
-                            value={item.status}
-                            onChange={(value) =>
-                              updateField(index, "status", value)
-                            }
-                          >
-                            <option value="Announced">Announced</option>
-                            <option value="TBA">TBA</option>
-                            <option value="Cancelled">Cancelled</option>
-                          </FormSelect>
-                        </div>
-                        {item.raEventId && (
-                          <div className="md:col-span-2">
-                            <p className="text-xs text-[var(--color-accent)] tracking-widest">
-                              RA에서 가져온 이벤트 (ID: {item.raEventId})
-                            </p>
-                            <p className="mt-1 text-xs text-[var(--color-secondary)]/60">
-                              삭제 후 저장하면 다음 동기화에서 다시 가져오지
-                              않도록 제외됩니다.
-                            </p>
-                          </div>
-                        )}
-                        <div className="md:col-span-2 space-y-2">
-                          <label className="block text-xs text-[var(--color-accent)] tracking-widest">
-                            POSTER IMAGE{" "}
-                            <span className="text-[var(--color-secondary)]/30 normal-case font-normal">
-                              (선택)
-                            </span>
-                          </label>
-                          {item.posterImageId ? (
-                            <button
-                              type="button"
-                              onClick={() => void changePoster(item.id)}
-                              disabled={posterBusy[item.id] || hasEventEdits}
-                              className="text-xs text-red-400 hover:text-red-300 tracking-widest disabled:opacity-50"
-                            >
-                              {posterBusy[item.id]
-                                ? "REMOVING..."
-                                : "REMOVE POSTER"}
-                            </button>
-                          ) : (
-                            <label className="flex items-center gap-2 cursor-pointer text-xs text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] tracking-widest">
-                              <i
-                                className="ri-upload-line"
-                                aria-hidden="true"
-                              />
-                              <span>UPLOAD POSTER</span>
-                              <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/avif,image/gif"
-                                className="sr-only focus:not-sr-only focus:absolute focus:mt-8 focus:border focus:border-[var(--color-accent)] focus:bg-[var(--color-bg)] focus:p-2"
-                                disabled={posterBusy[item.id] || hasEventEdits}
-                                onChange={(event) => {
-                                  const file = event.target.files?.[0];
-                                  if (file) void changePoster(item.id, file);
-                                  event.target.value = "";
-                                }}
-                              />
-                            </label>
-                          )}
-                          <p className="text-[10px] text-[var(--color-secondary)]/30 tracking-wider">
-                            JPG · PNG · WebP · AVIF · GIF · max 10MB
-                          </p>
-                          {posterBusy[item.id] && (
-                            <div
-                              role="status"
-                              className="w-full h-0.5 bg-[var(--color-secondary)]/10 overflow-hidden rounded-full"
-                            >
-                              <div className="h-full w-1/2 bg-[var(--color-accent)] animate-shimmer rounded-full" />
-                            </div>
-                          )}
-                          {posterError[item.id] && (
-                            <p
-                              role="alert"
-                              className="text-[10px] text-red-400 tracking-wider"
-                            >
-                              {posterError[item.id]}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => deleteConfirm.openConfirm(index)}
-                        aria-label={`이벤트 ${item.title} 삭제`}
-                        className="w-8 h-8 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer shrink-0"
-                        title="Delete"
-                      >
-                        <i className="ri-delete-bin-line" aria-hidden="true" />
-                      </button>
-                    </div>
-                  )}
-                </AdminCard>
-              ))}
-            </div>
-          )}
-        </section>
+        </details>
+
       </fieldset>
     </div>
   );

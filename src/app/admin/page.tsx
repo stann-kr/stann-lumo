@@ -1,91 +1,57 @@
 'use client';
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { authenticateAdmin } from '@/capabilities/auth/auth.client';
 
-const AdminLoginPage = () => {
+import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { adminReturnPath, authenticateAdmin, getAdminSessionState } from '@/capabilities/auth/auth.client';
+import FormInput from '@/components/base/FormInput';
+import styles from './page.module.css';
+
+/** Read at use time so the statically rendered login page needs no search-param Suspense boundary. */
+function returnPath() {
+  return adminReturnPath(new URLSearchParams(window.location.search).get('next'));
+}
+
+export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  // An editor that is still signed in (for example a second tab) goes straight back to work.
+  useEffect(() => {
+    let active = true;
+    void getAdminSessionState().then((session) => {
+      if (active && session === 'authenticated') router.replace(returnPath());
+    });
+    return () => { active = false; };
+  }, [router]);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (loading) return;
     setLoading(true);
+    setError('');
     try {
       const result = await authenticateAdmin(password);
-      if (result.isAuthenticated) {
-        router.push('/admin/home');
-      } else {
-        setError(result.errorMessage ?? 'Invalid password');
-        setPassword('');
-      }
-    } catch {
-      setError('Connection error. Please try again.');
-      setPassword('');
-    } finally {
-      setLoading(false);
-    }
+      if (result.isAuthenticated) router.replace(returnPath());
+      else { setError(result.errorMessage ?? '비밀번호를 확인해 주세요.'); setPassword(''); }
+    } catch { setError('연결하지 못했습니다. 다시 시도해 주세요.'); }
+    finally { setLoading(false); }
   };
 
-  return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-secondary)] font-mono flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-[var(--color-primary)] tracking-wider mb-2">
-            ADMIN ACCESS
-          </h1>
-          <p className="text-sm text-[var(--color-muted)] tracking-widest">CONTENT MANAGEMENT SYSTEM</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="password" className="block text-sm tracking-widest text-[var(--color-secondary)]/70 mb-3">
-              PASSWORD
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError('');
-              }}
-              className="w-full bg-transparent border-b border-[var(--color-secondary)]/30 py-3 px-1 text-[var(--color-primary)] focus:outline-none focus:border-[var(--color-secondary)] transition-colors duration-200"
-              placeholder="Enter admin password"
-              autoFocus
-              disabled={loading}
-            />
-          </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-[var(--color-secondary)]/70 bg-[var(--color-secondary)]/5 px-4 py-3 border border-[var(--color-secondary)]/20">
-              <i className="ri-error-warning-line"></i>
-              <span>{error}</span>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[var(--color-secondary)]/10 hover:bg-[var(--color-secondary)]/20 text-[var(--color-primary)] py-4 px-6 transition-all duration-200 cursor-pointer border border-[var(--color-secondary)]/30 hover:border-[var(--color-secondary)]/50 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="text-sm tracking-widest">{loading ? 'VERIFYING...' : 'ENTER ADMIN'}</span>
-          </button>
-        </form>
-
-        <div className="mt-8 text-center">
-          <button
-            onClick={() => router.push('/')}
-            className="text-sm tracking-widest text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] transition-colors duration-200 cursor-pointer whitespace-nowrap"
-          >
-            <i className="ri-arrow-left-line mr-2"></i>
-            BACK TO SITE
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AdminLoginPage;
+  return <main className={styles.login}>
+    <section className={styles.panel} aria-labelledby="admin-login-title">
+      <p className={styles.brand}>STANN LUMO</p>
+      <h1 id="admin-login-title">콘텐츠 관리</h1>
+      <form onSubmit={handleSubmit}>
+        <FormInput id="password" label="관리자 비밀번호" type="password" value={password}
+          onChange={(value) => { setPassword(value); setError(''); }} required autoComplete="current-password"
+          aria-invalid={Boolean(error)} aria-describedby={error ? 'login-error' : undefined} disabled={loading} />
+        {error && <p id="login-error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading} aria-busy={loading}>{loading ? '로그인 중…' : '로그인'}</button>
+      </form>
+      <Link href="/">사이트로 돌아가기</Link>
+    </section>
+  </main>;
+}

@@ -9,12 +9,15 @@ import SaveErrorMessage from '@/components/base/SaveErrorMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useDeleteConfirm } from '@/capabilities/admin/useDeleteConfirm';
-import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
+import { useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
+import collection from '@/capabilities/admin/AdminCollection.module.css';
+import styles from '@/capabilities/media/MediaEditor.module.css';
 import { createBorderFaint } from '@/utils/colorMix';
 import { runSave } from '@/capabilities/admin/saveResult';
 import type { Performance } from '@/capabilities/events/events';
 import { fetchPerformances } from '@/capabilities/events/eventsAdmin.client';
-import { extractYouTubeId, type GalleryPhoto } from '@/capabilities/media/media';
+import { extractYouTubeId, GALLERY_UPLOAD_TYPES, getPublicImageUrl, splitUploadFiles, type GalleryPhoto } from '@/capabilities/media/media';
+import LoadingImage from '@/capabilities/media/LoadingImage';
 import {
   addYouTubeGalleryVideo,
   deleteGalleryPhoto,
@@ -32,7 +35,8 @@ interface FocalPickerProps {
 }
 function FocalPicker({ photoId, focalX, focalY, onFocalChange }: FocalPickerProps) {
   const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (e.detail === 0) { onFocalChange(50, 50); return; }
       const rect = e.currentTarget.getBoundingClientRect();
       const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
       const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
@@ -45,14 +49,22 @@ function FocalPicker({ photoId, focalX, focalY, onFocalChange }: FocalPickerProp
   );
 
   return (
-    <div
+    <button
+      type="button"
+      aria-label={`이미지 초점 ${focalX}%, ${focalY}%. 방향키로 조절, Enter로 중앙 정렬`}
+      onKeyDown={(event) => {
+        const delta = { ArrowLeft: [-5, 0], ArrowRight: [5, 0], ArrowUp: [0, -5], ArrowDown: [0, 5] }[event.key];
+        if (!delta) return;
+        event.preventDefault();
+        onFocalChange(Math.max(0, Math.min(100, focalX + delta[0])), Math.max(0, Math.min(100, focalY + delta[1])));
+      }}
       className="relative w-24 h-24 shrink-0 overflow-hidden border cursor-crosshair"
       style={createBorderFaint()}
       onClick={handleClick}
       title="클릭하여 포컬 포인트 설정"
     >
       <img
-        src={`/api/media/${photoId}`}
+        src={getPublicImageUrl(photoId)}
         alt=""
         className="w-full h-full object-cover"
         style={{ objectPosition: `${focalX}% ${focalY}%` }}
@@ -64,7 +76,7 @@ function FocalPicker({ photoId, focalX, focalY, onFocalChange }: FocalPickerProp
         className="absolute w-3 h-3 border-2 border-[var(--color-accent)] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2"
         style={{ left: `${focalX}%`, top: `${focalY}%` }}
       />
-    </div>
+    </button>
   );
 }
 
@@ -75,7 +87,7 @@ interface EventSelectProps {
   onChange: (eventId: string) => void;
   label?: string;
 }
-function EventSelect({ value, performances, onChange, label = 'LINKED EVENT' }: EventSelectProps) {
+function EventSelect({ value, performances, onChange, label = '연결된 공연' }: EventSelectProps) {
   return (
       <FormSelect
         label={label}
@@ -95,11 +107,18 @@ function EventSelect({ value, performances, onChange, label = 'LINKED EVENT' }: 
 // ─── 메인 페이지 ─────────────────────────────────────────────────────────────
 const AdminGalleryPage = () => {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [savedPhotos, setSavedPhotos] = useState<GalleryPhoto[]>([]);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [uploadNotice, setUploadNotice] = useState('');
 
   const [performances, setPerformances] = useState<Performance[]>([]);
 
@@ -109,24 +128,32 @@ const AdminGalleryPage = () => {
   const [youtubeLinkedEventId, setYoutubeLinkedEventId] = useState('');
   const [isAddingYoutube, setIsAddingYoutube] = useState(false);
   const [youtubeError, setYoutubeError] = useState('');
-  const [savedDataVersion, setSavedDataVersion] = useState(0);
+  const { setDirty } = useAdminEditGuard();
+  const hasPhotoEdits = JSON.stringify(photos) !== JSON.stringify(savedPhotos);
+  const controlsDisabled = isLoading || isSaving || isUploading || isAddingYoutube || isDeleting || Boolean(loadError);
+  const hasDraft = hasPhotoEdits || Boolean(youtubeUrl.trim()) || Boolean(youtubeLinkedEventId);
+  useEffect(() => { setDirty(hasDraft); }, [hasDraft, setDirty]);
+  useEffect(() => () => setDirty(false), [setDirty]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
   const { isOpen: isDeleteModalOpen, pendingIndex: deleteIndex, openConfirm, closeConfirm, confirmDelete } = useDeleteConfirm();
-  const borderStyle = createBorderFaint();
 
   // ─── 초기 데이터 로드 ────────────────────────────────────────────────────
   const fetchData = async () => {
+    setIsLoading(true);
+    setLoadError('');
     try {
       const [photosResult, performancesResult] = await Promise.all([
         fetchGalleryPhotos(),
         fetchPerformances(),
       ]);
-      if (photosResult.success && photosResult.data) setPhotos(photosResult.data);
-      if (performancesResult.success && performancesResult.data) setPerformances(performancesResult.data);
+      if (!photosResult.success || !photosResult.data || !performancesResult.success || !performancesResult.data) throw new Error('load');
+      setPhotos(photosResult.data);
+      setSavedPhotos(photosResult.data);
+      setPerformances(performancesResult.data);
     } catch {
-      // 조용히 실패
+      setLoadError('미디어 목록을 불러오지 못했습니다. 다시 시도해 주세요.');
     } finally {
       setIsLoading(false);
     }
@@ -140,11 +167,10 @@ const AdminGalleryPage = () => {
     setYoutubeError('');
   }, [youtubeUrl]);
 
-  useUnsavedChanges(photos, `${isLoading}:${savedDataVersion}`);
 
   // ─── 사진 메타 필드 업데이트 ─────────────────────────────────────────────
   const updatePhotoField = (index: number, field: keyof Pick<GalleryPhoto, 'altText' | 'caption' | 'linkedEventId'>, value: string) => {
-    setPhotos((prev) => prev.map((p, i) => i === index ? { ...p, [field]: value || undefined } : p));
+    setPhotos((prev) => prev.map((p, i) => i === index ? { ...p, [field]: field === 'linkedEventId' ? value || undefined : value } : p));
   };
 
   // ─── 포컬 포인트 업데이트 ───────────────────────────────────────────────
@@ -161,20 +187,21 @@ const AdminGalleryPage = () => {
     setPhotos(newPhotos);
   };
 
-  // ─── 저장 (photos + settings 병렬) ──────────────────────────────────────
+  // Save the complete collection, including items hidden by the current filter.
   const saveChanges = async () => {
+    if (controlsDisabled) return;
     setIsSaving(true);
     setSaveError('');
     try {
       await runSave(
-        ['ARCHIVE LAYOUT'],
+        ['아카이브 목록'],
         [updateGalleryPhotos(photos)],
         () => {
-          setSavedDataVersion((version) => version + 1);
+          setSavedPhotos(photos);
           showNotification();
         },
         () => {
-          setSaveError('ARCHIVE LAYOUT 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.');
+          setSaveError('아카이브 목록 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.');
         },
       );
     } finally {
@@ -184,21 +211,30 @@ const AdminGalleryPage = () => {
 
   // ─── 파일 업로드 ─────────────────────────────────────────────────────────
   const handleUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setIsUploading(true);
+    if (!files || files.length === 0 || controlsDisabled || hasPhotoEdits) return;
+    // Dropped files bypass the input's accept list; say which ones the server would silently skip.
+    const { accepted, rejected } = splitUploadFiles(Array.from(files));
     setUploadError('');
+    setUploadNotice('');
+    if (accepted.length === 0) {
+      setUploadError(`${rejected.join(', ')} — 이미지·동영상 파일만, 파일당 10MB까지 올릴 수 있습니다.`);
+      return;
+    }
+    setIsUploading(true);
     try {
-      const result = await uploadGalleryFiles(files);
+      const result = await uploadGalleryFiles(accepted);
       const uploadedPhotos = result.data;
       if (result.success && uploadedPhotos && uploadedPhotos.length > 0) {
-        setPhotos((prev) => [...prev, ...uploadedPhotos]);
-        setSavedDataVersion((version) => version + 1);
+        // New uploads are stored ahead of the current first item, so show them where a reload would.
+        setPhotos((prev) => [...uploadedPhotos, ...prev]);
+        setSavedPhotos((prev) => [...uploadedPhotos, ...prev]);
         showNotification();
+        if (rejected.length > 0) setUploadNotice(`${uploadedPhotos.length}개를 올렸습니다. 형식이나 용량(10MB) 때문에 제외한 파일: ${rejected.join(', ')}`);
       } else {
-        setUploadError(result.error?.message ?? '업로드 실패. 다시 시도해 주세요.');
+        setUploadError('파일을 올리지 못했습니다. 다시 시도해 주세요.');
       }
     } catch {
-      setUploadError('업로드 중 오류가 발생했습니다');
+      setUploadError('파일을 올리지 못했습니다. 다시 시도해 주세요.');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -206,13 +242,14 @@ const AdminGalleryPage = () => {
   };
 
   // ─── 드래그 앤 드롭 ──────────────────────────────────────────────────────
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
     e.preventDefault();
     handleUpload(e.dataTransfer.files);
   };
 
   // ─── YouTube 추가 ────────────────────────────────────────────────────────
   const handleAddYoutube = async () => {
+    if (controlsDisabled || hasPhotoEdits) return;
     if (!youtubePreviewId) {
       setYoutubeError('유효한 YouTube URL을 입력하세요');
       return;
@@ -226,7 +263,7 @@ const AdminGalleryPage = () => {
         setPhotos((prev) => [...prev, addedPhoto]);
         setYoutubeUrl('');
         setYoutubeLinkedEventId('');
-        setSavedDataVersion((version) => version + 1);
+        setSavedPhotos((prev) => [...prev, addedPhoto]);
         showNotification();
       } else {
         setYoutubeError(result.error?.message ?? 'YouTube 추가 실패. 다시 시도해 주세요.');
@@ -241,273 +278,114 @@ const AdminGalleryPage = () => {
   // ─── 삭제 ────────────────────────────────────────────────────────────────
   const handleDeletePhoto = async (index: number) => {
     const photo = photos[index];
-    if (!photo) return;
+    if (!photo || controlsDisabled || hasPhotoEdits) return;
+    setIsDeleting(true);
     setSaveError('');
     try {
       const result = await deleteGalleryPhoto(photo.id);
       if (!result.success) {
-        setSaveError('MEDIA DELETE에 실패했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
+        setSaveError('미디어를 삭제하지 못했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
         return;
       }
       setPhotos((prev) => prev.filter((_, i) => i !== index));
-      setSavedDataVersion((version) => version + 1);
+      setSavedPhotos((prev) => prev.filter((_, i) => i !== index));
+      setSelectedId(null);
     } catch {
-      setSaveError('MEDIA DELETE에 실패했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
-    }
+      setSaveError('미디어를 삭제하지 못했습니다. 현재 목록은 유지됩니다. 다시 시도해 주세요.');
+    } finally { setIsDeleting(false); }
   };
 
-  return (
-    <div className="space-y-8">
-      <AdminSectionHeader
-        title="ARCHIVE"
-        description="사진 업로드 및 레이아웃 관리"
-        onSave={saveChanges}
-        isSaving={isSaving}
-        action={
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="px-6 py-3 border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors whitespace-nowrap cursor-pointer text-sm tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
-            style={borderStyle}
-          >
-            <i className="ri-upload-line mr-2"></i>
-            {isUploading ? 'UPLOADING...' : 'UPLOAD'}
-          </button>
-        }
-      />
+  const visiblePhotos = photos.map((photo, index) => ({ photo, index })).filter(({ photo }) => {
+    const source = savedPhotos.find((saved) => saved.id === photo.id) ?? photo;
+    const eventTitle = performances.find((event) => event.id === source.linkedEventId)?.title;
+    const matches = [source.filename, source.caption, source.altText, eventTitle]
+      .some((value) => value?.toLowerCase().includes(search.trim().toLowerCase()));
+    return matches && (filter === 'all' || (filter === 'image' && photo.mediaType === 'image') ||
+      (filter === 'video' && photo.mediaType !== 'image') || (filter === 'unlinked' && !photo.linkedEventId));
+  });
 
-      <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
-      <SaveErrorMessage message={saveError} />
-
-      {/* 파일 입력 (숨김) */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/quicktime"
-        multiple
-        className="hidden"
-        onChange={(e) => handleUpload(e.target.files)}
-      />
-
-      {/* ── 파일 업로드 영역 ──────────────────────────────────────────────── */}
-      <div
-        onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
-        onClick={() => fileInputRef.current?.click()}
-        className="border-2 border-dashed border-[var(--color-secondary)]/20 hover:border-[var(--color-secondary)]/40 transition-colors p-12 flex flex-col items-center justify-center gap-3 cursor-pointer"
-      >
-        <i className="ri-image-add-line text-3xl text-[var(--color-secondary)]/30"></i>
-        <p className="text-[var(--color-secondary)]/40 text-sm tracking-wider text-center">
-          드래그 앤 드롭 또는 클릭하여 업로드
-        </p>
-        <p className="text-[var(--color-secondary)]/20 text-xs tracking-wider">
-          JPG · PNG · WebP · GIF · AVIF · MP4 · WebM · 최대 10MB
-        </p>
-        {isUploading && (
-          <p className="text-[var(--color-accent)] text-sm tracking-widest animate-pulse">
-            UPLOADING...
-          </p>
-        )}
-        {uploadError && (
-          <p className="text-red-400 text-sm tracking-wider">{uploadError}</p>
-        )}
-      </div>
-
-      {/* ── YouTube 추가 ──────────────────────────────────────────────────── */}
-      <AdminCard>
-        <div className="space-y-4">
-          <p className="text-xs text-[var(--color-accent)] tracking-widest border-b pb-3" style={borderStyle}>
-            YOUTUBE 동영상 추가
-          </p>
-          <div className="space-y-3">
-            <div className="flex gap-3 items-start">
-              <div className="flex-1">
-                <FormInput
-                  label="YouTube URL"
-                  value={youtubeUrl}
-                  onChange={setYoutubeUrl}
-                  placeholder="https://youtu.be/... 또는 https://youtube.com/watch?v=..."
-                />
-                {youtubeError && (
-                  <p className="text-red-400 text-xs tracking-wider mt-1">{youtubeError}</p>
-                )}
-              </div>
-              {/* 썸네일 미리보기 */}
-              {youtubePreviewId && (
-                <div className="shrink-0 w-24 h-16 overflow-hidden border" style={borderStyle}>
-                  <img
-                    src={`https://img.youtube.com/vi/${youtubePreviewId}/mqdefault.jpg`}
-                    alt="YouTube preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <button
-                onClick={handleAddYoutube}
-                disabled={!youtubePreviewId || isAddingYoutube}
-                className="px-4 py-2 border text-sm text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap tracking-wider self-end"
-                style={borderStyle}
-              >
-                <i className="ri-youtube-line mr-1.5"></i>
-                {isAddingYoutube ? '추가 중...' : '갤러리에 추가'}
-              </button>
-            </div>
-            {performances.length > 0 && (
-              <EventSelect
-                value={youtubeLinkedEventId}
-                performances={performances}
-                onChange={setYoutubeLinkedEventId}
-                label="LINKED EVENT (선택)"
-              />
-            )}
+  return <div className="space-y-8">
+    <AdminSectionHeader title="아카이브" description="사진·영상과 연결된 공연을 관리합니다."
+      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={controlsDisabled || !hasPhotoEdits}
+      action={<button type="button" className={styles.uploadAction} onClick={() => fileInputRef.current?.click()}
+        disabled={controlsDisabled || hasPhotoEdits}>{isUploading ? '업로드 중…' : '파일 업로드'}</button>} />
+    <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
+    <SaveErrorMessage message={saveError} />
+    {loadError && <div role="alert"><p>{loadError}</p><button type="button" className={styles.uploadAction} onClick={() => void fetchData()}>다시 불러오기</button></div>}
+    <fieldset disabled={controlsDisabled} className="space-y-6">
+      <input ref={fileInputRef} type="file" multiple aria-label="미디어 파일 선택"
+        accept={GALLERY_UPLOAD_TYPES.join(',')}
+        className="sr-only" disabled={controlsDisabled || hasPhotoEdits} onChange={(event) => void handleUpload(event.target.files)} />
+      <button type="button" className={styles.dropzone} disabled={controlsDisabled || hasPhotoEdits}
+        onDrop={handleDrop} onDragOver={(event) => event.preventDefault()} onClick={() => fileInputRef.current?.click()}>
+        <strong>사진·영상 파일을 여기에 놓거나 선택하세요</strong><span>이미지·동영상 · 파일당 최대 10MB · 업로드 즉시 반영</span>
+      </button>
+      {uploadError && <p role="alert" className={styles.uploadError}>{uploadError}</p>}
+      {uploadNotice && <p role="status" className={styles.uploadNotice}>{uploadNotice}</p>}
+      {hasPhotoEdits && <p className={collection.notice}>편집한 내용을 먼저 저장하면 파일 추가·삭제를 할 수 있습니다.</p>}
+      <details className={collection.disclosure}>
+        <summary>YouTube 영상 추가</summary>
+        <div className={styles.youtube}>
+          <FormInput label="YouTube URL" value={youtubeUrl} onChange={setYoutubeUrl} placeholder="https://youtu.be/..." />
+          <EventSelect value={youtubeLinkedEventId} performances={performances} onChange={setYoutubeLinkedEventId} label="연결할 공연 (선택)" />
+          <button type="button" className={styles.uploadAction} disabled={!youtubePreviewId || hasPhotoEdits} onClick={() => void handleAddYoutube()}>{isAddingYoutube ? '추가 중…' : '영상 추가'}</button>
+          {youtubeError && <p role="alert">{youtubeError}</p>}
+        </div>
+      </details>
+      <section aria-label="미디어 목록">
+        <div className={collection.toolbar}>
+          <FormInput label="미디어 검색" type="search" value={search} onChange={setSearch} placeholder="파일명, 설명, 공연명" />
+          <div className={collection.filters} role="group" aria-label="미디어 필터">
+            {[["all", "전체"], ["image", "사진"], ["video", "영상"], ["unlinked", "공연 미연결"]].map(([value, label]) =>
+              <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}
           </div>
         </div>
-      </AdminCard>
-
-      {/* ── 사진 목록 ─────────────────────────────────────────────────────── */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <p className="text-[var(--color-secondary)]/40 text-sm tracking-widest animate-pulse">LOADING...</p>
-        </div>
-      ) : photos.length === 0 ? (
-        <div className="flex items-center justify-center py-16 border" style={borderStyle}>
-          <p className="text-[var(--color-secondary)]/30 text-sm tracking-widest">
-            업로드된 미디어가 없습니다
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {photos.map((photo, index) => (
-            <AdminCard key={photo.id}>
-              {isDeleteModalOpen && deleteIndex === index ? (
-                <DeleteConfirmModal
-                  show={true}
-                  itemName={photo.filename}
-                  onConfirm={() => confirmDelete(() => handleDeletePhoto(index))}
-                  onCancel={closeConfirm}
-                />
-              ) : (
-                <div className="flex items-start gap-4">
-                  {/* 썸네일 / 포컬 피커 */}
-                  {photo.mediaType === 'image' ? (
-                    <FocalPicker
-                      photoId={photo.id}
-                      focalX={photo.focalX}
-                      focalY={photo.focalY}
-                      onFocalChange={(x, y) => updateFocal(index, x, y)}
-                    />
-                  ) : photo.mediaType === 'video_youtube' ? (
-                    <div className="w-24 h-24 shrink-0 overflow-hidden border relative" style={borderStyle}>
-                      <img
-                        src={photo.videoThumbnailUrl ?? ''}
-                        alt={photo.altText}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <i className="ri-youtube-fill text-red-500 text-2xl"></i>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-24 h-24 shrink-0 overflow-hidden border relative" style={borderStyle}>
-                      <video
-                        src={`/api/media/${photo.id}`}
-                        className="w-full h-full object-cover"
-                        preload="metadata"
-                        muted
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <i className="ri-movie-line text-[var(--color-secondary)] text-xl"></i>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 편집 필드 */}
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-[var(--color-accent)] tracking-widest mb-1">FILENAME</p>
-                      <p className="text-sm text-[var(--color-secondary)]/60 truncate">{photo.filename}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-[var(--color-secondary)]/30">
-                          {photo.mediaType === 'video_youtube'
-                            ? 'YouTube'
-                            : `${(photo.sizeBytes / 1024).toFixed(0)} KB`}
-                        </p>
-                        {photo.mediaType !== 'image' && (
-                          <span className="text-xs px-1.5 py-0.5 border border-[var(--color-accent)]/30 text-[var(--color-accent)]/60 tracking-wider">
-                            {photo.mediaType === 'video_youtube' ? '▶ YT' : '🎬 VIDEO'}
-                          </span>
-                        )}
-                      </div>
-                      {photo.mediaType === 'image' && (
-                        <p className="text-xs text-[var(--color-secondary)]/25 mt-1">
-                          focal: {photo.focalX}% {photo.focalY}%
-                        </p>
-                      )}
-                    </div>
-                    <FormInput
-                      label="ALT TEXT"
-                      value={photo.altText}
-                      onChange={(value) => updatePhotoField(index, 'altText', value)}
-                      placeholder="이미지 설명 (접근성)"
-                    />
-                    <div className="md:col-span-2">
-                      <FormInput
-                        label="CAPTION"
-                        value={photo.caption}
-                        onChange={(value) => updatePhotoField(index, 'caption', value)}
-                        placeholder="갤러리에 표시될 캡션"
-                      />
-                    </div>
-                    {performances.length > 0 && (
-                      <div className="md:col-span-2">
-                        <EventSelect
-                          value={photo.linkedEventId ?? ''}
-                          performances={performances}
-                          onChange={(eventId) => updatePhotoField(index, 'linkedEventId', eventId)}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 액션 버튼 */}
-                  <div className="flex flex-col gap-1 shrink-0">
-                    <button
-                      onClick={() => movePhoto(index, 'up')}
-                      disabled={index === 0}
-                      className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                      style={borderStyle}
-                      title="위로"
-                    >
-                      <i className="ri-arrow-up-s-line"></i>
-                    </button>
-                    <button
-                      onClick={() => movePhoto(index, 'down')}
-                      disabled={index === photos.length - 1}
-                      className="w-8 h-8 flex items-center justify-center border text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                      style={borderStyle}
-                      title="아래로"
-                    >
-                      <i className="ri-arrow-down-s-line"></i>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openConfirm(index)}
-                      aria-label={`미디어 ${photo.filename} 삭제`}
-                      className="w-8 h-8 flex items-center justify-center border border-red-900/30 text-red-400 hover:bg-red-900/20 transition-colors cursor-pointer"
-                      title="삭제"
-                    >
-                      <i className="ri-delete-bin-line"></i>
-                    </button>
+        <p role="status" className={collection.count}>{isLoading ? '미디어를 불러오는 중입니다.' : `${visiblePhotos.length}개 표시 / 전체 ${photos.length}개`}</p>
+        <div className={collection.list}>
+          {visiblePhotos.map(({ photo, index }) => <AdminCard key={photo.id}>
+            {isDeleteModalOpen && deleteIndex === index ? <DeleteConfirmModal show itemName={photo.filename}
+              onConfirm={() => confirmDelete(() => void handleDeletePhoto(index))} onCancel={closeConfirm} /> : <>
+              <div className={styles.row}>
+                <div className={styles.thumbnail}>
+                  {photo.mediaType === 'image' ? <LoadingImage src={getPublicImageUrl(photo.id)} alt="" quiet /> :
+                    photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt="" quiet /> : <span>영상</span>}
+                </div>
+                <button type="button" className={styles.summary} aria-expanded={selectedId === photo.id} aria-controls={`media-editor-${photo.id}`}
+                  onClick={() => setSelectedId(selectedId === photo.id ? null : photo.id)}>
+                  <strong>{photo.caption || photo.filename}</strong>
+                  <span>{photo.mediaType === 'image' ? '사진' : '영상'} · {performances.find((event) => event.id === photo.linkedEventId)?.title ?? '공연 미연결'}</span>
+                </button>
+                <button type="button" className={styles.uploadAction} aria-label={`${selectedId === photo.id ? '편집 닫기' : '편집'} ${photo.filename}`} aria-expanded={selectedId === photo.id} aria-controls={`media-editor-${photo.id}`}
+                  onClick={() => setSelectedId(selectedId === photo.id ? null : photo.id)}>{selectedId === photo.id ? '편집 닫기' : '편집'}<span className="sr-only"> {photo.filename}</span></button>
+              </div>
+              {selectedId === photo.id && <div id={`media-editor-${photo.id}`} className={styles.editor}>
+                <div className={styles.fields}>
+                  <FormInput label="이미지 설명" value={photo.altText} onChange={(value) => updatePhotoField(index, 'altText', value)} placeholder="이미지를 보지 못하는 사용자를 위한 설명" />
+                  <FormInput label="캡션" value={photo.caption} onChange={(value) => updatePhotoField(index, 'caption', value)} />
+                  <EventSelect value={photo.linkedEventId ?? ''} performances={performances} onChange={(value) => updatePhotoField(index, 'linkedEventId', value)} />
+                </div>
+                <div className={styles.editorFooter}>
+                  {photo.mediaType === 'image' && <div className={styles.focal}><FocalPicker photoId={photo.id} focalX={photo.focalX} focalY={photo.focalY} onFocalChange={(x,y) => updateFocal(index,x,y)} /><p>이미지의 초점을 선택하세요.<br />방향키로도 조절할 수 있습니다.</p></div>}
+                  {photo.mediaType === 'video_file' && <video src={`/api/media/${photo.id}`} controls preload="none" className={styles.video} aria-label={`${photo.filename} 미리보기`} />}
+                  {photo.mediaType === 'video_youtube' && <a href={`https://www.youtube.com/watch?v=${photo.videoYoutubeId}`} target="_blank" rel="noreferrer">YouTube에서 보기</a>}
+                  <div className={styles.itemActions}>
+                    <button type="button" disabled={index === 0 || Boolean(search) || filter !== 'all'} onClick={() => movePhoto(index,'up')}>위로</button>
+                    <button type="button" disabled={index === photos.length - 1 || Boolean(search) || filter !== 'all'} onClick={() => movePhoto(index,'down')}>아래로</button>
+                    <button type="button" disabled={hasPhotoEdits} onClick={() => openConfirm(index)} aria-label={`미디어 ${photo.filename} 삭제`}>삭제</button>
                   </div>
                 </div>
-              )}
-            </AdminCard>
-          ))}
+                {(search || filter !== 'all') && <p className={collection.notice}>순서는 검색과 필터를 초기화한 전체 목록에서 변경할 수 있습니다.</p>}
+              </div>}
+            </>}
+          </AdminCard>)}
         </div>
-      )}
-    </div>
-  );
+        {!isLoading && !loadError && visiblePhotos.length === 0 && <div className={collection.empty}>
+          <p>{photos.length ? '조건에 맞는 미디어가 없습니다.' : '아직 등록된 미디어가 없습니다.'}</p>
+          {photos.length > 0 && <button type="button" onClick={() => { setSearch(''); setFilter('all'); }}>필터 초기화</button>}
+        </div>}
+      </section>
+    </fieldset>
+  </div>;
 };
 
 export default AdminGalleryPage;

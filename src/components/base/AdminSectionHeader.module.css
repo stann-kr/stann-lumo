@@ -1,0 +1,15 @@
+.header { position: sticky; top: var(--admin-toolbar-height, 0px); z-index: 20; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px 24px; margin-bottom: 28px; padding: 18px 0; border-bottom: 1px solid color-mix(in srgb, var(--color-secondary) 24%, transparent); background: var(--color-bg); }
+.header > div:first-child { flex: 1; min-width: min(100%, 12rem); }
+.header h1 { font-size: clamp(1.625rem, 2.8vw, 2.375rem); font-weight: 700; line-height: 1.2; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.header p { margin-top: 8px; max-width: 65ch; font-size: .8125rem; color: var(--color-secondary); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.actions button { min-height: 44px; padding: 10px 18px; }
+.status { font-size: .75rem; color: var(--color-secondary); }
+.status[data-dirty='true'] { color: var(--color-accent); }
+@media (max-width: 600px) {
+  .header { gap: 12px; padding-block: 12px; }
+  .header > div:first-child { flex-basis: 100%; }
+  .header p { display: none; }
+  .actions { width: 100%; gap: 8px; }
+  .status { margin-right: auto; }
+}

@@ -10,6 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
+import styles from '@/components/base/AdminDialog.module.css';
 
 interface PendingExit {
   action: () => void;
@@ -111,36 +112,25 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
     <AdminEditGuardContext.Provider value={{ isDirty, setDirty, requestExit }}>
       {children}
       {pendingExit && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6">
+        <div className={styles.backdrop}>
           <div
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-unsaved-changes-title"
             aria-describedby="admin-unsaved-changes-description"
-            className="w-full max-w-md border border-[var(--color-secondary)]/30 bg-[var(--color-bg)] p-6 font-mono shadow-2xl"
+            className={styles.dialog}
             onKeyDown={handleDialogKeyDown}
           >
-            <h2 id="admin-unsaved-changes-title" className="text-lg font-bold tracking-wider text-[var(--color-primary)]">
-              저장하지 않은 변경 사항
-            </h2>
-            <p id="admin-unsaved-changes-description" className="mt-3 text-sm tracking-wider text-[var(--color-secondary)]/80">
+            <h2 id="admin-unsaved-changes-title">저장하지 않은 변경 사항</h2>
+            <p id="admin-unsaved-changes-description">
               저장하지 않은 변경 사항이 있습니다. 저장하지 않고 이동할까요?
             </p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button
-                ref={cancelButtonRef}
-                type="button"
-                onClick={cancelExit}
-                className="px-4 py-2 text-sm tracking-wider text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10"
-              >
+            <div className={styles.actions}>
+              <button ref={cancelButtonRef} type="button" onClick={cancelExit}>
                 계속 편집하기
               </button>
-              <button
-                type="button"
-                onClick={confirmExit}
-                className="px-4 py-2 text-sm tracking-wider text-[var(--color-accent)] hover:bg-[var(--color-accent)]/15"
-              >
+              <button type="button" onClick={confirmExit} className={styles.leave}>
                 저장하지 않고 이동
               </button>
             </div>

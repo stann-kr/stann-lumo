@@ -17,6 +17,7 @@ export default async function HomePage() {
 
   return (
     <HomePageClient
+      previews={projection.previews}
       artistInfo={projection.artistInfo}
       homeMeta={projection.pageMeta.home}
       homeSections={projection.homeSections}

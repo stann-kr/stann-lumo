@@ -1,0 +1,33 @@
+# Source checks for pull requests and the deploy branches.
+# Builds and deploys stay with Cloudflare Workers Builds; this job needs no secrets or bindings.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm test
+      - run: npm run test:env
+      # test:local-config also needs a developer .dev.vars; CI runs only its script tests.
+      - run: npm run test:scripts

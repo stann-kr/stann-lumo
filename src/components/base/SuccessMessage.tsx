@@ -21,8 +21,7 @@ const SuccessMessage = ({ message, show }: SuccessMessageProps) => {
       className="bg-[var(--color-accent)]/20 border p-4"
       style={createBorderAccent()}
     >
-      <p className="text-sm text-[var(--color-primary)] tracking-wider flex items-center gap-2">
-        <i className="ri-check-line"></i>
+      <p className="text-sm text-[var(--color-primary)] tracking-wider">
         {message}
       </p>
     </div>

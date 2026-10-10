@@ -1,0 +1,15 @@
+.booking > h2 { font-size: 1.125rem; font-weight: 600; margin-bottom: 2rem; }
+.contact { border-top: 1px solid var(--color-muted); padding-block: 1.5rem 2.5rem; }
+.contact h3 { font: .8rem 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); color: var(--color-secondary); margin-bottom: 1.5rem; }
+.contact a { position: relative; display: flex; align-items: baseline; min-height: 44px; padding-bottom: .35em; font-size: clamp(1.5rem, 4.4vw, 4rem); font-weight: 600; letter-spacing: -.04em; line-height: 1.25; overflow-wrap: anywhere; }
+@media (hover: hover) and (pointer: fine) { .contact a:hover { color: var(--color-accent); } }
+.address { min-width: 0; }
+.linkRule { position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: var(--color-accent); transform: scaleX(0); transform-origin: left; }
+.contact a:focus-visible { color: var(--color-accent); }
+.contact p { font-size: 1.25rem; overflow-wrap: anywhere; }
+.booking { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--color-muted); }
+.details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2rem 4rem; }
+.details h3 { margin-bottom: .75rem; font: .8rem 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); color: var(--color-secondary); }
+.details p, .details li { font-size: 1.125rem; line-height: 1.7; overflow-wrap: anywhere; }
+.details a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: .3rem; }
+@media (max-width: 799px) { .details { grid-template-columns: minmax(0, 1fr); } }

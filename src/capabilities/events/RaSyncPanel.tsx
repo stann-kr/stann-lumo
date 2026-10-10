@@ -61,7 +61,7 @@ export default function RaSyncPanel({
           id="ra-sync-title"
           className="text-sm font-bold text-[var(--color-secondary)] tracking-wider"
         >
-          RA AUTOMATIC SYNC
+          RA 동기화 상태
         </h3>
         <p className="mt-1 text-xs text-[var(--color-secondary)]/60 tracking-wider">
           매일 오전 4:15(KST)에 확인하며, 정상 동기화는 2주마다 실행됩니다.
@@ -112,7 +112,7 @@ export default function RaSyncPanel({
           disabled={isRunDisabled}
           className="px-6 py-2 bg-[var(--color-accent)] text-[var(--color-bg)] tracking-wider text-sm hover:bg-[var(--color-primary)] transition-colors whitespace-nowrap cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isRunning ? "SYNCING..." : "SYNC RA NOW"}
+          {isRunning ? "동기화 중…" : "RA 정보 가져오기"}
         </button>
         {disabledReason && (
           <p className="text-xs text-[var(--color-secondary)]/60">
@@ -138,7 +138,7 @@ export default function RaSyncPanel({
       {status && status.exclusions.length > 0 && (
         <div className="border-t border-[color:color-mix(in_srgb,var(--color-secondary)_15%,transparent)] pt-4">
           <h4 className="text-xs font-bold text-[var(--color-secondary)] tracking-wider">
-            SYNC EXCLUSIONS
+            동기화 제외 목록
           </h4>
           <p className="mt-1 text-xs text-[var(--color-secondary)]/60">
             삭제 후 제외된 RA 이벤트입니다. 복원해도 즉시 가져오지는 않으며 다음
@@ -161,8 +161,8 @@ export default function RaSyncPanel({
                   className="min-h-9 px-3 border border-[var(--color-secondary)]/30 text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 disabled:opacity-50"
                 >
                   {restoringId === exclusion.raEventId
-                    ? "RESTORING..."
-                    : "RESTORE"}
+                    ? "복원 중…"
+                    : "복원"}
                 </button>
               </li>
             ))}

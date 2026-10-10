@@ -7,13 +7,13 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html>
+    <html lang="en">
       <body>
-        <div className="flex flex-col items-center justify-center min-h-screen text-center p-8" style={{ fontFamily: 'monospace', background: '#000', color: '#fff' }}>
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Something went wrong.</h2>
+        <div className="flex flex-col items-center justify-center min-h-screen text-center p-8" style={{ fontFamily: 'Arial, sans-serif', background: '#000', color: '#fff', minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <h1 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Something went wrong.</h1>
           <button
             onClick={() => reset()}
-            style={{ padding: '0.5rem 1.5rem', border: '1px solid #fff', background: 'transparent', color: '#fff', cursor: 'pointer' }}
+            style={{ minHeight: '44px', padding: '0.5rem 1.5rem', border: '1px solid #fff', background: 'transparent', color: '#fff', cursor: 'pointer' }}
           >
             Try again
           </button>

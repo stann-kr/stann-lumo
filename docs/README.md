@@ -2,7 +2,7 @@
 
 ## 개요
 
-`stann-lumo`는 Stann Lumo의 음악, 공연, archive, contact/link 표면을 제공하는 Next.js 기반 artist web app이다. 3D scene, terminal-inspired layout, 다국어 콘텐츠, admin CMS, Cloudflare D1/R2 배포 구조를 포함한다.
+`stann-lumo`는 Stann Lumo의 음악, 공연, archive, contact/link 표면을 제공하는 Next.js 기반 artist web app이다. 펼침 패널 홈과 콘텐츠별 목록·미디어 상세, 다국어 콘텐츠, admin CMS, Cloudflare D1/R2 배포 구조를 포함한다.
 
 ## 현재 상태
 

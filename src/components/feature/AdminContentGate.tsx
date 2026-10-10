@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef } from 'react';
 import { useContent } from '@/contexts/ContentContext';
-import { createBorderFaint } from '@/utils/colorMix';
+import styles from './AdminContentGate.module.css';
 
 interface AdminContentGateProps {
   children: ReactNode;
@@ -25,7 +25,7 @@ export default function AdminContentGate({ children }: AdminContentGateProps) {
     return (
       <>
         <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-          CONTENT READY. EDITOR AVAILABLE.
+          콘텐츠를 불러왔습니다. 편집할 수 있습니다.
         </p>
         {children}
       </>
@@ -40,21 +40,11 @@ export default function AdminContentGate({ children }: AdminContentGateProps) {
         aria-live="assertive"
         aria-atomic="true"
         tabIndex={-1}
-        className="mx-auto flex min-h-[60vh] max-w-xl flex-col justify-center gap-5 font-mono"
+        className={styles.state}
       >
-        <div className="border bg-[var(--color-secondary)]/5 p-6" style={createBorderFaint()}>
-          <p className="text-sm font-bold tracking-[0.2em] text-[var(--color-primary)]">CONTENT LOAD FAILED</p>
-          <p className="mt-3 text-sm tracking-wider text-[var(--color-secondary)]/70">
-            관리자 콘텐츠를 불러오지 못했습니다. 다시 시도해 주세요.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleRetry}
-          className="w-fit border border-[var(--color-primary)] px-5 py-3 text-sm font-bold tracking-widest text-[var(--color-primary)] transition-colors hover:bg-[var(--color-primary)] hover:text-[var(--color-bg)]"
-        >
-          RETRY CONTENT LOAD
-        </button>
+        <h2>콘텐츠를 불러오지 못했습니다.</h2>
+        <p>한국어·영어 콘텐츠를 모두 불러와야 편집할 수 있습니다. 잠시 후 다시 시도해 주세요.</p>
+        <button type="button" onClick={handleRetry}>다시 불러오기</button>
       </section>
     );
   }
@@ -67,9 +57,9 @@ export default function AdminContentGate({ children }: AdminContentGateProps) {
       aria-atomic="true"
       aria-busy="true"
       tabIndex={-1}
-      className="flex min-h-[60vh] items-center justify-center font-mono text-sm tracking-[0.2em] text-[var(--color-primary)]"
+      className={styles.state}
     >
-      LOADING CONTENT...
+      <p>콘텐츠를 불러오는 중…</p>
     </section>
   );
 }

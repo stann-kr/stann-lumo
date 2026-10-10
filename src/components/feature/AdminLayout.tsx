@@ -1,271 +1,170 @@
 'use client';
-import { useState, ReactNode } from 'react';
+
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { requestLogout } from '@/capabilities/auth/auth.client';
-import { useContent } from '../../contexts/ContentContext';
+import { adminLoginHref, getAdminSessionState, requestLogout } from '@/capabilities/auth/auth.client';
+import { ADMIN_UNAUTHORIZED_EVENT } from '@/capabilities/auth/adminSessionEvents';
+import { useContent } from '@/contexts/ContentContext';
 import { AdminEditGuardProvider, useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
-import { createColorMixStyle } from '../../utils/colorMix';
-import { COLOR_VARS } from '../../constants/colors';
-import { TRANSITION } from '../../constants/styles';
+import styles from './AdminLayout.module.css';
 
-interface AdminLayoutProps {
-  children: ReactNode;
-}
+/** 편집 중 세션 재검증 주기 (ms) — 5분. 창으로 돌아올 때와 401 응답 때도 바로 확인한다. */
+const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
 
-const ADMIN_NAV_ITEMS = [
-  { label: 'HOME', path: '/admin/home' },
-  { label: 'ABOUT', path: '/admin/about' },
-  { label: 'MUSIC', path: '/admin/music' },
-  { label: 'EVENTS', path: '/admin/events' },
-  { label: 'ARCHIVE', path: '/admin/archive' },
-  { label: 'CONTACT', path: '/admin/contact' },
-  { label: 'LINK', path: '/admin/link' },
-  { label: 'THEME', path: '/admin/theme' },
+const NAV_GROUPS = [
+  { label: '콘텐츠', items: [
+    { label: '공연', path: '/admin/events', publicPath: '/events' },
+    { label: '아카이브', path: '/admin/archive', publicPath: '/archive' },
+    { label: '음악', path: '/admin/music', publicPath: '/music' },
+  ] },
+  { label: '사이트', items: [
+    { label: '홈', path: '/admin/home', publicPath: '/' },
+    { label: '소개', path: '/admin/about', publicPath: '/about' },
+    { label: '연락처', path: '/admin/contact', publicPath: '/contact' },
+    { label: '링크', path: '/admin/link', publicPath: '/link' },
+    { label: '디자인 참조', path: '/admin/theme', publicPath: '/' },
+  ] },
 ];
 
-const AdminLayoutContent = ({ children }: AdminLayoutProps) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+/**
+ * 편집 중 세션 만료를 감지한다. 저장하지 않은 변경이 없으면 현재 화면으로 돌아오는 로그인으로 보내고,
+ * 변경이 있으면 화면을 유지한 채 다시 로그인할 방법을 안내한다. 응답이 없을 때는 아무것도 바꾸지 않는다.
+ */
+function useSessionExpiry(isDirty: boolean, pathname: string) {
+  const router = useRouter();
+  const [expired, setExpired] = useState(false);
+  const latest = useRef({ isDirty, pathname });
+
+  useEffect(() => { latest.current = { isDirty, pathname }; }, [isDirty, pathname]);
+
+  useEffect(() => {
+    let active = true;
+    let pending = false;
+    const check = async () => {
+      if (pending) return;
+      pending = true;
+      const session = await getAdminSessionState();
+      pending = false;
+      if (!active) return;
+      if (session === 'authenticated') setExpired(false);
+      else if (session === 'unauthenticated') {
+        if (latest.current.isDirty) setExpired(true);
+        else router.replace(adminLoginHref(latest.current.pathname));
+      }
+    };
+    const checkWhenVisible = () => { if (document.visibilityState === 'visible') void check(); };
+    const onUnauthorized = () => { void check(); };
+    const interval = window.setInterval(() => { void check(); }, SESSION_CHECK_INTERVAL);
+    document.addEventListener('visibilitychange', checkWhenVisible);
+    window.addEventListener('focus', checkWhenVisible);
+    window.addEventListener(ADMIN_UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', checkWhenVisible);
+      window.removeEventListener('focus', checkWhenVisible);
+      window.removeEventListener(ADMIN_UNAUTHORIZED_EVENT, onUnauthorized);
+    };
+  }, [router]);
+
+  return expired;
+}
+
+function AdminLayoutContent({ children }: { children: ReactNode }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { currentEditLanguage, setCurrentEditLanguage } = useContent();
-  const { requestExit } = useAdminEditGuard();
+  const { isDirty, requestExit } = useAdminEditGuard();
+  const sessionExpired = useSessionExpiry(isDirty, pathname);
+  const currentPage = NAV_GROUPS.flatMap((group) => group.items).find((item) => item.path === pathname);
 
-  const handleNavClick = (path: string) => {
-    if (pathname === path) {
-      setMobileMenuOpen(false);
-      return;
-    }
-
-    requestExit(() => {
-      router.push(path);
-      setMobileMenuOpen(false);
-    });
+  const navigate = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    if (pathname === path) { setMenuOpen(false); return; }
+    requestExit(() => { setMenuOpen(false); router.push(path); });
   };
 
   const logout = async () => {
-    await requestLogout();
-    router.push('/admin');
+    setIsLoggingOut(true);
+    setLogoutError('');
+    try {
+      await requestLogout();
+      router.push('/admin');
+    } catch {
+      setLogoutError('로그아웃하지 못했습니다. 다시 시도해 주세요.');
+    } finally { setIsLoggingOut(false); }
   };
-
-  const handleLogout = () => {
-    requestExit(() => {
-      void logout();
-    });
-  };
-
-  const handleBackToSite = () => {
-    requestExit(() => router.push('/'));
-  };
-
-  const handleLanguageChange = (language: 'en' | 'ko') => {
-    if (language === currentEditLanguage) return;
-    requestExit(() => setCurrentEditLanguage(language));
-  };
-
-  const borderStyle = createColorMixStyle(COLOR_VARS.SECONDARY, 15);
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-secondary)] font-mono flex">
-      {/* Desktop Sidebar */}
-      <aside
-        className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:border-r lg:bg-[var(--color-bg)]"
-        style={borderStyle}
-      >
-        {/* Logo/Brand */}
-        <div className="p-8 border-b" style={borderStyle}>
-          <h1 className="text-2xl font-bold text-[var(--color-primary)] tracking-wider">
-            ADMIN
-          </h1>
-          <p className="text-xs text-[var(--color-accent)] mt-2 tracking-widest">CONTENT MANAGEMENT</p>
-
-          {/* Edit Language Indicator */}
-          <div className="mt-4 flex items-center gap-2">
-            <span className="text-xs text-[var(--color-muted)]/60 tracking-wider">EDITING:</span>
-            <div className="inline-flex items-center gap-1 bg-[var(--color-secondary)]/5 px-2 py-1 rounded">
-              <button
-                type="button"
-                onClick={() => handleLanguageChange('en')}
-                className={`px-2 py-0.5 text-xs tracking-widest transition-all cursor-pointer whitespace-nowrap ${
-                  currentEditLanguage === 'en'
-                    ? 'text-[var(--color-accent)] font-bold'
-                    : 'text-[var(--color-secondary)]/40 hover:text-[var(--color-secondary)]/70'
-                }`}
-              >
-                EN
-              </button>
-              <span className="text-[var(--color-secondary)]/30">|</span>
-              <button
-                type="button"
-                onClick={() => handleLanguageChange('ko')}
-                className={`px-2 py-0.5 text-xs tracking-widest transition-all cursor-pointer whitespace-nowrap ${
-                  currentEditLanguage === 'ko'
-                    ? 'text-[var(--color-accent)] font-bold'
-                    : 'text-[var(--color-secondary)]/40 hover:text-[var(--color-secondary)]/70'
-                }`}
-              >
-                KO
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-6">
-          <ul className="space-y-1">
-            {ADMIN_NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.path;
-              return (
-                <li key={item.path}>
-                  <button
-                    type="button"
-                    onClick={() => handleNavClick(item.path)}
-                    className={`w-full text-left px-4 py-3 cursor-pointer whitespace-nowrap relative group ${
-                      isActive
-                        ? 'text-[var(--color-primary)] bg-[var(--color-secondary)]/10'
-                        : 'text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5'
-                    }`}
-                    style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-                  >
-                    {isActive && (
-                      <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-[var(--color-secondary)]"></span>
-                    )}
-                    <span className="text-sm tracking-widest">{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+    <div className={styles.admin} onKeyDown={(event) => {
+      if (event.key === 'Escape' && menuOpen) {
+        setMenuOpen(false);
+        menuButton.current?.focus();
+      }
+    }}>
+      <a className={styles.skip} href="#admin-content">편집 영역으로 건너뛰기</a>
+      <aside className={styles.sidebar} data-open={menuOpen} id="admin-navigation">
+        <div className={styles.brand}>STANN LUMO<span>콘텐츠 관리</span></div>
+        <nav aria-label="관리자 메뉴" className={styles.navigation}>
+          {NAV_GROUPS.map((group) => <div key={group.label} className={styles.group}>
+            <p>{group.label}</p>
+            {group.items.map((item) => <Link key={item.path} href={item.path}
+              aria-current={pathname === item.path ? 'page' : undefined}
+              onClick={(event) => navigate(event, item.path)}>{item.label}</Link>)}
+          </div>)}
         </nav>
-
-        {/* Footer Actions */}
-        <div className="p-6 border-t space-y-2" style={borderStyle}>
-          <button
-            type="button"
-            onClick={handleBackToSite}
-            className="w-full px-4 py-2 text-sm tracking-widest text-[var(--color-secondary)]/70 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5 cursor-pointer whitespace-nowrap"
-            style={{ transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-          >
-            <i className="ri-arrow-left-line mr-2"></i>
-            BACK TO SITE
+        <div className={styles.footer}>
+          <Link href="/" onClick={(event) => navigate(event, '/')}>사이트 보기</Link>
+          <button type="button" disabled={isLoggingOut} onClick={() => requestExit(() => { void logout(); })}>
+            {isLoggingOut ? '로그아웃 중…' : '로그아웃'}
           </button>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full px-4 py-2 text-sm tracking-widest text-[var(--color-secondary)]/70 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5 cursor-pointer whitespace-nowrap"
-            style={{ transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-          >
-            <i className="ri-logout-box-line mr-2"></i>
-            LOGOUT
-          </button>
+          {logoutError && <p role="alert">{logoutError}</p>}
         </div>
       </aside>
-
-      {/* Mobile Header */}
-      <header
-        className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg)]/95 backdrop-blur-sm border-b"
-        style={borderStyle}
-      >
-        <div className="flex items-center justify-between px-6 h-16">
-          <div>
-            <h1 className="text-xl font-bold text-[var(--color-primary)] tracking-wider">
-              ADMIN
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-[var(--color-muted)]/60 tracking-wider">EDITING:</span>
-              <button
-                type="button"
-                onClick={() => handleLanguageChange(currentEditLanguage === 'en' ? 'ko' : 'en')}
-                className="text-xs text-[var(--color-accent)] font-bold tracking-widest cursor-pointer"
-              >
-                {currentEditLanguage.toUpperCase()}
-              </button>
-            </div>
+      <div className={styles.workspace}>
+        <header className={styles.toolbar}>
+          <div className={styles.location}>
+            <button ref={menuButton} type="button" className={styles.menuToggle}
+              aria-expanded={menuOpen} aria-controls="admin-navigation"
+              onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? '메뉴 닫기' : '메뉴'}</button>
+            <span>관리자</span><span aria-hidden="true">/</span><strong>{currentPage?.label ?? '콘텐츠'}</strong>
           </div>
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-10 h-10 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
-            aria-label="Toggle menu"
-            aria-expanded={mobileMenuOpen}
-            aria-controls="admin-mobile-navigation"
-          >
-            <span className={`w-6 h-0.5 bg-[var(--color-secondary)] ${mobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}></span>
-            <span className={`w-6 h-0.5 bg-[var(--color-secondary)] ${mobileMenuOpen ? 'opacity-0' : ''}`} style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}></span>
-            <span className={`w-6 h-0.5 bg-[var(--color-secondary)] ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} style={{ transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}></span>
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        <nav
-          id="admin-mobile-navigation"
-          className={`absolute top-full left-0 right-0 bg-[var(--color-bg)] border-b ${
-            mobileMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
-          }`}
-          style={{ ...borderStyle, transition: `${TRANSITION.DURATION.MEDIUM} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-        >
-          <ul className="py-4">
-            {ADMIN_NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.path;
-              return (
-                <li key={item.path}>
-                  <button
-                    type="button"
-                    onClick={() => handleNavClick(item.path)}
-                    className={`w-full text-left px-6 py-4 cursor-pointer ${
-                      isActive
-                        ? 'text-[var(--color-primary)] bg-[var(--color-secondary)]/10'
-                        : 'text-[var(--color-secondary)]/50 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5'
-                    }`}
-                    style={{
-                      ...(isActive ? { borderLeft: '2px solid var(--color-secondary)' } : {}),
-                      transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}`
-                    }}
-                  >
-                    <span className="text-sm tracking-widest">{item.label}</span>
-                  </button>
-                </li>
-              );
-            })}
-            <li className="mt-4 pt-4 border-t" style={borderStyle}>
-              <button
-                type="button"
-                onClick={handleBackToSite}
-                className="w-full text-left px-6 py-3 text-sm tracking-widest text-[var(--color-secondary)]/70 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5 cursor-pointer whitespace-nowrap"
-                style={{ transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-              >
-                <i className="ri-arrow-left-line mr-2"></i>
-                BACK TO SITE
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full text-left px-6 py-3 text-sm tracking-widest text-[var(--color-secondary)]/70 hover:text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/5 cursor-pointer whitespace-nowrap"
-                style={{ transition: `${TRANSITION.DURATION.DEFAULT} ${TRANSITION.TIMING.EASE_IN_OUT}` }}
-              >
-                <i className="ri-logout-box-line mr-2"></i>
-                LOGOUT
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
-        <div className="min-h-screen p-6 md:p-12 lg:p-16">
+          <div className={styles.tools}>
+            {/* A new tab keeps the editor and its unsaved draft in place while checking the public page. */}
+            <a className={styles.publicLink} href={currentPage?.publicPath ?? '/'} target="_blank" rel="noopener noreferrer">
+              공개 화면<span className="sr-only"> (새 창)</span>
+            </a>
+            <label className={styles.language}>
+              <span>편집 언어</span>
+              <select value={currentEditLanguage} onChange={(event) => {
+                const language = event.target.value as 'ko' | 'en';
+                if (language !== currentEditLanguage) requestExit(() => setCurrentEditLanguage(language));
+              }}>
+                <option value="ko">한국어</option><option value="en">English</option>
+              </select>
+            </label>
+          </div>
+        </header>
+        {sessionExpired && (
+          <div role="alert" className={styles.sessionNotice}>
+            <p><strong>로그인이 만료되었습니다.</strong> 저장하지 않은 변경 사항은 이 화면에 그대로 있습니다. 새 창에서 다시 로그인한 뒤 이 화면으로 돌아와 저장해 주세요.</p>
+            <a href={adminLoginHref(pathname)} target="_blank" rel="noopener noreferrer">새 창에서 로그인</a>
+          </div>
+        )}
+        <main id="admin-content" tabIndex={-1} className={styles.content}>
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
-};
+}
 
-const AdminLayout = ({ children }: AdminLayoutProps) => (
-  <AdminEditGuardProvider>
-    <AdminLayoutContent>{children}</AdminLayoutContent>
-  </AdminEditGuardProvider>
-);
-
-export default AdminLayout;
+export default function AdminLayout({ children }: { children: ReactNode }) {
+  return <AdminEditGuardProvider><AdminLayoutContent>{children}</AdminLayoutContent></AdminEditGuardProvider>;
+}

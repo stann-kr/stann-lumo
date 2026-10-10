@@ -21,6 +21,8 @@ npm run dev
 
 개발 서버는 항상 `http://localhost:3004`에서 실행한다. `npm run dev`는 OpenNext artifact를 만든 뒤 Wrangler local preview로 실행되어 local D1/R2 binding만 사용하며, 시작 전에 local D1 migration을 적용한다. 실행 wrapper는 `.dev.vars`에서 관리자 비밀번호만 일회성 환경 파일로 전달하고 Cloudflare credential을 포함한 나머지 키를 배제한다. 공개 URL은 `.env`, 로컬 서버 전용 값은 git-ignored `.dev.vars`에 둔다.
 
+실제 공개 콘텐츠로 UI를 확인하려면 `npm run dev:preview`를 사용한다. 기존 Wrangler CLI 로그인을 통해 production D1/R2를 연결하고, 코드는 `http://127.0.0.1:3004`에서 실행한다. 이 명령은 매번 빌드와 연결 설정을 준비하므로 이전 세션의 임시 파일이 필요 없다. 공개 GET/HEAD 요청만 앱으로 전달하며 관리자·인증·쓰기 요청과 예약 작업을 차단한다. `.dev.vars`의 관리자 비밀번호를 사용하거나 migration·배포를 실행하지 않는다. 두 명령은 같은 포트를 사용하므로 기존 서버를 종료한 뒤 실행한다.
+
 Docker 환경에서는 다음 명령을 사용한다.
 
 ```bash
@@ -31,11 +33,14 @@ docker compose up --build
 
 ```bash
 npm run lint
+npm test
 npm run test:local-config
 npm run test:local-worker
 npm run type-check
 npm run build
 ```
+
+Pull request와 `main`·`dev` push에서는 GitHub Actions(`.github/workflows/ci.yml`)가 lint, type-check, `npm test`, `npm run test:env`, `npm run test:scripts`를 실행한다. 이 검사는 비밀값과 Cloudflare binding을 쓰지 않으며, `.dev.vars`가 필요한 `local:config:check`와 빌드·배포는 포함하지 않는다.
 
 `npm run dev`는 OpenNext artifact `.next`와 Wrangler local runtime을 사용하고, `npm run build`는 `.next-build`를 사용한다. `npm run start`는 `npm run build`가 만든 `.next-build`를 실행한다. Worker binding이 필요 없는 빠른 UI 확인에는 `npm run dev:next`를 쓸 수 있지만 D1/R2 API는 의도적으로 fail-closed 한다. Cloudflare Workers Builds에서는 OpenNext 호환을 위해 같은 build 명령이 `.next`를 사용한다.
 

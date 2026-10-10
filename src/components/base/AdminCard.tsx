@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { createBorderFaint } from '../../utils/colorMix';
+import styles from './AdminCard.module.css';
 
 /**
  * AdminCard Props 정의
@@ -28,8 +28,7 @@ interface AdminCardProps {
 const AdminCard = ({ children, className = '' }: AdminCardProps) => {
   return (
     <div 
-      className={`bg-[var(--color-secondary)]/5 border p-6 ${className}`}
-      style={createBorderFaint()}
+      className={`${styles.card} ${className}`}
     >
       {children}
     </div>

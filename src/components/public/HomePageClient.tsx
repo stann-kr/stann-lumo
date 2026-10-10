@@ -1,132 +1,142 @@
 "use client";
 
-import Link from "next/link";
+import { useId, useRef, useState } from "react";
+import Link from "../feature/PublicLink";
 import { useTranslation } from "react-i18next";
-import PageLayout from "@/components/feature/PageLayout";
-import { createBorderFaint } from "@/utils/colorMix";
-import type {
-  ArtistInfoItem,
-  HomePageMeta,
-  HomeSection,
-} from "@/capabilities/content/content";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useMotionPreference } from "@/hooks/useMotionPreference";
+import { SITE_NAME } from "@/constants/site";
+import type { ArtistInfoItem, HomePageMeta, HomeSection, HomePreviews } from "@/capabilities/content/content";
 import type { TerminalInfo } from "@/capabilities/terminal/terminalConfig";
+import { getPublicImageUrl } from "@/capabilities/media/media";
+import styles from "./HomePageClient.module.css";
+import KineticHeading from '../feature/KineticHeading';
+import { useHomeMotion } from './useHomeMotion';
 
 interface HomePageClientProps {
   artistInfo: ArtistInfoItem[];
   homeMeta: HomePageMeta;
   homeSections: HomeSection[];
   terminalInfo: TerminalInfo;
+  previews?: HomePreviews;
 }
 
-export default function HomePageClient({
-  artistInfo,
-  homeMeta,
-  homeSections,
-  terminalInfo,
-}: HomePageClientProps) {
+export default function HomePageClient({ artistInfo, homeMeta, homeSections, terminalInfo, previews }: HomePageClientProps) {
   const { t } = useTranslation();
-  const borderFaint = createBorderFaint();
-
-  const artistName = Array.isArray(artistInfo)
-    ? (artistInfo.find(
-        (item) => item.key === "Name" || item.key === "이름",
-      )?.value ?? "")
-    : "";
-  const nameParts = artistName.includes("&")
-    ? artistName.split("&").map((s) => s.trim())
-    : artistName
-        .split(" ")
-        .map((s) => s.trim())
-        .filter(Boolean);
+  const { language } = useLanguage();
+  const { isResolved, prefersReducedMotion } = useMotionPreference();
+  const panelId = useId();
+  const isMotionEnabled = isResolved && !prefersReducedMotion;
+  // The CMS owns order: the first four sections are panels, all remaining sections stay visible below.
+  const panels = homeSections.slice(0, 4);
+  const [selectedPath, setSelectedPath] = useState<string | null>(() => panels.find((section) => section.path === "/music")?.path ?? panels[0]?.path ?? null);
+  const homeRef = useRef<HTMLDivElement>(null);
+  const preparePanelTransition = useHomeMotion(homeRef, selectedPath, isMotionEnabled);
+  const artistName = artistInfo.find((item) => item.key === "Name" || item.key === "이름")?.value || SITE_NAME;
+  const secondarySections = homeSections.slice(4);
+  const terminalDescription = terminalInfo.description.trim();
+  const newTabLabel = language === "ko" ? " (새 창)" : " (opens in a new tab)";
 
   return (
-    <PageLayout
-      title={nameParts[0] ?? artistName}
-      titleExtra={nameParts.slice(1)}
-    >
-      <div className="space-y-10">
-        <div>
-          <p className="font-mono text-xs text-[var(--color-accent)] tracking-widest mb-3 flex items-center gap-2">
-            <span className="w-1 h-1 bg-[var(--color-accent)] animate-pulse"></span>
-            {homeMeta.navTitle || t("home_nav_title")}
-          </p>
-          <div className="border" style={borderFaint}>
-            {homeSections.map((section, index) => {
-              const numStr = (index + 1).toString().padStart(2, "0");
-              return (
-                <Link
-                  key={index}
-                  href={section.path}
-                  className="group relative flex min-h-[44px] items-center gap-4 border-b px-4 py-3 last:border-b-0 transition-[background-color] duration-200 hover:bg-[var(--color-accent)]/5"
-                  style={borderFaint}
-                >
-                  <span className="font-mono text-xs text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] tracking-widest group-hover:text-[var(--color-accent)] transition-colors shrink-0">
-                    [{numStr}]
-                  </span>
-                  <h2 className="font-mono text-base uppercase tracking-[0.2em] text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors shrink-0">
-                    {section.title}
-                  </h2>
-                  <p className="hidden flex-1 truncate font-mono text-xs text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] transition-colors group-hover:text-[var(--color-secondary)] md:block">
-                    {section.description}
-                  </p>
-                  <i aria-hidden="true" className="ri-arrow-right-line text-xs text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-[var(--color-accent)] shrink-0" />
+    <div ref={homeRef} className={styles.home} data-motion={isMotionEnabled ? "on" : "off"}>
+      <header className={styles.intro}>
+        <KineticHeading title={artistName} />
+        {homeMeta.navTitle && <p>{homeMeta.navTitle}</p>}
+      </header>
+      <div className={styles.panels} data-home-panels>
+        {panels.map((section, index) => {
+          const isExpanded = section.path === selectedPath;
+          const contentId = `${panelId}-${index}`;
+          return (
+            <section key={`${section.path}-${index}`} className={styles.panel} data-expanded={isExpanded}>
+              <span className={styles.panelEdge} data-panel-edge aria-hidden="true" />
+              <span className={styles.panelIndex} data-panel-index aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <span className={styles.panelRule} data-panel-rule aria-hidden="true" />
+              <h2 data-panel-heading>
+                <button type="button" id={`${contentId}-trigger`} aria-expanded={isExpanded} aria-controls={contentId}
+                  onClick={(event) => { preparePanelTransition(event.detail > 0); setSelectedPath(isExpanded ? null : section.path); }}>
+                  <span className={styles.panelTitle} data-panel-title>{section.title}</span>
+                  <span className={styles.toggle} aria-hidden="true">{isExpanded ? "−" : "+"}</span>
+                </button>
+              </h2>
+              <div id={contentId} hidden={!isExpanded} className={styles.panelContent} data-panel-content>
+                {!['/music', '/events', '/archive', '/about'].includes(section.path) && section.description && <p>{section.description}</p>}
+                {section.path === '/music' && !!previews?.tracks.length && <ul className={styles.trackPreview}>
+                  {previews.tracks.map((track, trackIndex) => <li key={track.id} data-featured={trackIndex === 0}>
+                    <span>{[track.type, track.year].filter(Boolean).join(' / ')}</span>
+                    <strong>{track.title}</strong>
+                    {trackIndex === 0 && track.link && <a href={track.link} target="_blank" rel="noopener noreferrer">{t('music_listen_on', { platform: track.platform })}<span className="sr-only">{newTabLabel}</span></a>}
+                  </li>)}
+                </ul>}
+                {section.path === '/events' && !!previews?.events.length && <div className={styles.eventPreview}>
+                  {previews.events.map((event) => {
+                    const date = event.date.replace(/\./g, '-');
+                    const time = <time dateTime={date}>{date}</time>;
+                    // Without a poster the date takes the image column, like the meta column of tracks.
+                    return <Link key={event.id} href={`/events/${event.id}`} data-poster={Boolean(event.posterImageId)}>
+                      {event.posterImageId ? <img src={getPublicImageUrl(event.posterImageId)} alt="" loading="lazy" /> : time}
+                      <div>{event.posterImageId && time}<strong>{event.title}</strong><span>{event.venue}{event.status === 'Cancelled' ? ` / ${event.status}` : ''}</span></div>
+                    </Link>;
+                  })}
+                </div>}
+                {section.path === '/events' && !previews?.events.length && <p>{language === 'ko' ? '예정된 공연이 없습니다.' : 'No upcoming events.'}</p>}
+                {section.path === '/archive' && !!previews?.photos.length && <div className={styles.photoPreview}>
+                  {previews.photos.map((photo) => <Link key={photo.id} href={`/archive/${photo.id}`} aria-label={photo.caption || photo.altText || (language === 'ko' ? '이미지 보기' : 'View image')}><img src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.caption} loading="lazy" /></Link>)}
+                </div>}
+                {section.path === '/about' && artistInfo.length > 0 && <dl className={styles.artistPreview}>
+                  {artistInfo.filter((info) => !['name', '이름'].includes(info.key.toLowerCase())).map((info) => <div key={info.id}><dt>{info.key}</dt><dd>{info.value}</dd></div>)}
+                </dl>}
+                <Link href={section.path} className={styles.visit} data-hover>
+                  <span data-hover-label>{section.path === '/music' ? (language === 'ko' ? '전체 음악' : 'All recordings')
+                    : section.path === '/events' ? (language === 'ko' ? '전체 공연' : 'All events')
+                    : section.path === '/archive' ? (language === 'ko' ? '아카이브 열기' : 'Open archive')
+                    : section.path === '/about' ? (language === 'ko' ? '소개 읽기' : 'Read biography')
+                    : section.title}</span>
                 </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {terminalInfo.url && (
-          <div className="pt-8 space-y-6 relative before:absolute before:top-0 before:left-0 before:w-16 before:h-px before:bg-[var(--color-accent)]">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="font-mono text-xs tracking-widest text-[var(--color-accent)] uppercase flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-[var(--color-accent)]"></span>
-                  {t("home_terminal_side_project")}
-                </div>
-                <p className="max-w-2xl font-mono text-base leading-relaxed text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)]">
-                  {terminalInfo.description}
-                </p>
-                <p className="font-mono text-xs tracking-widest text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] uppercase">
-                  Archive here / Music hub on stann-web / Live interface on TERMINAL
-                </p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer" className="group relative inline-flex min-h-[44px] items-center overflow-hidden border border-[var(--color-muted)] px-6 py-3 font-mono text-base tracking-widest text-[var(--color-secondary)] whitespace-nowrap transition-[background-color,border-color,color] hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/5 hover:text-[var(--color-primary)]">
-                  <span className="relative z-10 flex items-center gap-2">OPEN MUSIC HUB<i aria-hidden="true" className="ri-arrow-right-up-line"></i></span>
-                </a>
-                <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer" className="group relative inline-flex min-h-[44px] items-center overflow-hidden border border-[var(--color-accent)] px-6 py-3 font-mono text-base tracking-widest text-[var(--color-accent)] whitespace-nowrap transition-[background-color,color] hover:bg-[var(--color-accent)] hover:text-white">
-                  <div className="absolute inset-0 bg-[var(--color-accent)]/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                  <span className="relative z-10 flex items-center gap-2">{t("home_terminal_enter")} <i aria-hidden="true" className="ri-arrow-right-up-line"></i></span>
-                </a>
-              </div>
-            </div>
-
-            {terminalInfo.customFields && terminalInfo.customFields.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-[1px] bg-[var(--color-muted)] border border-[var(--color-muted)] p-[1px]">
-                {terminalInfo.customFields.map((field) => (
-                  <div key={field.id} className="bg-surface p-4 flex flex-col justify-between space-y-2">
-                    <p className="font-mono text-xs tracking-widest text-[var(--color-accent)] uppercase">{field.fieldKey}</p>
-                    <div className="font-mono text-base tracking-wider text-[var(--color-primary)] truncate">
-                      {field.fieldType === "url" ? (
-                        <a href={field.fieldValue} target="_blank" rel="noopener noreferrer" className="hover:text-[var(--color-accent)] hover:underline transition-colors">{field.fieldValue}</a>
-                      ) : field.fieldType === "badge" ? (
-                        <span className="inline-block border border-[var(--color-accent)] px-2 py-0.5 text-[var(--color-accent)]">{field.fieldValue}</span>
-                      ) : <span>{field.fieldValue}</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {terminalInfo.style?.showEmbed && (
-              <div className="hud-panel p-1">
-                <iframe src={terminalInfo.url} style={{ width: "100%", height: terminalInfo.style.embedHeight, border: "none" }} title="Terminal" sandbox="allow-scripts allow-same-origin" loading="lazy" className="bg-black filter grayscale opacity-90 transition-[filter,opacity] hover:grayscale-0 hover:opacity-100" />
-              </div>
-            )}
-          </div>
-        )}
+            </section>
+          );
+        })}
       </div>
-    </PageLayout>
+      {(secondarySections.length > 0 || terminalInfo.url) && (
+        <div className={styles.secondary}>
+          {secondarySections.map((section, index) => (
+            <Link key={`${section.path}-${index}`} href={section.path}>
+              <h2 data-hover-label>{section.title}</h2>
+              {/* The CMS default for Link is filler; the real destinations say more. */}
+              {section.path === '/link'
+                ? !!previews?.platforms.length && <p>{previews.platforms.join(' · ')}</p>
+                : section.description && <p>{section.description}</p>}
+            </Link>
+          ))}
+          {terminalInfo.url && (
+            <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">
+              <h2 data-hover-label>Terminal</h2>
+              <p>{terminalDescription && !/^terminal platform$/i.test(terminalDescription) ? terminalDescription : t("home_terminal_side_project")}</p>
+              <span className="sr-only">{newTabLabel}</span>
+            </a>
+          )}
+        </div>
+      )}
+      {terminalInfo.url && (!!terminalInfo.customFields?.length || terminalInfo.style?.showEmbed) && (
+        <section className={styles.terminal} aria-label="Terminal">
+          {!!terminalInfo.customFields?.length && (
+            <dl className={styles.fields}>
+              {terminalInfo.customFields.map((field) => (
+                <div key={field.id}>
+                  <dt>{field.fieldKey}</dt>
+                  <dd>{field.fieldType === "url" ? (
+                    <a href={field.fieldValue} target="_blank" rel="noopener noreferrer">{field.fieldValue}<span className="sr-only">{newTabLabel}</span></a>
+                  ) : <span data-badge={field.fieldType === "badge"}>{field.fieldValue}</span>}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {terminalInfo.style?.showEmbed && (
+            <iframe src={terminalInfo.url} style={{ height: terminalInfo.style.embedHeight }} title="Terminal" sandbox="allow-scripts allow-same-origin" loading="lazy" />
+          )}
+        </section>
+      )}
+    </div>
   );
 }

@@ -1,144 +1,40 @@
 'use client';
+
 import AdminCard from '@/components/base/AdminCard';
 import AdminSectionHeader from '@/components/base/AdminSectionHeader';
-import { PALETTE, THEME, COLORS } from '@/styles/colors';
 
-const COLOR_ENTRIES: { label: string; cssVar: string; hex: string }[] = [
-  { label: 'PRIMARY',    cssVar: '--color-primary',    hex: THEME.primary   },
-  { label: 'SECONDARY',  cssVar: '--color-secondary',  hex: THEME.secondary },
-  { label: 'ACCENT',     cssVar: '--color-accent',     hex: THEME.accent    },
-  { label: 'MUTED',      cssVar: '--color-muted',      hex: THEME.muted     },
-  { label: 'BG',         cssVar: '--color-bg',         hex: THEME.bg        },
-  { label: 'BG SIDEBAR', cssVar: '--color-bg-sidebar', hex: THEME.bgSidebar },
+const tokens = [
+  ['본문', '--color-primary', '#ffffff'],
+  ['보조 본문', '--color-secondary', '#b8b8b8'],
+  ['선택·포커스', '--color-accent', '#ff0033'],
+  ['구획선', '--color-muted', '#333333'],
+  ['보조 정보', '--color-text-muted', '#a0a0a0'],
+  ['배경', '--color-bg', '#000000'],
 ];
 
-const ThemePage = () => {
+export default function ThemePage() {
   return (
     <div className="space-y-8">
-      <AdminSectionHeader
-        title="COLOR SYSTEM"
-        description="색상은 코드에서 직접 관리됩니다. 색상 변경 시 아래 두 파일을 동시에 수정하세요."
-        showSaveButton={false}
-      />
-
-      {/* 파일 경로 안내 */}
+      <AdminSectionHeader title="디자인 참조" description="공개 사이트의 색상과 글꼴을 확인하는 참조 화면입니다. 여기에서는 디자인을 변경하지 않습니다." showSaveButton={false} />
       <AdminCard>
-        <p className="text-xs font-mono text-[var(--color-accent)] tracking-widest mb-4">EDIT LOCATIONS</p>
-        <div className="space-y-3 font-mono text-xs">
-          <div className="flex items-start gap-3 p-3 border border-[var(--color-muted)]/30">
-            <i className="ri-file-code-line text-base text-[var(--color-accent)] shrink-0 mt-0.5"></i>
-            <div>
-              <p className="text-[var(--color-accent)] tracking-widest mb-1">src/styles/colors.ts</p>
-              <p className="text-[var(--color-secondary)] opacity-60 leading-relaxed">
-                PALETTE(원시 hex) → THEME(시맨틱 토큰) → COLORS(컴포넌트별 할당) 3레이어 구조.
-                색상 변경 시 PALETTE 또는 THEME 섹션의 값을 수정.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 p-3 border border-[var(--color-muted)]/30">
-            <i className="ri-css3-line text-base text-[var(--color-accent)] shrink-0 mt-0.5"></i>
-            <div>
-              <p className="text-[var(--color-accent)] tracking-widest mb-1">src/app/globals.css — :root</p>
-              <p className="text-[var(--color-secondary)] opacity-60 leading-relaxed">
-                CSS 커스텀 프로퍼티 선언. colors.ts THEME 값과 1:1 동기화 필수.
-                이 파일의 값이 브라우저에서 실제 렌더링되는 색상.
-              </p>
-            </div>
-          </div>
+        <h2 className="text-xl font-semibold mb-6">색상</h2>
+        <dl className="divide-y divide-[var(--color-muted)]">
+          {tokens.map(([label, variable, value]) => <div key={variable} className="flex flex-wrap items-center gap-4 py-4">
+            <span aria-hidden="true" className="h-10 w-10 border border-[var(--color-muted)]" style={{ background: `var(${variable})` }} />
+            <dt className="flex-1 min-w-32">{label}</dt>
+            <dd className="text-sm text-[var(--color-secondary)] break-all">{variable} / {value}</dd>
+          </div>)}
+        </dl>
+      </AdminCard>
+      <AdminCard>
+        <h2 className="text-xl font-semibold mb-6">글꼴과 구성</h2>
+        <div className="space-y-4 max-w-3xl text-[var(--color-secondary)]">
+          <p>Inter를 영문 제목·본문에 사용하고, 한글은 Apple SD Gothic Neo와 Malgun Gothic을 우선 사용합니다. 날짜와 보조 정보에는 JetBrains Mono를 사용합니다.</p>
+          <p>공개 화면은 큰 제목과 펼침 패널·콘텐츠 목록을 사용합니다. 관리자는 같은 글꼴과 구획선을 쓰며 입력·저장 작업에 맞는 크기를 유지합니다.</p>
+          <p>홈은 저장 순서대로 앞 4개 항목을 패널로, 이후 항목을 보조 링크로 표시합니다. 미리보기는 음악 3개·공연 2개·이미지 3개까지 실제 공개 콘텐츠를 사용합니다.</p>
         </div>
       </AdminCard>
 
-      {/* 현재 색상 테마 */}
-      <AdminCard>
-        <p className="text-xs font-mono text-[var(--color-accent)] tracking-widest mb-4">CURRENT THEME</p>
-        <div className="space-y-2">
-          {COLOR_ENTRIES.map(({ label, cssVar, hex }) => (
-            <div key={cssVar} className="flex items-center gap-4 py-2 border-b border-[var(--color-muted)]/20 last:border-0">
-              <div
-                className="w-8 h-8 shrink-0 border border-[var(--color-muted)]/40"
-                style={{ backgroundColor: hex }}
-              />
-              <div className="flex-1 font-mono text-xs">
-                <p className="text-[var(--color-accent)] tracking-widest">{label}</p>
-                <p className="text-[var(--color-secondary)] opacity-50">{cssVar}</p>
-              </div>
-              <p className="font-mono text-xs text-[var(--color-secondary)] opacity-70 tracking-widest">{hex}</p>
-            </div>
-          ))}
-        </div>
-      </AdminCard>
-
-      {/* 팔레트 */}
-      <AdminCard>
-        <p className="text-xs font-mono text-[var(--color-accent)] tracking-widest mb-4">PALETTE</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Object.entries(PALETTE).map(([name, hex]) => (
-            <div key={name} className="space-y-2">
-              <div
-                className="w-full h-10 border border-[var(--color-muted)]/30"
-                style={{ backgroundColor: hex }}
-              />
-              <div className="font-mono text-[10px]">
-                <p className="text-[var(--color-secondary)] tracking-widest uppercase">{name}</p>
-                <p className="text-[var(--color-secondary)] opacity-50">{hex}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </AdminCard>
-
-      {/* 사용 예시 */}
-      <AdminCard>
-        <p className="text-xs font-mono text-[var(--color-accent)] tracking-widest mb-4">USAGE</p>
-        <div className="font-mono text-xs space-y-4">
-          <div>
-            <p className="text-[var(--color-accent)] tracking-widest mb-2">CSS (Tailwind)</p>
-            <div className="bg-black/40 p-3 space-y-1 border border-[var(--color-muted)]/20">
-              <p className="text-[var(--color-secondary)] opacity-70">text-[var(--color-accent)]</p>
-              <p className="text-[var(--color-secondary)] opacity-70">border-[var(--color-muted)]</p>
-              <p className="text-[var(--color-secondary)] opacity-70">bg-[var(--color-accent)]/5</p>
-            </div>
-          </div>
-          <div>
-            <p className="text-[var(--color-accent)] tracking-widest mb-2">TypeScript (inline style)</p>
-            <div className="bg-black/40 p-3 space-y-1 border border-[var(--color-muted)]/20">
-              <p className="text-[var(--color-secondary)] opacity-70">{'import { COLORS } from "@/styles/colors"'}</p>
-              <p className="text-[var(--color-secondary)] opacity-70">{'style={{ borderColor: COLORS.border.faint }}'}</p>
-              <p className="text-[var(--color-secondary)] opacity-70">{'// Three.js: COLORS.scene3d.accent'}</p>
-            </div>
-          </div>
-          <div>
-            <p className="text-[var(--color-accent)] tracking-widest mb-2">유틸리티 함수</p>
-            <div className="bg-black/40 p-3 space-y-1 border border-[var(--color-muted)]/20">
-              <p className="text-[var(--color-secondary)] opacity-70">createBorderFaint() — muted/30 border</p>
-              <p className="text-[var(--color-secondary)] opacity-70">createBorderMid()   — muted/60 border</p>
-              <p className="text-[var(--color-secondary)] opacity-70">createBorderAccent()— accent border</p>
-            </div>
-          </div>
-        </div>
-      </AdminCard>
-
-      {/* 컴포넌트별 색상 할당 */}
-      <AdminCard>
-        <p className="text-xs font-mono text-[var(--color-accent)] tracking-widest mb-4">COMPONENT COLOR MAP</p>
-        <div className="font-mono text-xs space-y-3">
-          <p className="text-[var(--color-secondary)] opacity-50 leading-relaxed">
-            각 UI 요소의 색상 할당은{' '}
-            <span className="text-[var(--color-accent)]">src/styles/colors.ts</span> 의
-            COLORS 객체에서 확인 및 수정 가능.
-          </p>
-          <div className="grid md:grid-cols-2 gap-2">
-            {Object.keys(COLORS).map((section) => (
-              <div key={section} className="flex items-center gap-2 py-1.5 border-b border-[var(--color-muted)]/15">
-                <i className="ri-palette-line text-[var(--color-accent)] text-xs"></i>
-                <span className="text-[var(--color-secondary)] tracking-widest uppercase">{section}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </AdminCard>
     </div>
   );
-};
-
-export default ThemePage;
+}

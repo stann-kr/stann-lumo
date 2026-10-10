@@ -68,6 +68,14 @@ export interface PageMeta {
   link: LinkPageMeta;
 }
 
+export interface HomePreviews {
+  tracks: Pick<Track, 'id' | 'title' | 'type' | 'year' | 'platform' | 'link'>[];
+  events: Pick<Performance, 'id' | 'title' | 'date' | 'venue' | 'status' | 'posterImageId'>[];
+  photos: { id: string; caption: string; altText: string }[];
+  /** Platform names only; the Link page owns the actual URLs. */
+  platforms: string[];
+}
+
 export interface HomeSection {
   title: string;
   description: string;
@@ -83,6 +91,11 @@ export interface Track {
   year: string;
   platform: string;
   link: string;
+}
+
+/** Imported tracks carry a zero placeholder until a real length is entered. */
+export function hasKnownDuration(duration?: string): boolean {
+  return !!duration && !/^0{1,2}:00(:00)?$/.test(duration.trim());
 }
 
 export interface LinkPlatform {

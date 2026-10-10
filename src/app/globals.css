@@ -1,6 +1,5 @@
 @import "../styles/stann-os.css";
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Orbit&display=swap");
+/* Web fonts (Inter, JetBrains Mono) load from the root layout <head>. */
 
 @tailwind base;
 @tailwind components;
@@ -20,6 +19,11 @@
   --color-text-muted: #a0a0a0; /* 본문·메타 보조 텍스트, black 표면에서 AA 대비 */
   --color-bg: var(--os-music-bg); /* #000000 */
   --color-bg-sidebar: #050505; /* lumo 고유 — 사이드바 */
+}
+
+/* JetBrains Mono에는 한글이 없어 한국어 라벨의 단어 사이만 0.6em 고정폭 공백으로 벌어진다. */
+html:lang(ko) {
+  --mono-word-spacing: -.3em;
 }
 
 /* 타입 베이스 = 16px (브라우저 기본, STANN OS 공통 — 구 17px 오버라이드 제거) */
@@ -55,6 +59,10 @@ html {
   color: var(--color-bg);
 }
 
+/* Headings break into even lines and body copy avoids one-word last lines; components can still override. */
+:where(h1, h2, h3, h4) { text-wrap: balance; }
+:where(p, li, dd, blockquote) { text-wrap: pretty; }
+
 /* 포커스 가시화 — STANN OS 불변 글루 (web canon: 2px accent, offset 2px) */
 :focus-visible {
   outline: 2px solid var(--color-accent);
@@ -70,7 +78,7 @@ html {
 }
 
 body {
-  font-family: "Orbit", sans-serif;
+  font-family: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;

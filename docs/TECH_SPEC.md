@@ -6,7 +6,7 @@
 
 ```text
 src/app/(public)/
-└─ TerminalLayout + public pages
+└─ PublicSiteShell + public pages
 src/app/admin/
 └─ AdminLayout + dashboard pages
 Cloudflare
@@ -20,8 +20,8 @@ Cloudflare
 |---|---|---|
 | Public routes | `src/app/(public)/` | home, about, music, events, archive, contact, link |
 | Admin routes | `src/app/admin/(dashboard)/` | home, about, contact, link, music, events, archive, theme |
-| Public shell | `src/components/feature/TerminalLayout.tsx` | navigation, language, content loading, scene, signal links |
-| 3D scene | `src/components/feature/Scene3D.tsx` | visual background |
+| Public shell | `src/components/feature/PublicSiteShell.tsx` | navigation, language, focus, signal links |
+| 3D scene | `src/components/feature/Scene3D.tsx` | 보관된 모듈; 공개 shell에서는 미사용 |
 | Admin content | `src/contexts/ContentContext.tsx` | 편집용 콘텐츠 bootstrap과 상태 |
 | Terminal capability | `src/capabilities/terminal/` | 설정 contract, D1 persistence, API client |
 | Language | `src/contexts/LanguageContext.tsx` | language state |
@@ -45,16 +45,18 @@ Cloudflare
 
 | 모듈 | 역할 |
 |---|---|
-| `TerminalLayout.tsx` | public site shell, navigation, scene, signal links |
+| `PublicSiteShell.tsx` | public site shell, navigation, focus, signal links |
 | `PageLayout.tsx` | public page frame |
 | `AdminLayout.tsx` | admin dashboard shell |
 | `ProtectedRoute.tsx` | admin route protection boundary |
 | `ContentContext.tsx` | admin content bootstrap and edit state |
 | `src/capabilities/terminal/` | terminal config contract, persistence, client boundary |
 | `LanguageContext.tsx` | language state |
-| `Scene3D.tsx` | 3D background scene |
+| `Scene3D.tsx` | 보관된 3D 모듈; 공개 shell에서는 미사용 |
 | `SignalNet.tsx` | STANN OS signal network 표시 |
 | `wrangler.json` | Cloudflare route and binding config |
+
+홈 미리보기는 `HomeProjection`에서 음악 3개·공연 2개·이미지 3개까지 조회하고 화면에 필요한 공개 필드만 전달한다. 관리자 전체 content provider는 공개 route에 연결하지 않는다.
 
 ## 데이터 모델과 저장소
 

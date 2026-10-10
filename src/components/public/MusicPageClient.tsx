@@ -1,48 +1,53 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 import PageLayout from "@/components/feature/PageLayout";
-import { createBorderFaint } from "@/utils/colorMix";
-import type { MusicPageMeta, Track } from "@/capabilities/content/content";
+import InfiniteList from "@/components/feature/InfiniteList";
+import Link from '../feature/PublicLink';
+import { hasKnownDuration, type MusicPageMeta, type Track } from "@/capabilities/content/content";
+import styles from "./MusicPageClient.module.css";
 
-interface MusicPageClientProps {
-  musicMeta: MusicPageMeta;
-  tracks: Track[];
+interface MusicPageClientProps { musicMeta: MusicPageMeta; tracks: Track[]; }
+
+function TrackRow({ track, featured }: { track: Track; featured: boolean }) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const newTabLabel = language === 'ko' ? ' (새 창)' : ' (opens in a new tab)';
+  const content = <>
+    <div className={styles.year}>{track.year}</div>
+    <div className={styles.record}>
+      <h2 data-hover-label>{track.title}</h2>
+      {track.link && <span className={styles.listen}>{t('music_listen_on', { platform: track.platform })}</span>}
+    </div>
+    <div className={styles.meta}><span>{track.type}</span>{hasKnownDuration(track.duration) && <span className={styles.duration}>{track.duration}</span>}</div>
+    {track.link && <i className={styles.rowRule} aria-hidden="true" />}
+  </>;
+
+  return track.link ? (
+    <a href={track.link} target="_blank" rel="noopener noreferrer" className={styles.row} data-featured={featured} aria-label={`${track.title} — ${t('music_listen_on', { platform: track.platform })}${newTabLabel}`}>
+      {content}
+    </a>
+  ) : <div className={styles.row} data-featured={featured}>{content}</div>;
 }
 
 export default function MusicPageClient({ musicMeta, tracks }: MusicPageClientProps) {
   const { t } = useTranslation();
-  const borderFaint = createBorderFaint();
-
+  const { language } = useLanguage();
+  const isKorean = language === 'ko';
+  const newTabLabel = isKorean ? ' (새 창)' : ' (opens in a new tab)';
   return (
-    <PageLayout title={musicMeta.title || t("music_title")} subtitle={musicMeta.subtitle || t("music_subtitle")}>
-      <div className="mb-6 border p-4 md:p-5 space-y-3" style={borderFaint}>
-        <div className="font-mono text-xs tracking-widest text-[var(--color-accent)] uppercase">MUSIC ECOSYSTEM</div>
-        <p className="text-base leading-relaxed text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)]">이 페이지는 Stann Lumo archive입니다. 더 넓은 음악 허브는 stann-web에서, 현장 중심 라이브 인터페이스는 TERMINAL에서 이어집니다.</p>
-        <div className="flex flex-wrap gap-2">
-          <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center gap-2 border px-3 py-1 font-mono text-xs tracking-widest text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] transition-[background-color,color] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-secondary)]" style={borderFaint}>OPEN MUSIC HUB</a>
-          <a href="https://terminal.stann.kr" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center gap-2 border px-3 py-1 font-mono text-xs tracking-widest text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] transition-[background-color,color] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-secondary)]" style={borderFaint}>OPEN LIVE INTERFACE</a>
+    <PageLayout title={musicMeta.title || t("music_title")} subtitle={musicMeta.subtitle}>
+      {tracks.length ? <InfiniteList key={language} items={tracks} pageSize={10} className={styles.tracks} label={musicMeta.title || t('music_title')}
+        renderItem={(track, index) => <TrackRow track={track} featured={index === 0} />} />
+        : <p className={styles.empty}>{isKorean ? '등록된 음악이 없습니다.' : 'No music has been added yet.'}</p>}
+      <footer className={styles.footer}>
+        <Link href="/contact">{t('music_licensing')}</Link>
+        <div>
+          <a href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{isKorean ? '뮤직 허브' : 'Music hub'}<span className="sr-only">{newTabLabel}</span></a>
+          <a href="https://terminal.stann.kr" target="_blank" rel="noopener noreferrer">{isKorean ? '터미널' : 'Terminal'}<span className="sr-only">{newTabLabel}</span></a>
         </div>
-      </div>
-      <div className="border border-[var(--color-muted)] p-[1px] flex flex-col gap-[1px] overflow-x-hidden">
-        <div className="hidden md:flex items-center px-4 py-2 bg-surface font-mono text-xs tracking-widest text-[var(--color-accent)] uppercase">
-          <div className="w-16">{t("music_col_id")}</div><div className="flex-1">{t("music_col_title")}</div><div className="w-24">{t("music_col_type")}</div><div className="w-16">{t("music_col_yr")}</div><div className="w-32 text-right">{t("music_col_action")}</div>
-        </div>
-        {tracks.map((track, index) => {
-          const idStr = (index + 1).toString().padStart(3, "0");
-          return (
-            <div key={track.id} className="group bg-surface relative overflow-hidden transition-colors hover:bg-[var(--color-accent)]/5 flex flex-col md:flex-row md:items-center px-4 py-4 md:py-3 gap-3 md:gap-0">
-              <div className="hidden w-16 font-mono text-xs text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] transition-colors group-hover:text-[var(--color-accent)] md:block">{idStr}</div>
-              <div className="flex-1 w-full min-w-0 pr-4"><div className="flex items-center gap-2 md:hidden mb-2"><span className="font-mono text-xs text-[var(--color-accent)]">[{idStr}]</span></div><h3 className="font-mono text-base tracking-widest text-[var(--color-secondary)] group-hover:text-[var(--color-primary)] transition-colors uppercase truncate">{track.title}</h3></div>
-              <div className="hidden md:block w-24 font-mono text-xs tracking-widest text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)]">{`[${track.type}]`}</div>
-              <div className="hidden md:block w-16 font-mono text-xs tracking-widest text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)]">{track.year}</div>
-              <div className="md:w-32 md:text-right mt-2 md:mt-0"><a href={track.link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-[44px] items-center gap-2 border px-3 py-1 font-mono text-xs tracking-widest text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)] transition-[background-color,color] hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-secondary)]" style={borderFaint}><i aria-hidden="true" className="ri-play-fill text-xs"></i>{track.platform.toUpperCase()}</a></div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="pt-6 border-t" style={borderFaint}><p className="text-base leading-relaxed text-[color:color-mix(in_srgb,var(--color-secondary)_72%,transparent)]">{t("music_note")}</p><div className="mt-4"><Link href="/" className="inline-flex min-h-[44px] items-center font-mono text-xs tracking-widest text-[var(--color-accent)] transition-colors hover:text-[var(--color-primary)] uppercase">Return to artist archive root</Link></div></div>
+      </footer>
     </PageLayout>
   );
 }

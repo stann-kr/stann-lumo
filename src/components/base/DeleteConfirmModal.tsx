@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type KeyboardEvent } from 'react';
-import { useTranslation } from 'react-i18next';
+import styles from './AdminDialog.module.css';
 
 interface DeleteConfirmModalProps {
   show: boolean;
@@ -11,7 +11,7 @@ interface DeleteConfirmModalProps {
 /**
  * 어드민 삭제 확인 모달 컴포넌트
  * - 삭제 작업 확인 UI 재사용
- * - 일관된 스타일 및 버튼 동작 제공
+ * - 관리자 화면은 방문자 언어 설정과 관계없이 한국어로 표시한다
  */
 const DeleteConfirmModal = ({
   show,
@@ -19,7 +19,6 @@ const DeleteConfirmModal = ({
   onConfirm,
   onCancel
 }: DeleteConfirmModalProps) => {
-  const { t } = useTranslation();
   const titleId = useId();
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -70,36 +69,21 @@ const DeleteConfirmModal = ({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-6">
+    <div className={styles.backdrop}>
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className="w-full max-w-md space-y-4 border border-[var(--color-secondary)]/30 bg-[var(--color-bg)] p-6 font-mono shadow-2xl"
+        className={styles.dialog}
         onKeyDown={handleKeyDown}
       >
-        <h2 id={titleId} className="sr-only">DELETE ITEM</h2>
-        <p id={descriptionId} className="text-sm text-[var(--color-secondary)] tracking-wider">
-          {t('msg_confirm_delete_item', { name: itemName })}
-        </p>
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="px-4 py-2 bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-sm tracking-wider hover:bg-[var(--color-accent)]/20 transition-colors whitespace-nowrap cursor-pointer"
-          >
-            {t('msg_confirm_delete_action')}
-          </button>
-          <button
-            ref={cancelButtonRef}
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 bg-[var(--color-secondary)]/10 text-[var(--color-secondary)] text-sm tracking-wider hover:bg-[var(--color-secondary)]/20 transition-colors whitespace-nowrap cursor-pointer"
-          >
-            {t('btn_cancel')}
-          </button>
+        <h2 id={titleId}>항목 삭제</h2>
+        <p id={descriptionId}>“{itemName}”을(를) 삭제할까요?</p>
+        <div className={styles.actions}>
+          <button ref={cancelButtonRef} type="button" onClick={onCancel}>취소</button>
+          <button type="button" onClick={onConfirm} className={styles.leave}>삭제</button>
         </div>
       </div>
     </div>
