@@ -80,7 +80,7 @@ describe('AdminContentGate', () => {
     expect(screen.queryByRole('button', { name: 'SAVE CONTENT' })).not.toBeInTheDocument();
     expect(saveRequest).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole('button', { name: 'RETRY CONTENT LOAD' }));
+    await user.click(screen.getByRole('button', { name: '다시 불러오기' }));
 
     await waitFor(() => expect(fetchContent).toHaveBeenCalledTimes(4));
     const loading = screen.getByRole('status');
@@ -93,7 +93,7 @@ describe('AdminContentGate', () => {
     retryKo.resolve(content);
     expect(await screen.findByRole('button', { name: 'SAVE CONTENT' })).toBeInTheDocument();
     const readyAnnouncement = screen.getByRole('status');
-    expect(readyAnnouncement).toHaveTextContent('CONTENT READY. EDITOR AVAILABLE.');
+    expect(readyAnnouncement).toHaveTextContent('콘텐츠를 불러왔습니다. 편집할 수 있습니다.');
     expect(readyAnnouncement).not.toHaveFocus();
     await waitFor(() => expect(saveRequest).toHaveBeenCalledTimes(1));
   });

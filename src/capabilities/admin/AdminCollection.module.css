@@ -1,0 +1,33 @@
+.toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; margin-block: 24px 16px; }
+.toolbar > :first-child { flex: 1; min-width: min(100%, 220px); }
+.filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.filters button { min-height: 44px; padding: 8px 14px; font-size: .8125rem; border: 1px solid transparent; }
+.filters button[aria-pressed='true'] { border-color: var(--color-secondary); color: var(--color-primary); background: color-mix(in srgb, var(--color-secondary) 9%, transparent); }
+.filters button:hover { background: color-mix(in srgb, var(--color-secondary) 7%, transparent); }
+.count { color: var(--color-secondary); font-size: .8125rem; margin-bottom: 16px; }
+.list { display: grid; gap: 12px; }
+.empty { padding: 48px 20px; text-align: center; border: 1px dashed color-mix(in srgb, var(--color-secondary) 30%, transparent); color: var(--color-secondary); }
+.empty button { display: block; min-height: 44px; margin: 16px auto 0; padding-inline: 16px; border: 1px solid var(--color-secondary); }
+.disclosure { border-top: 1px solid color-mix(in srgb, var(--color-secondary) 24%, transparent); }
+.disclosure > summary { min-height: 56px; padding-block: 16px; font-size: .9375rem; font-weight: 500; cursor: pointer; }
+.disclosure > div { margin-block: 8px 24px; }
+.notice { margin-block: 16px; color: var(--color-secondary); font-size: .8125rem; }
+.sectionHeader { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.sectionHeader h2 { font-size: 1.125rem; font-weight: 500; color: var(--color-primary); }
+.button, .dangerButton { min-height: 44px; padding: 10px 16px; border: 1px solid color-mix(in srgb, var(--color-secondary) 30%, transparent); font-size: .8125rem; }
+.button:hover:not(:disabled), .dangerButton:hover:not(:disabled) { background: color-mix(in srgb, var(--color-secondary) 8%, transparent); }
+.button:disabled, .dangerButton:disabled { opacity: .4; cursor: not-allowed; }
+.dangerButton { color: var(--color-accent); }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.stack { display: grid; gap: 20px; }
+.inlineItem { display: flex; align-items: flex-end; gap: 12px; }
+/* A label/value pair whose row actions sit on the input line instead of a separate footer. */
+.pairRow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: end; gap: 16px 20px; }
+.pairActions { display: flex; gap: 8px; }
+.pairActions .button { min-width: 44px; padding-inline: 12px; }
+.inlineItem > :first-child { flex: 1; min-width: 0; }
+.inlineItem > button { flex-shrink: 0; }
+@media (max-width: 640px) {
+  .fields, .pairRow { grid-template-columns: minmax(0, 1fr); }
+  .pairActions { justify-content: flex-end; }
+}

@@ -1,8 +1,60 @@
-.admin { composes: root from '../../styles/designV2.module.css'; min-height: 100svh; display: flex; }
-.admin h1, .admin h2, .admin h3 { font-family: var(--font-display); letter-spacing: -.025em; }
-.admin input, .admin textarea, .admin select { font-family: var(--font-display); font-size: 1rem; line-height: 1.5; }
-.admin input:not([type='checkbox']):not([type='radio']), .admin select { min-height: 44px; }
+.admin {
+  composes: root from '../../styles/designV2.module.css';
+  --admin-toolbar-height: 64px;
+  --admin-line: color-mix(in srgb, var(--color-secondary) 22%, transparent);
+  min-height: 100svh;
+  font-size: .9375rem;
+}
+.admin fieldset { min-width: 0; }
+.admin :is(h1, h2, h3) { font-family: var(--font-display); letter-spacing: -.025em; }
+.admin :is(input, textarea, select, button) { font-family: inherit; }
+.admin :is(button, a, input, select, textarea, summary):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 .admin :global(.tracking-widest), .admin :global(.tracking-wider) { letter-spacing: .01em; }
-.admin :global(.font-mono) { font-family: 'JetBrains Mono', monospace; }
-.admin > aside { overflow-y: auto; }
-.admin > main { min-width: 0; }
+.admin :global(.font-mono) { font-family: var(--font-display); }
+.sidebar { position: fixed; inset: 0 auto 0 0; width: 216px; z-index: 40; display: flex; flex-direction: column; overflow-y: auto; background: var(--color-bg); border-right: 1px solid var(--admin-line); }
+.brand { padding: 30px 24px; font-weight: 800; letter-spacing: -.04em; }
+.brand span { display: block; margin-top: 5px; font-size: .75rem; font-weight: 400; letter-spacing: 0; color: var(--color-secondary); }
+.navigation { flex: 1; padding: 0 12px; }
+.group { margin-bottom: 24px; }
+.group p { padding: 0 12px 8px; font-size: .75rem; color: var(--color-secondary); }
+.navigation a { display: flex; align-items: center; min-height: 44px; padding: 10px 12px; border-left: 2px solid transparent; text-decoration: none; }
+.navigation a:hover, .footer :is(a, button):hover { background: color-mix(in srgb, var(--color-secondary) 8%, transparent); }
+.navigation a[aria-current] { background: color-mix(in srgb, var(--color-accent) 12%, transparent); border-color: var(--color-accent); color: var(--color-accent); font-weight: 600; }
+.footer { padding: 16px 24px; border-top: 1px solid var(--admin-line); }
+.footer :is(a, button) { display: block; width: 100%; min-height: 44px; text-align: left; font-size: .8125rem; }
+.footer p { font-size: .75rem; color: var(--color-accent); }
+.workspace { margin-left: 216px; min-width: 0; }
+.toolbar { position: sticky; top: 0; height: var(--admin-toolbar-height); z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 clamp(16px, 3vw, 48px); border-bottom: 1px solid var(--admin-line); background: var(--color-bg); }
+.location { display: flex; align-items: center; gap: 12px; font-size: .8125rem; }
+.location > span { color: var(--color-secondary); }
+.location strong { font-weight: 500; }
+.tools { display: flex; align-items: center; gap: clamp(12px, 2vw, 24px); }
+.publicLink { display: inline-flex; align-items: center; min-height: 40px; font-size: .75rem; color: var(--color-secondary); text-decoration: none; }
+.publicLink:hover { color: var(--color-primary); }
+/* Fixed to the bottom so it never covers the sticky save header, wherever the editor is scrolled. */
+.sessionNotice { position: fixed; z-index: 50; left: calc(216px + clamp(16px, 3vw, 48px)); right: clamp(16px, 3vw, 48px); bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 14px 18px; border: 1px solid var(--color-accent); background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg)); box-shadow: 0 12px 32px #000a; font-size: .875rem; }
+.sessionNotice p { max-width: 72ch; }
+.sessionNotice strong { font-weight: 600; }
+.sessionNotice a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--color-primary); white-space: nowrap; text-decoration: none; }
+.sessionNotice a:hover { background: var(--color-primary); color: var(--color-bg); }
+.language { display: flex; align-items: center; gap: 12px; font-size: .75rem; }
+.language select { min-height: 40px; padding: 6px 28px 6px 10px; border: 1px solid var(--admin-line); background: var(--color-bg); color: var(--color-primary); }
+.content { max-width: 1440px; margin-inline: auto; padding: 24px clamp(16px, 3vw, 48px) 80px; min-width: 0; }
+.menuToggle { display: none; }
+.skip { position: fixed; top: -100px; left: 16px; z-index: 100; padding: 12px; background: var(--color-accent); color: var(--color-bg); }
+.skip:focus { top: 8px; }
+@media (max-width: 900px) {
+  .workspace { margin-left: 0; }
+  .sessionNotice { left: 16px; right: 16px; }
+  .sidebar { display: none; top: var(--admin-toolbar-height); width: min(320px, 100%); bottom: auto; max-height: calc(100svh - var(--admin-toolbar-height)); border-bottom: 1px solid var(--admin-line); box-shadow: 12px 12px 32px #0006; }
+  .sidebar[data-open='true'] { display: flex; }
+  .brand { display: none; }
+  .navigation { padding-top: 16px; }
+  .menuToggle { display: block; min-height: 44px; padding: 8px; border: 1px solid var(--admin-line); }
+  .location > span { display: none; }
+  .content { padding-top: 16px; }
+}
+@media (max-width: 440px) {
+  .language > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .location { gap: 8px; }
+}

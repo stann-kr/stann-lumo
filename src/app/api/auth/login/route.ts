@@ -3,6 +3,7 @@ import { getEnv } from '@/lib/db';
 import {
   createSession,
   buildSessionCookieHeader,
+  pruneExpiredSessions,
   SessionStorageUnavailableError,
 } from '@/capabilities/auth/auth.server';
 
@@ -27,7 +28,13 @@ async function timingSafeEqual(a: string, b: string): Promise<boolean> {
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = (await request.json()) as { password: string };
+    const { password } = (await request.json()) as { password?: unknown };
+    if (typeof password !== 'string' || password.length === 0 || password.length > 1024) {
+      return NextResponse.json(
+        { success: false, error: { code: 'BAD_REQUEST', message: 'Password is required' } },
+        { status: 400 },
+      );
+    }
 
     const { ADMIN_PASSWORD } = getEnv();
 
@@ -47,6 +54,8 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionId = await createSession();
+    // Expired rows are otherwise never removed; cleanup must not block a successful sign-in.
+    await pruneExpiredSessions().catch(() => undefined);
 
     const response = NextResponse.json({ success: true });
     response.headers.set('Set-Cookie', buildSessionCookieHeader(sessionId));

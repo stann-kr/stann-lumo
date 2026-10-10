@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 import SaveButton from './SaveButton';
+import { useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
 import styles from './AdminSectionHeader.module.css';
 
 /**
@@ -54,7 +55,28 @@ export default function AdminSectionHeader({
   className = '',
 }: AdminSectionHeaderProps) {
   const actionContent = actions || action;
-  
+  const { isDirty } = useAdminEditGuard();
+  const hasSave = showSaveButton && Boolean(onSave);
+  const latestSave = useRef({ onSave, canSave: false });
+
+  useEffect(() => {
+    latestSave.current = { onSave, canSave: hasSave && !isSaving && !isSaveDisabled };
+  }, [hasSave, isSaveDisabled, isSaving, onSave]);
+
+  // ⌘S / Ctrl+S saves the page in place instead of opening the browser's "save page" dialog.
+  useEffect(() => {
+    if (!hasSave) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== 's') return;
+      event.preventDefault();
+      if (event.repeat || document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      const { onSave: save, canSave } = latestSave.current;
+      if (canSave) save?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasSave]);
+
   return (
     <div className={`${styles.header} ${className}`}>
       <div>
@@ -72,12 +94,18 @@ export default function AdminSectionHeader({
         )}
       </div>
       <div className={styles.actions}>
+        {showSaveButton && onSave && <span className={styles.status} data-dirty={isDirty} role="status">
+          {isSaving ? '저장 중…' : isDirty ? '저장 전' : '변경 사항 없음'}
+        </span>}
         {actionContent}
         {showSaveButton && onSave && (
           <SaveButton
             onClick={onSave}
             isSaving={isSaving}
             disabled={isSaveDisabled}
+            // Saving stays available (some settings are not tracked as edits); it only steps back visually.
+            emphasized={isDirty || isSaving}
+            keyShortcuts
           />
         )}
       </div>

@@ -4,13 +4,27 @@ import ArchiveDetailPageClient from '@/components/public/ArchiveDetailPageClient
 import { createPublicMetadata } from '@/capabilities/site/publicMetadata';
 import { getArchiveDetail, getArchivePhotos } from '@/capabilities/content/publicContent.server';
 import { archiveBrowseState, archiveDetailContext } from '@/capabilities/media/archiveBrowsing';
+import { getPublicImageUrl, type GalleryPhoto } from '@/capabilities/media/media';
 
 interface ArchiveDetailPageProps { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>>; }
+
+function shareImage(photo: GalleryPhoto): { url: string; alt?: string } | undefined {
+  const alt = photo.altText || photo.caption || undefined;
+  if (photo.mediaType === 'image') return { url: getPublicImageUrl(photo.id), alt };
+  if (photo.mediaType === 'video_youtube' && photo.videoThumbnailUrl) return { url: photo.videoThumbnailUrl, alt };
+  return undefined;
+}
 
 export async function generateMetadata({ params }: ArchiveDetailPageProps): Promise<Metadata> {
   const detail = await getArchiveDetail((await params).id);
   if (!detail) return createPublicMetadata({ title: 'Archive item not found', description: 'The requested STANN LUMO archive item is unavailable.', path: '/archive' });
-  return createPublicMetadata({ title: detail.photo.caption || detail.photo.altText || 'Archive', description: detail.photo.caption || 'Photo and video archive of STANN LUMO', path: `/archive/${detail.photo.id}` });
+  const image = shareImage(detail.photo);
+  return createPublicMetadata({
+    title: detail.photo.caption || detail.photo.altText || 'Archive',
+    description: detail.photo.caption || 'Photo and video archive of STANN LUMO',
+    path: `/archive/${detail.photo.id}`,
+    ...(image && { image }),
+  });
 }
 
 export default async function ArchiveDetailPage({ params, searchParams }: ArchiveDetailPageProps) {

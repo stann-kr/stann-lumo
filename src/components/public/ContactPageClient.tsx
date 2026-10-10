@@ -11,6 +11,7 @@ interface ContactPageClientProps { bookingInfo: EventsInfo; contactInfo: Contact
 export default function ContactPageClient({ bookingInfo, contactInfo, contactMeta }: ContactPageClientProps) {
   const { t } = useTranslation();
   const isBookingAddressListed = contactInfo.some((item) => item.value.trim().toLowerCase() === bookingInfo.contactEmail.trim().toLowerCase());
+  const showsBookingAddress = !!bookingInfo.contactEmail && !isBookingAddressListed;
   return (
     <PageLayout title={contactMeta.title || t("contact_title")} subtitle={/guestbook|방명록/i.test(contactMeta.subtitle) ? undefined : contactMeta.subtitle}>
       <section className={styles.direct}>
@@ -27,8 +28,8 @@ export default function ContactPageClient({ bookingInfo, contactInfo, contactMet
         <div className={styles.details}>
           {!!bookingInfo.setDurations.length && <div><h3>{t("events_set_duration")}</h3><ul>{bookingInfo.setDurations.map((duration, index) => <li key={index}>{duration}</li>)}</ul></div>}
           {!!bookingInfo.technicalRequirements.length && <div><h3>{t("events_technical")}</h3><ul>{bookingInfo.technicalRequirements.map((requirement, index) => <li key={index}>{requirement}</li>)}</ul></div>}
-          {((bookingInfo.contactEmail && !isBookingAddressListed) || bookingInfo.responseTime) && <div><h3>{t("events_contact")}</h3>
-            {bookingInfo.contactEmail && !isBookingAddressListed && <a href={`mailto:${bookingInfo.contactEmail}`}>{bookingInfo.contactEmail}</a>}
+          {(showsBookingAddress || bookingInfo.responseTime) && <div><h3>{t(showsBookingAddress ? "events_contact" : "contact_response_time")}</h3>
+            {showsBookingAddress && <a href={`mailto:${bookingInfo.contactEmail}`}>{bookingInfo.contactEmail}</a>}
             {bookingInfo.responseTime && <p>{bookingInfo.responseTime}</p>}
           </div>}
         </div>

@@ -1,14 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { useDeleteConfirm } from '@/capabilities/admin/useDeleteConfirm';
 import DeleteConfirmModal from './DeleteConfirmModal';
-
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, values?: { name: string }) => values?.name ? `${key}:${values.name}` : key,
-  }),
-}));
 
 const DeleteHarness = () => {
   const { isOpen, openConfirm, closeConfirm } = useDeleteConfirm();
@@ -34,10 +28,10 @@ describe('DeleteConfirmModal', () => {
     const opener = screen.getByRole('button', { name: 'OPEN DELETE' });
     await user.click(opener);
 
-    const dialog = await screen.findByRole('dialog', { name: 'DELETE ITEM' });
+    const dialog = await screen.findByRole('dialog', { name: '항목 삭제' });
     expect(dialog).toHaveAttribute('aria-modal', 'true');
-    expect(dialog).toHaveAccessibleDescription('msg_confirm_delete_item:Fixture');
-    await waitFor(() => expect(screen.getByRole('button', { name: 'btn_cancel' })).toHaveFocus());
+    expect(dialog).toHaveAccessibleDescription('“Fixture”을(를) 삭제할까요?');
+    await waitFor(() => expect(screen.getByRole('button', { name: '취소' })).toHaveFocus());
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

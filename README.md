@@ -33,11 +33,14 @@ docker compose up --build
 
 ```bash
 npm run lint
+npm test
 npm run test:local-config
 npm run test:local-worker
 npm run type-check
 npm run build
 ```
+
+Pull request와 `main`·`dev` push에서는 GitHub Actions(`.github/workflows/ci.yml`)가 lint, type-check, `npm test`, `npm run test:env`, `npm run test:scripts`를 실행한다. 이 검사는 비밀값과 Cloudflare binding을 쓰지 않으며, `.dev.vars`가 필요한 `local:config:check`와 빌드·배포는 포함하지 않는다.
 
 `npm run dev`는 OpenNext artifact `.next`와 Wrangler local runtime을 사용하고, `npm run build`는 `.next-build`를 사용한다. `npm run start`는 `npm run build`가 만든 `.next-build`를 실행한다. Worker binding이 필요 없는 빠른 UI 확인에는 `npm run dev:next`를 쓸 수 있지만 D1/R2 API는 의도적으로 fail-closed 한다. Cloudflare Workers Builds에서는 OpenNext 호환을 위해 같은 build 명령이 `.next`를 사용한다.
 

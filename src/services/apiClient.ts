@@ -5,6 +5,8 @@
  * ApiResponse<T> 형식으로 결과 반환, 네트워크/파싱 에러 처리 포함.
  */
 
+import { notifyAdminUnauthorized } from '@/capabilities/auth/adminSessionEvents';
+
 export interface ApiError {
   code: string;
   message: string;
@@ -47,6 +49,7 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
+    notifyAdminUnauthorized(url, res.status);
     return {
       success: false,
       error: { code: 'HTTP_ERROR', message: `Request failed with status ${res.status}` },

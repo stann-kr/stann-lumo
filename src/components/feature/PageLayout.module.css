@@ -1,6 +1,10 @@
 .page { padding: clamp(1.5rem, 3vw, 3rem) var(--page-gutter, 1.25rem) clamp(4rem, 8vw, 8rem); max-width: 1800px; margin-inline: auto; }
 .header { position: relative; padding-bottom: clamp(1.5rem, 3vw, 3rem); }
 .header h1 { font-family: var(--font-display, sans-serif); font-size: clamp(1.25rem, 2vw, 2rem); font-weight: 700; line-height: 1.15; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.header[data-size='label'] h1 { text-transform: uppercase; }
 .header h1 span { display: block; }
 .header[data-size='display'] h1 { max-width: 26ch; font-size: clamp(2rem, 4.5vw, 5rem); font-weight: 800; letter-spacing: -.045em; }
 .header p { margin-top: .75rem; max-width: 65ch; font-size: .95rem; color: var(--color-secondary); overflow-wrap: anywhere; }
+.eyebrow { margin-bottom: 1rem; }
+.eyebrow a { display: inline-flex; align-items: center; min-height: 44px; font: .75rem/1.6 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); letter-spacing: .08em; text-transform: uppercase; color: var(--color-secondary); }
+@media (hover: hover) and (pointer: fine) { .eyebrow a:hover { color: var(--color-accent); } }

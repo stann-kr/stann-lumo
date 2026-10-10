@@ -1,7 +1,7 @@
 .about { display: grid; grid-template-columns: minmax(10rem, 1fr) minmax(0, 3fr); gap: 3rem clamp(2rem, 6vw, 7rem); border-top: 1px solid var(--color-muted); padding-top: 2rem; }
 .facts { align-self: start; }
 .facts > div { margin-bottom: 2rem; }
-.facts dt { font: .8rem 'JetBrains Mono', monospace; color: var(--color-secondary); margin-bottom: .5rem; }
+.facts dt { font: .8rem 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); color: var(--color-secondary); margin-bottom: .5rem; }
 .facts dd { font-size: 1.25rem; font-weight: 500; overflow-wrap: anywhere; }
 .prose { max-width: 65ch; }
 .prose section + section { margin-top: 4rem; }

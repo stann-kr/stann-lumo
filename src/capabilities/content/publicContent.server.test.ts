@@ -29,6 +29,7 @@ function createPublicDatabase() {
           if (sql.includes('FROM page_meta')) return { results: [{ page: 'home', key: 'navTitle', value: 'ARCHIVE INDEX' }], success: true, meta: {} };
           if (sql.includes('FROM tracks')) return { results: [{ id: 'track', title: 'Track', type: 'Original', year: '2026' }], success: true, meta: {} };
           if (sql.includes('FROM home_sections')) return { results: [{ title: 'MUSIC', description: 'Releases', path: '/music', icon: 'ri-music-2-line' }], success: true, meta: {} };
+          if (sql.includes('FROM link_platforms')) return { results: [{ platform: 'SoundCloud' }], success: true, meta: {} };
           if (sql.includes('FROM terminal_custom_fields')) return { results: [], success: true, meta: {} };
           if (sql.includes('FROM gallery_photos')) return { results: [], success: true, meta: {} };
           return { results: [], success: true, meta: {} };
@@ -122,6 +123,7 @@ describe('public server content projections', () => {
     expect(projection.artistInfo).toContainEqual(expect.objectContaining({ value: 'STANN LUMO' }));
     expect(projection.homeSections).toHaveLength(1);
     expect(projection.terminalInfo.url).toBe('https://terminal.example.test');
+    expect(projection.previews.platforms).toEqual(['SoundCloud']);
     expect(prepared.some((statement) => /ra_api_config|admin_password|token/i.test(statement.sql))).toBe(false);
     expect(prepared.filter((statement) => statement.sql.includes('lang = ?')).every((statement) => statement.bindings[0] === 'ko')).toBe(true);
     expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
@@ -167,6 +169,7 @@ describe('public server content projections', () => {
         sqlite.prepare("INSERT INTO tracks (id, lang, title, type, duration, year, platform, sort_order) VALUES (?, 'en', ?, 'Original', '0:00', '2026', 'Bandcamp', ?)").run(`track-${index}`, `Track ${index}`, index);
         sqlite.prepare("INSERT INTO performances (id, title, date, venue) VALUES (?, ?, ?, 'Venue')").run(`event-${index}`, `Event ${index}`, index === 0 ? '2000-01-01' : `2999.09.0${index}`);
         sqlite.prepare("INSERT INTO gallery_photos (id, filename, caption, sort_order) VALUES (?, ?, ?, ?)").run(`photo-${index}`, `photo-${index}.jpg`, `Photo ${index}`, index);
+        sqlite.prepare("INSERT INTO link_platforms (id, lang, platform, url, icon, description, sort_order) VALUES (?, 'en', ?, ?, '', '', ?)").run(`link-${index}`, `Platform ${index}`, `https://example.com/${index}`, index);
       }
       const { previews } = await getHomeProjection('ko');
       expect(previews.tracks.map((track) => track.id)).toEqual(['track-0', 'track-1', 'track-2']);
@@ -174,6 +177,8 @@ describe('public server content projections', () => {
       expect(previews.photos.map((photo) => photo.id)).toEqual(['photo-0', 'photo-1', 'photo-2']);
       expect(previews.tracks[0]).toEqual({ id: 'track-0', title: 'Track 0', type: 'Original', year: '2026', platform: 'Bandcamp', link: '' });
       expect(previews.photos[0]).toEqual({ id: 'photo-0', caption: 'Photo 0', altText: '' });
+      // Only names reach the home; URLs stay on the Link page.
+      expect(previews.platforms).toEqual(['Platform 0', 'Platform 1', 'Platform 2', 'Platform 3']);
       expect(() => assertPublicPayloadSafe(previews)).not.toThrow();
     } finally { close(); }
   });

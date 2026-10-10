@@ -1,17 +1,19 @@
-import Link from 'next/link';
-import { getRequestLocale } from '@/capabilities/content/publicContent.server';
-import styles from '@/components/public/PublicFallback.module.css';
+import PublicSiteShell from '@/components/feature/PublicSiteShell';
+import PublicNotFound from '@/components/public/PublicNotFound';
+import { getPublicShellProjection, getRequestLocale } from '@/capabilities/content/publicContent.server';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Unknown addresses get the full site navigation while still answering with a real 404 status
+ * (the public route group streams through its loading boundary, which would turn it into a 200).
+ */
 export default async function NotFoundPage() {
-  const isKorean = (await getRequestLocale()) === 'ko';
+  const locale = await getRequestLocale();
+  const shell = await getPublicShellProjection(locale).catch(() => ({ artistName: undefined }));
   return (
-    <main className={styles.fallback}>
-      <p>404</p>
-      <h1>{isKorean ? '페이지를 찾을 수 없습니다.' : 'Page not found.'}</h1>
-      <p>{isKorean ? '주소를 확인하거나 홈에서 다시 찾아보세요.' : 'Check the address or explore from the home page.'}</p>
-      <div className={styles.actions}><Link href="/">{isKorean ? '홈으로' : 'Return home'}</Link></div>
-    </main>
+    <PublicSiteShell artistName={shell.artistName}>
+      <PublicNotFound isKorean={locale === 'ko'} />
+    </PublicSiteShell>
   );
 }

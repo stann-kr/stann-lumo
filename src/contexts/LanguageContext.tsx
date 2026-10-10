@@ -31,7 +31,9 @@ function subscribe(callback: () => void) {
 function getSnapshot(): Language {
   const cookieMatch = document.cookie.match(new RegExp(`(?:^|; )${LANGUAGE_COOKIE}=([^;]+)`));
   if (cookieMatch?.[1] === 'ko' || cookieMatch?.[1] === 'en') return cookieMatch[1];
-  const saved = localStorage.getItem('app_language');
+  // Storage can throw when the visitor blocks site data; the cookie and browser language still decide.
+  let saved: string | null = null;
+  try { saved = localStorage.getItem('app_language'); } catch { /* fall through */ }
   if (saved === 'ko' || saved === 'en') return saved;
   const nav = (navigator.languages?.[0] || navigator.language || 'en').toLowerCase();
   return nav.startsWith('ko') ? 'ko' : 'en';
@@ -53,7 +55,7 @@ export function LanguageProvider({ children, initialLanguage = 'en' }: { childre
   }, [language, router]);
 
   const setLanguage = useCallback((lang: Language) => {
-    localStorage.setItem('app_language', lang);
+    try { localStorage.setItem('app_language', lang); } catch { /* the cookie below still carries the choice */ }
     document.cookie = `${LANGUAGE_COOKIE}=${lang}; Path=/; Max-Age=31536000; SameSite=Lax`;
     // storage 이벤트는 같은 탭에서 자동 발생하지 않으므로 수동 트리거
     window.dispatchEvent(new StorageEvent('storage', { key: 'app_language', newValue: lang }));

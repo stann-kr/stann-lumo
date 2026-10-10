@@ -5,14 +5,19 @@ import { useTranslation } from 'react-i18next';
 import styles from './LoadingImage.module.css';
 import { observeInViewport } from '@/lib/observeInViewport';
 
-type LoadingImageProps = Omit<ComponentProps<'img'>, 'src' | 'onLoad' | 'onError'> & { src?: string; natural?: boolean };
+type LoadingImageProps = Omit<ComponentProps<'img'>, 'src' | 'onLoad' | 'onError'> & {
+  src?: string;
+  natural?: boolean;
+  /** Decorative thumbnails keep an empty frame instead of an error message that cannot fit. */
+  quiet?: boolean;
+};
 
 export default function LoadingImage(props: LoadingImageProps) {
   // Changing the source must never reveal the next image with the previous image's ready state.
   return <ImageFrame key={props.src} {...props} />;
 }
 
-function ImageFrame({ src, alt = '', className, natural = false, loading = 'lazy', ...props }: LoadingImageProps) {
+function ImageFrame({ src, alt = '', className, natural = false, quiet = false, loading = 'lazy', ...props }: LoadingImageProps) {
   const { t } = useTranslation();
   const frameRef = useRef<HTMLSpanElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -63,7 +68,7 @@ function ImageFrame({ src, alt = '', className, natural = false, loading = 'lazy
   return <span ref={frameRef} className={`${styles.frame} ${natural ? styles.natural : ''} ${className || ''}`} data-load-state={state} aria-busy={state === 'loading'}>
     <img {...props} ref={imageRef} src={requested ? src : undefined} alt={alt} loading="eager" decoding="async" />
     {state !== 'ready' && <span className={styles.placeholder} aria-hidden={state === 'loading' || !alt ? true : undefined}>
-      {state === 'error' && <span>{t('image_load_error')}</span>}
+      {state === 'error' && !quiet && <span>{t('image_load_error')}</span>}
     </span>}
   </span>;
 }

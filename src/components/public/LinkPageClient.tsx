@@ -11,6 +11,20 @@ import styles from './LinkPageClient.module.css';
 
 interface LinkPageClientProps { linkMeta: LinkPageMeta; linkPlatforms: LinkPlatform[]; terminalInfo: TerminalInfo; }
 
+/** The visible destination, e.g. instagram.com/stannlumo, when the CMS text adds nothing. */
+function destinationLabel(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.hostname.replace(/^www\./, '')}${parsed.pathname.replace(/\/$/, '')}`;
+  } catch { return ''; }
+}
+
+function Destination({ description, url, defaults }: { description: string; url: string; defaults: string[] }) {
+  const text = description.trim();
+  const isFiller = !text || defaults.includes(text.toLowerCase());
+  return isFiller ? <p data-kind="url">{destinationLabel(url)}</p> : <p>{text}</p>;
+}
+
 export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }: LinkPageClientProps) {
   const { t } = useTranslation();
   const { language } = useLanguage();
@@ -20,7 +34,9 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
       <ul className={styles.platforms}>
         {linkPlatforms.map((link) => <li key={link.id}>
           <a href={link.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>
-            <h2 data-hover-label>{link.platform}</h2><p>{['platform description', `${SITE_NAME} ${link.platform}`.toLowerCase(), link.platform.toLowerCase()].includes(link.description.trim().toLowerCase()) ? '' : link.description}</p><span className="sr-only">{newTabLabel}</span>
+            <h2 data-hover-label>{link.platform}</h2>
+            <Destination description={link.description} url={link.url} defaults={['platform description', `${SITE_NAME} ${link.platform}`.toLowerCase(), link.platform.toLowerCase()]} />
+            <span className="sr-only">{newTabLabel}</span>
             <i className={styles.rowRule} data-hover-rule aria-hidden="true" />
           </a>
         </li>)}
@@ -28,7 +44,9 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
       {terminalInfo.url && <section className={styles.terminal}>
         <p>{t("link_side_project")}</p>
         <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>
-          <h2 data-hover-label>{linkMeta.terminalTitle || 'Terminal'}</h2><p>{/^terminal platform$/i.test(terminalInfo.description.trim()) ? '' : terminalInfo.description}</p><span className="sr-only">{newTabLabel}</span>
+          <h2 data-hover-label>{linkMeta.terminalTitle || 'Terminal'}</h2>
+          <Destination description={terminalInfo.description} url={terminalInfo.url} defaults={['terminal platform']} />
+          <span className="sr-only">{newTabLabel}</span>
           <i className={styles.rowRule} data-hover-rule aria-hidden="true" />
         </a>
       </section>}

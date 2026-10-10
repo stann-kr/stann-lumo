@@ -233,11 +233,15 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
             aria-label={language === "ko" ? "모바일 메뉴 배경을 눌러 닫기" : "Close mobile navigation backdrop"} />
           <div ref={mobileDialogRef} id="mobile-navigation-dialog" role="dialog" aria-modal="true" aria-label={mobileNavigationLabel}
             className={styles.dialog} onKeyDown={handleMobileDialogKeyDown}>
-            {navigation(mobileNavigationLabel)}
-            <div className={styles.dialogControls}>
-              <button type="button" onClick={() => closeMobileMenu()}>{t("nav_close_menu")}</button>
-              {languageControls}
+            {/* Mirrors the header so the close control sits exactly where the menu trigger was. */}
+            <div className={styles.dialogBar}>
+              <span className={styles.brand} aria-hidden="true">{artistName}</span>
+              <button type="button" className={styles.closeButton} onClick={() => closeMobileMenu()} aria-label={t("nav_close_menu")}>
+                {language === "ko" ? "닫기" : "Close"}<span aria-hidden="true">−</span>
+              </button>
             </div>
+            {navigation(mobileNavigationLabel)}
+            <div className={styles.dialogControls}>{languageControls}</div>
           </div>
         </div>
       )}

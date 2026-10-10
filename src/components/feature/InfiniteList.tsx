@@ -64,7 +64,7 @@ export default function InfiniteList<T extends { id: string }>({ items, pageSize
         focusIndex.current = visibleCount;
         setLimit(visibleCount + pageSize);
       }}>
-        {t('list_load_more')}<span aria-hidden="true">↓</span>
+        {t('list_load_more')}
       </button>}
     </div>}
   </>;

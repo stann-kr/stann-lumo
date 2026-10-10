@@ -12,6 +12,10 @@ interface SaveButtonProps {
   text?: string;
   /** 저장 중 텍스트 (기본값: 'SAVING...') */
   savingText?: string;
+  /** 저장할 변경이 있을 때만 강조 색으로 표시 (기본값: true) */
+  emphasized?: boolean;
+  /** 페이지 단축키(⌘S / Ctrl+S)로도 저장된다는 것을 알린다 */
+  keyShortcuts?: boolean;
 }
 
 /**
@@ -34,8 +38,10 @@ const SaveButton = ({
   onClick,
   isSaving,
   disabled = false,
-  text = 'SAVE CHANGES',
-  savingText = 'SAVING...',
+  text = '변경 사항 저장',
+  savingText = '저장 중…',
+  emphasized = true,
+  keyShortcuts = false,
 }: SaveButtonProps) => {
   return (
     <button
@@ -43,7 +49,12 @@ const SaveButton = ({
       onClick={onClick}
       disabled={isSaving || disabled}
       aria-busy={isSaving}
-      className="px-8 py-3 bg-[var(--color-accent)] text-[var(--color-bg)] tracking-wider text-sm hover:bg-[var(--color-primary)] transition-colors disabled:opacity-50 whitespace-nowrap cursor-pointer"
+      aria-keyshortcuts={keyShortcuts ? 'Meta+S Control+S' : undefined}
+      title={keyShortcuts ? '⌘S / Ctrl+S' : undefined}
+      data-emphasized={emphasized}
+      className={`px-8 py-3 border tracking-wider text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer ${emphasized
+        ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-bg)] enabled:hover:bg-[var(--color-primary)] enabled:hover:border-[var(--color-primary)]'
+        : 'border-[color-mix(in_srgb,var(--color-secondary)_35%,transparent)] text-[var(--color-secondary)] enabled:hover:text-[var(--color-primary)]'}`}
     >
       {isSaving ? savingText : text}
     </button>

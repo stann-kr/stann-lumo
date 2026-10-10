@@ -32,8 +32,15 @@ export interface D1Database {
 export interface R2Object {
   key: string;
   size: number;
+  httpEtag?: string;
   httpMetadata?: { contentType?: string };
   customMetadata?: Record<string, string>;
+}
+
+export interface R2GetOptions {
+  /** Conditional headers (If-None-Match …); an unmet condition returns the object without a body. */
+  onlyIf?: Headers;
+  range?: { offset: number; length: number };
 }
 
 export interface R2ObjectBody extends R2Object {
@@ -49,7 +56,8 @@ export interface R2PutOptions {
 }
 
 export interface R2Bucket {
-  get(key: string): Promise<R2ObjectBody | null>;
+  get(key: string, options?: R2GetOptions): Promise<R2ObjectBody | R2Object | null>;
+  head(key: string): Promise<R2Object | null>;
   put(
     key: string,
     value: ReadableStream | ArrayBuffer | ArrayBufferView | string | null | Blob,

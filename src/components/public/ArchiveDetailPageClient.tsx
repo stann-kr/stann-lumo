@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import Link, { usePublicNavigation } from '../feature/PublicLink';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getPublicImageUrl, type GalleryPhoto } from '@/capabilities/media/media';
+import { captionIncludesDate, getPublicImageUrl, type GalleryPhoto } from '@/capabilities/media/media';
 import styles from './ArchiveDetailPageClient.module.css';
 import LoadingImage from '@/capabilities/media/LoadingImage';
 import { useContentMotion } from '../feature/useContentMotion';
@@ -52,7 +52,7 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
     <article ref={pageRef} className={styles.page} aria-label={`Archive item: ${itemLabel}`}>
       <header className={styles.header}>
         <Link href={backHref} scroll={false}>{t('gallery_title')}</Link>
-        <h1>{t('gallery_sort_' + browse.sort)} <span>{index + 1} / {total}</span><span className="sr-only"> — {itemLabel}</span></h1>
+        <h1><span className={styles.order}>{t('gallery_sort_' + browse.sort)}</span> <span className={styles.position}>{index + 1} / {total}</span><span className="sr-only"> — {itemLabel}</span></h1>
       </header>
       <div className={styles.detail}>
         <div className={styles.media}>
@@ -61,9 +61,10 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
             : <LoadingImage src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.filename} loading="eager" natural />}
         </div>
         <div className={styles.info}>
-          <p className={styles.type}>{photo.mediaType === 'video_youtube' ? 'YouTube' : photo.mediaType === 'video_file' ? (isKorean ? '영상' : 'Video') : (isKorean ? '이미지' : 'Image')}</p>
+          {/* Nearly every item is an image; only a video needs its kind spelled out. */}
+          {photo.mediaType !== 'image' && <p className={styles.type}>{photo.mediaType === 'video_youtube' ? 'YouTube' : (isKorean ? '영상' : 'Video')}</p>}
           {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
-          {photo.eventDate && <time dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
+          {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
           {photo.linkedEventId && <Link href={`/events/${photo.linkedEventId}`} className={styles.event}>{isKorean ? '공연 보기' : 'View event'}</Link>}
           <nav className={styles.navigation} aria-label={isKorean ? '아카이브 탐색' : 'Archive navigation'}>
             {previousHref ? <Link href={previousHref} aria-label={previousLabel} aria-keyshortcuts="ArrowLeft">{isKorean ? '이전' : 'Previous'}</Link>
