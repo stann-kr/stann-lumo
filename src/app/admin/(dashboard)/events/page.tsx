@@ -459,7 +459,7 @@ export default function AdminEventsPage() {
             className="px-6 py-3 border text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10 transition-colors whitespace-nowrap cursor-pointer text-sm tracking-wider disabled:opacity-50"
             style={createBorderFaint()}
           >
-            <i className="ri-add-line mr-2" aria-hidden="true" />
+            <span className="mr-2" aria-hidden="true">+</span>
             공연 추가
           </button>
         }

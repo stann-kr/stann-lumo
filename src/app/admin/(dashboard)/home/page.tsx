@@ -372,7 +372,6 @@ const AdminHomePage = () => {
                       aria-expanded={showEmbedPreview}
                       className="text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors cursor-pointer flex items-center gap-2"
                     >
-                      <i className={`${showEmbedPreview ? 'ri-eye-off-line' : 'ri-eye-line'}`}></i>
                       {showEmbedPreview ? '미리보기 닫기' : '미리보기 열기'}
                     </button>
                     {showEmbedPreview && (
@@ -401,7 +400,7 @@ const AdminHomePage = () => {
                 onClick={addCustomField}
                 className="text-xs tracking-widest text-[var(--color-secondary)]/60 hover:text-[var(--color-secondary)] transition-colors cursor-pointer flex items-center gap-1"
               >
-                <i className="ri-add-line"></i>정보 추가
+                <span aria-hidden="true">+</span>정보 추가
               </button>
             </div>
 

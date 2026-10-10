@@ -513,6 +513,12 @@ export async function getArchivePage(browse: Pick<ArchiveBrowseState, 'sort' | '
   return page;
 }
 
+export async function getSitemapEventIds(): Promise<string[]> {
+  const records = await rows<{ id: string }>(getPublicDB(),
+    "SELECT id FROM performances ORDER BY SUBSTR(REPLACE(date, '.', '-'), 1, 10) DESC, id");
+  return records.map(({ id }) => id);
+}
+
 export const getEventDetail = cache(async (id: string): Promise<{ event: Performance; posterPhoto?: GalleryPhoto } | null> => {
   const db = getPublicDB();
   const eventRow = await db.prepare('SELECT * FROM performances WHERE id = ?').bind(id).first<PerformanceRow>();

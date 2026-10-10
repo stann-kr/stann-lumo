@@ -1,6 +1,5 @@
 @import "../styles/stann-os.css";
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Orbit&display=swap");
+/* Web fonts (Inter, JetBrains Mono) load from the root layout <head>. */
 
 @tailwind base;
 @tailwind components;
@@ -75,7 +74,7 @@ html {
 }
 
 body {
-  font-family: "Orbit", sans-serif;
+  font-family: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;
