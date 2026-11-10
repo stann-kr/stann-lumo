@@ -1,6 +1,7 @@
 export const RA_SYNC_CRON = '15 19 * * *';
-export const RA_SYNC_INTERVAL_MS = 14 * 24 * 60 * 60 * 1000;
-export const RA_SYNC_ANCHOR = Date.UTC(2026, 8, 6, 19, 15);
+// Weekly slots on Sunday 04:15 KST (Saturday 19:15 UTC); the daily cron tick also drives retries.
+export const RA_SYNC_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+export const RA_SYNC_ANCHOR = Date.UTC(2026, 8, 12, 19, 15);
 
 export interface RaEventExclusion {
   raEventId: string;

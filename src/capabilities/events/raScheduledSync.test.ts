@@ -3,7 +3,6 @@ import type { D1Database } from '@/lib/db';
 import { createSqliteD1 } from '@/test/sqliteD1';
 import {
   parseRaEventsXml,
-  shouldRunBiweeklyRaSync,
   syncRaEvents,
 } from './raScheduledSync';
 import { RA_SYNC_ANCHOR, RA_SYNC_CRON, RA_SYNC_INTERVAL_MS } from './raSync';
@@ -71,13 +70,13 @@ describe('scheduled RA sync', () => {
     return fixture;
   }
 
-  it('uses the daily cron tick only for the anchored fourteen-day slots', async () => {
+  it('uses the daily cron tick only for the weekly Sunday 04:15 KST slots', async () => {
     const { db } = database();
 
     expect(RA_SYNC_CRON).toBe('15 19 * * *');
-    expect(shouldRunBiweeklyRaSync(RA_SYNC_ANCHOR - 7 * 24 * 60 * 60 * 1000)).toBe(false);
-    expect(shouldRunBiweeklyRaSync(RA_SYNC_ANCHOR)).toBe(true);
-    expect(shouldRunBiweeklyRaSync(RA_SYNC_ANCHOR + 7 * 24 * 60 * 60 * 1000)).toBe(false);
+    expect(RA_SYNC_INTERVAL_MS).toBe(7 * 24 * 60 * 60 * 1000);
+    const anchorKst = new Date(RA_SYNC_ANCHOR + 9 * 60 * 60 * 1000);
+    expect([anchorKst.getUTCDay(), anchorKst.getUTCHours(), anchorKst.getUTCMinutes()]).toEqual([0, 4, 15]);
 
     await expect(syncRaEvents(db, {
       mode: 'scheduled', now: RA_SYNC_ANCHOR - 24 * 60 * 60 * 1000,
