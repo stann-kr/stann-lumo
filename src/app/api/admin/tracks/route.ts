@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isContentLocale, type Track } from '@/capabilities/content/content';
-import { fetchTracks, replaceTracks } from '@/capabilities/content/contentAdmin.server';
+import { fetchTracks, replaceTracks, TrackInputError } from '@/capabilities/content/contentAdmin.server';
+import { deleteMediaObjects } from '@/capabilities/media/mediaLifecycle.server';
 import { requireAdminSession } from '@/capabilities/auth/authRoute.server';
-import { getDB } from '@/lib/db';
+import { getDB, getR2 } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   const authError = await requireAdminSession(request);
@@ -62,9 +63,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    await replaceTracks(db, lang, body.items);
+    const { removedCoverIds } = await replaceTracks(db, lang, body.items);
+    const r2 = getR2();
+    if (r2) await deleteMediaObjects(r2, removedCoverIds);
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    if (error instanceof TrackInputError) {
+      return NextResponse.json(
+        { success: false, error: { code: 'BAD_REQUEST', message: 'Tracklist is too long or the recording date is not YYYY-MM-DD' } },
+        { status: 400 },
+      );
+    }
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update tracks' } },
       { status: 500 },

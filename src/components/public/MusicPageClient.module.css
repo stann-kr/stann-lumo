@@ -19,6 +19,12 @@
   a.row:hover:not(:focus-visible) .rowRule { transform: scaleX(1); }
   .row:focus-visible .rowRule { transition: none; }
 }
+.tracklist { padding: 0 .75rem 1.25rem 9.5rem; border-bottom: 1px solid var(--color-muted); margin-top: -1px; }
+.tracklist summary { display: inline-flex; align-items: center; min-height: 44px; font: .8rem 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--color-secondary); cursor: pointer; }
+.tracklist summary:hover { color: var(--color-primary); }
+.tracklist ol { display: grid; gap: .35rem; padding-left: 2.25rem; font-size: .9rem; line-height: 1.5; color: var(--color-secondary); font-variant-numeric: tabular-nums; }
+.tracklist li { overflow-wrap: anywhere; }
+.tracklist li::marker { font-family: 'JetBrains Mono', monospace; font-size: .75rem; }
 .footer { display: flex; flex-wrap: wrap; gap: 2rem 4rem; justify-content: space-between; margin-top: 3rem; color: var(--color-secondary); }
 .footer p { max-width: 60ch; }
 .footer div { display: flex; flex-wrap: wrap; gap: 1.5rem; }
@@ -30,7 +36,9 @@
   .record, .meta { grid-column: 2; }
   .meta { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: .5rem 1rem; text-align: left; }
 }
+@media (max-width: 999px) { .tracklist { padding-left: 8.5rem; } }
 @media (max-width: 599px) {
+  .tracklist { padding-left: 0; }
   .row, .row[data-featured='true'] { grid-template-columns: minmax(0, 1fr); padding-inline: 0; }
   .year { grid-column: 1; grid-row: 1; }
   .record, .meta { grid-column: 1; }

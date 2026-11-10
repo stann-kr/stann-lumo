@@ -5,12 +5,11 @@ import PublicPageLoading from './PublicPageLoading';
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { SITE_NAME, TERMINAL_URL, HUB_URL } from "../../constants/site";
-import SignalNet from "../base/SignalNet";
+import { SITE_NAME, TERMINAL_URL, INSTAGRAM_URL, SOUNDCLOUD_URL } from "../../constants/site";
+import LumoWordmark from "../base/LumoWordmark";
 import styles from "./PublicSiteShell.module.css";
 import { useShellMotion } from './useShellMotion';
 import { PublicMotionInputContext, type MotionInput } from './publicMotion';
-import PublicAmbientBackground from './ambient/PublicAmbientBackground';
 
 interface PublicSiteShellProps {
   children: ReactNode;
@@ -40,6 +39,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
   const mainNavigationLabel = language === "ko" ? "주요 탐색" : "Primary navigation";
   const mobileNavigationLabel = language === "ko" ? "모바일 탐색" : "Mobile navigation";
   const skipLinkLabel = language === "ko" ? "본문으로 건너뛰기" : "Skip to main content";
+  const newTabLabel = language === "ko" ? " (새 창)" : " (opens in a new tab)";
 
   useEffect(() => {
     const keyboard = () => { motionInputRef.current = 'keyboard'; };
@@ -145,15 +145,19 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     return () => desktopBreakpoint.removeEventListener("change", handleBreakpointChange);
   }, [closeMobileMenu, mobileMenuOpen]);
 
+  // v5 canvas: the header names the artist's work in English in both languages; the wordmark is Home.
   const navItems = [
-    { label: t("nav_home"), path: "/" },
-    { label: t("nav_about"), path: "/about" },
-    { label: t("nav_music"), path: "/music" },
-    { label: t("nav_events"), path: "/events" },
-    { label: t("nav_gallery"), path: "/archive" },
-    { label: t("nav_contact"), path: "/contact" },
-    { label: t("nav_link"), path: "/link" },
+    { label: "Music", path: "/music" },
+    { label: "Events", path: "/events" },
+    { label: "Archive", path: "/archive" },
+    { label: "About", path: "/about" },
+    { label: "Press kit", path: "/press-kit" },
   ];
+  const secondaryItems = [
+    { label: "Contact", path: "/contact" },
+    { label: "Links", path: "/link" },
+  ];
+  const isCurrent = (path: string) => pathname === path || pathname.startsWith(path + "/");
 
   const handleMobileDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
@@ -183,8 +187,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
       <ul className={styles.navList}>
         {navItems.map((item) => (
           <li key={item.path}>
-            <Link href={item.path}
-              aria-current={(item.path === "/" ? pathname === "/" : pathname === item.path || pathname.startsWith(item.path + "/")) ? "page" : undefined}>
+            <Link href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>
               {item.label}
             </Link>
           </li>
@@ -194,8 +197,8 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
   );
   const languageControls = (
     <div className={styles.languages}>
-      <button type="button" onClick={() => setLanguage("en")} aria-label="Switch language to English" aria-pressed={language === "en"}>EN</button>
       <button type="button" onClick={() => setLanguage("ko")} aria-label="언어를 한국어로 전환" aria-pressed={language === "ko"}>KO</button>
+      <button type="button" onClick={() => setLanguage("en")} aria-label="Switch language to English" aria-pressed={language === "en"}>EN</button>
     </div>
   );
 
@@ -203,27 +206,30 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     <PublicNavigationContext value={navigate}>
     <PublicMotionInputContext value={motionInputRef}>
     <div ref={shellRef} className={styles.shell}>
-      <PublicAmbientBackground paused={mobileMenuOpen} />
       <div inert={mobileMenuOpen || undefined} className={styles.document}>
         <a href="#main-content" className={styles.skipLink}>{skipLinkLabel}</a>
         <header className={styles.header}>
-          <Link ref={brandRef} href="/" className={styles.brand}>{artistName}</Link>
-          <div className={styles.desktopNav}>{navigation(mainNavigationLabel)}{languageControls}</div>
-          <button ref={mobileMenuButtonRef} type="button" className={styles.menuButton}
-            onClick={(event) => { motionInputRef.current = event.detail === 0 ? 'keyboard' : 'pointer'; setMobileMenuPath(pathname); }} aria-label={t("nav_open_menu")}
-            aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation-dialog">
-            {language === "ko" ? "메뉴" : "Menu"}<span aria-hidden="true">+</span>
-          </button>
+          <Link ref={brandRef} href="/" className={styles.brand} aria-label={artistName}><LumoWordmark className={styles.wordmark} title={artistName} /></Link>
+          <div className={styles.desktopNav}>{navigation(mainNavigationLabel)}</div>
+          <div className={styles.tools}>
+            <div className={styles.desktopOnly}>{languageControls}</div>
+            <Link href="/contact" className={styles.booking} aria-current={isCurrent("/contact") ? "page" : undefined}>Booking</Link>
+            <button ref={mobileMenuButtonRef} type="button" className={styles.menuButton}
+              onClick={(event) => { motionInputRef.current = event.detail === 0 ? 'keyboard' : 'pointer'; setMobileMenuPath(pathname); }} aria-label={t("nav_open_menu")}
+              aria-expanded={mobileMenuOpen} aria-controls="mobile-navigation-dialog">
+              Menu
+            </button>
+          </div>
         </header>
         <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main}>
           <div inert={isNavigating || undefined} className={isNavigating ? styles.pendingContent : undefined}>{children}</div>
         </main>
         <footer inert={isNavigating || undefined} className={`${styles.footer} ${isNavigating ? styles.pendingContent : ''}`}>
-          <SignalNet />
-          <div className={styles.externalLinks}>
-            <a href={HUB_URL} target="_blank" rel="noopener noreferrer">HUB<span className="sr-only">{language === "ko" ? " (새 창)" : " (opens in a new tab)"}</span></a>
-            <a href={TERMINAL_URL} target="_blank" rel="noopener noreferrer">TERMINAL<span className="sr-only">{language === "ko" ? " (새 창)" : " (opens in a new tab)"}</span></a>
-          </div>
+          <span className={styles.copyright}>© {artistName} · Seoul</span>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram ↗<span className="sr-only">{newTabLabel}</span></a>
+          <a href={SOUNDCLOUD_URL} target="_blank" rel="noopener noreferrer">SoundCloud ↗<span className="sr-only">{newTabLabel}</span></a>
+          <Link href="/link">Links →</Link>
+          <a href={TERMINAL_URL} target="_blank" rel="noopener noreferrer">Terminal ↗<span className="sr-only">{newTabLabel}</span></a>
         </footer>
         {isNavigating && <PublicPageLoading overlay />}
       </div>
@@ -235,13 +241,14 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
             className={styles.dialog} onKeyDown={handleMobileDialogKeyDown}>
             {/* Mirrors the header so the close control sits exactly where the menu trigger was. */}
             <div className={styles.dialogBar}>
-              <span className={styles.brand} aria-hidden="true">{artistName}</span>
-              <button type="button" className={styles.closeButton} onClick={() => closeMobileMenu()} aria-label={t("nav_close_menu")}>
-                {language === "ko" ? "닫기" : "Close"}<span aria-hidden="true">−</span>
-              </button>
+              <span className={styles.brand} aria-hidden="true"><LumoWordmark className={styles.wordmark} title={artistName} /></span>
+              <button type="button" className={styles.closeButton} onClick={() => closeMobileMenu()} aria-label={t("nav_close_menu")}>Close</button>
             </div>
             {navigation(mobileNavigationLabel)}
-            <div className={styles.dialogControls}>{languageControls}</div>
+            <ul className={styles.secondaryList}>
+              {secondaryItems.map((item) => <li key={item.path}><Link href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>{item.label}</Link></li>)}
+            </ul>
+            <div className={styles.dialogControls}>{languageControls}<Link href="/contact" className={styles.booking}>Booking</Link></div>
           </div>
         </div>
       )}

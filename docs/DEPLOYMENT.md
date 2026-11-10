@@ -14,7 +14,7 @@
 
 두 Worker 모두 `worker.ts` custom entrypoint에서 `.open-next/worker.js`의 fetch handler를 재사용하고 `.open-next/assets`를 사용한다. D1 binding은 `DB`, R2 binding은 `MEDIA`로 동일하지만 resource ID와 bucket은 환경별로 분리한다.
 
-production Worker의 정기 RA 수집은 **격주 월요일 04:15 KST**이며 기준일은 2026-09-07이다. Cron은 매일 04:15 KST에 실행 필요 여부만 확인한다. 정상 수집은 14일 주기를 유지하고, 정기 수집 실패 시 하루 간격으로 최대 두 번 재시도한다. 배포·장애로 정기 실행을 놓쳤으면 다음 일일 확인에서 최근 누락 주기를 한 번 보충한다. development Worker와 preview에는 Cron Trigger를 등록하지 않는다.
+production Worker의 정기 RA 수집은 **매주 일요일 04:15 KST**이며 기준일은 2026-09-13이다. Cron은 매일 04:15 KST에 실행 필요 여부만 확인한다. 정상 수집은 7일 주기를 유지하고, 정기 수집 실패 시 하루 간격으로 최대 두 번 재시도한다. 배포·장애로 정기 실행을 놓쳤으면 다음 일일 확인에서 최근 누락 주기를 한 번 보충한다. development Worker와 preview에는 Cron Trigger를 등록하지 않는다.
 
 동기화는 공식 `GetEvents` 응답의 새 이벤트만 `ra-{eventId}`로 추가한다. 기존 RA ID, 관리자 수정값과 포스터 연결은 교체하지 않는다. 조회 범위는 관리자에 저장된 RA `option`과 `year`를 사용하므로 고정 연도를 설정했다면 다음 해 운영 전에 확인한다. 플라이어 자동 저장은 포함하지 않는다.
 

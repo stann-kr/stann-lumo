@@ -9,6 +9,7 @@ const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 
 export type MediaLifecycleErrorCode =
   | 'EVENT_NOT_FOUND'
+  | 'TRACK_NOT_FOUND'
   | 'FILE_REQUIRED'
   | 'INVALID_FILE_TYPE'
   | 'FILE_TOO_LARGE';
@@ -230,4 +231,60 @@ export async function deleteGalleryMedia(
   if (r2) {
     await deleteObjectsBestEffort(r2, [mediaKey(id)]);
   }
+}
+
+/** Deletes stored media objects by id, ignoring storage failures. */
+export async function deleteMediaObjects(r2: R2Bucket, ids: string[]): Promise<void> {
+  await deleteObjectsBestEffort(r2, ids.map(mediaKey));
+}
+
+async function assertTrackExists(db: D1Database, trackId: string): Promise<string | null> {
+  const track = await db.prepare(
+    `SELECT t.id, m.cover_image_id FROM tracks t LEFT JOIN track_media m ON m.track_id = t.id WHERE t.id = ? LIMIT 1`,
+  ).bind(trackId).first<{ id: string; cover_image_id: string | null }>();
+  if (!track) throw new MediaLifecycleError('TRACK_NOT_FOUND');
+  return track.cover_image_id;
+}
+
+/**
+ * Stores a mix cover in R2 and points `track_media` at it. Covers get no gallery_photos row,
+ * so they stay out of the public archive. The previous cover object is removed after the switch.
+ */
+export async function replaceTrackCover(
+  db: D1Database,
+  r2: R2Bucket,
+  trackId: string,
+  file: File | null,
+): Promise<{ coverImageId: string; trackId: string }> {
+  const previous = await assertTrackExists(db, trackId);
+  if (!file) throw new MediaLifecycleError('FILE_REQUIRED');
+  validatePosterFile(file);
+
+  const coverImageId = crypto.randomUUID();
+  const key = mediaKey(coverImageId);
+  await r2.put(key, file.stream(), { httpMetadata: { contentType: file.type } });
+
+  try {
+    const result = await db.prepare(
+      `INSERT INTO track_media (track_id, cover_image_id, updated_at) VALUES (?, ?, datetime('now'))
+       ON CONFLICT(track_id) DO UPDATE SET cover_image_id = excluded.cover_image_id, updated_at = excluded.updated_at`,
+    ).bind(trackId, coverImageId).run();
+    assertBatchSucceeded([result]);
+  } catch (error) {
+    await deleteObjectsBestEffort(r2, [key]);
+    throw error;
+  }
+
+  if (previous) await deleteObjectsBestEffort(r2, [mediaKey(previous)]);
+  return { coverImageId, trackId };
+}
+
+export async function deleteTrackCover(db: D1Database, r2: R2Bucket, trackId: string): Promise<void> {
+  const previous = await assertTrackExists(db, trackId);
+  if (!previous) return;
+  const result = await db.prepare(
+    "UPDATE track_media SET cover_image_id = NULL, updated_at = datetime('now') WHERE track_id = ?",
+  ).bind(trackId).run();
+  assertBatchSucceeded([result]);
+  await deleteObjectsBestEffort(r2, [mediaKey(previous)]);
 }

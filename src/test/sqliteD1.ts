@@ -54,7 +54,7 @@ class SqliteStatement implements D1PreparedStatement {
 
 export function createSqliteD1(): { db: D1Database; sqlite: DatabaseSync; close: () => void } {
   const sqlite = new DatabaseSync(':memory:');
-  for (const migration of ['0001_schema.sql', '0002_ra_sync_operations.sql']) {
+  for (const migration of ['0001_schema.sql', '0002_ra_sync_operations.sql', '0003_track_media.sql']) {
     sqlite.exec(readFileSync(resolve(process.cwd(), 'migrations', migration), 'utf8'));
   }
 

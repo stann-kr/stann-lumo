@@ -4,7 +4,7 @@ import { SITE_URL } from '@/capabilities/site/publicMetadata';
 
 export const dynamic = 'force-dynamic';
 
-const PUBLIC_PAGES = ['/', '/about', '/music', '/events', '/archive', '/contact', '/link'];
+const PUBLIC_PAGES = ['/', '/about', '/music', '/events', '/archive', '/contact', '/link', '/press-kit'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let eventIds: string[] = [];

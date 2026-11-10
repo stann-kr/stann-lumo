@@ -8,9 +8,6 @@ import { fetchRaEventsXmlFromSource } from './raEventsSource';
 import { RA_SYNC_ANCHOR, RA_SYNC_INTERVAL_MS } from './raSync';
 import { readRaSyncState } from './raSyncState';
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-const BIWEEKLY_ANCHOR_UTC = Date.UTC(2026, 8, 6, 19, 15);
-
 const FIELD_BY_XML_NAME: Readonly<Record<string, keyof RAEventXML>> = {
   id: 'id',
   venueid: 'venueid',
@@ -53,11 +50,6 @@ function emptyRaEvent(): RAEventXML {
     hasbarcode: '',
     promoterId: '',
   };
-}
-
-export function shouldRunBiweeklyRaSync(scheduledTime: number): boolean {
-  const elapsedWeeks = Math.floor((scheduledTime - BIWEEKLY_ANCHOR_UTC) / WEEK_MS);
-  return elapsedWeeks >= 0 && elapsedWeeks % 2 === 0;
 }
 
 export function parseRaEventsXml(xml: string): RAEventXML[] {
