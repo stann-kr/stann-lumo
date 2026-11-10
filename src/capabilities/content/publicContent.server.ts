@@ -11,6 +11,7 @@ import type {
   DynamicSectionType,
   HomeSection,
   HomePreviews,
+  HomeEventPreview,
   LinkPlatform,
   PageMeta,
   PhilosophyItem,
@@ -327,6 +328,24 @@ export const getPublicShellProjection = cache(async (locale: PublicLocale): Prom
   return projection;
 });
 
+interface HomePerformanceRow {
+  id: string; title: string; date: string; venue: string; status: string; poster_image_id: string | null;
+  time: string | null; location: string | null; ra_event_link: string | null; ra_has_tickets: number | string | null;
+}
+
+const HOME_EVENT_COLUMNS = 'id, title, date, venue, status, poster_image_id, time, location, ra_event_link, ra_has_tickets';
+
+function mapHomeEvent(row: HomePerformanceRow): HomeEventPreview {
+  return {
+    id: row.id, title: row.title, date: row.date, venue: row.venue, status: row.status as Performance['status'],
+    ...(row.poster_image_id && { posterImageId: row.poster_image_id }),
+    ...(row.time && { time: row.time }),
+    ...(row.location && { location: row.location }),
+    ...(row.ra_event_link && { raEventLink: row.ra_event_link }),
+    raHasTickets: Number(row.ra_has_tickets) === 1,
+  };
+}
+
 export interface HomeProjection {
   previews: HomePreviews;
   artistInfo: ArtistInfoItem[];
@@ -338,14 +357,16 @@ export interface HomeProjection {
 export const getHomeProjection = cache(async (locale: PublicLocale): Promise<HomeProjection> => {
   const db = getPublicDB();
 
-  const [artistRows, metaRows, homeRows, terminalInfo, trackRows, eventRows, photoRows, platformRows] = await Promise.all([
+  const today = performanceToday();
+  const [artistRows, metaRows, homeRows, terminalInfo, trackRows, eventRows, pastRows, photoRows, platformRows] = await Promise.all([
     localizedRows<ArtistInfoRow>(db, 'SELECT id, key, value FROM artist_info WHERE lang = ? ORDER BY sort_order', locale),
     localizedMetaRows(db, locale),
     localizedRows<HomeSectionRow>(db, 'SELECT title, description, path, icon FROM home_sections WHERE lang = ? ORDER BY sort_order', locale),
     getTerminalInfo(db),
-    localizedRows<TrackRow>(db, 'SELECT id, title, type, year, platform, link FROM tracks WHERE lang = ? ORDER BY sort_order LIMIT 3', locale),
-    rows<PerformanceRow>(db, "SELECT id, title, date, venue, status, poster_image_id FROM performances WHERE REPLACE(date, '.', '-') >= date('now', '+9 hours') ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 2"),
-    rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 3"),
+    localizedRows<TrackRow>(db, 'SELECT id, title, type, year, platform, link, duration FROM tracks WHERE lang = ? ORDER BY sort_order LIMIT 8', locale),
+    rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 3`, today),
+    rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE SUBSTR(REPLACE(date, '.', '-'), 1, 10) < ? ORDER BY REPLACE(date, '.', '-') DESC, sort_order LIMIT 3`, today),
+    rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 4"),
     localizedRows<{ platform: string }>(db, 'SELECT platform FROM link_platforms WHERE lang = ? ORDER BY sort_order LIMIT 4', locale),
   ]);
   const projection = {
@@ -354,8 +375,9 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
     homeSections: homeRows,
     terminalInfo,
     previews: {
-      tracks: trackRows.map(({ id, title, type, year, platform, link }) => ({ id, title, type, year, platform, link })),
-      events: eventRows.map(({ id, title, date, venue, status, poster_image_id }) => ({ id, title, date, venue, status: status as Performance['status'], ...(poster_image_id && { posterImageId: poster_image_id }) })),
+      tracks: trackRows.map(({ id, title, type, year, platform, link, duration }) => ({ id, title, type, year, platform, link, duration: duration ?? '' })),
+      events: eventRows.map(mapHomeEvent),
+      pastEvents: pastRows.map(mapHomeEvent),
       photos: photoRows.map(({ id, caption, alt_text }) => ({ id, caption, altText: alt_text })),
       platforms: platformRows.map(({ platform }) => platform),
     },

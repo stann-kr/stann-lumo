@@ -38,6 +38,6 @@ describe('sitemap.xml', () => {
   it('still lists the fixed pages when the database is unavailable', async () => {
     vi.mocked(getSitemapEventIds).mockRejectedValue(new Error('test-only database failure'));
 
-    await expect(sitemap()).resolves.toHaveLength(7);
+    await expect(sitemap()).resolves.toHaveLength(8);
   });
 });

@@ -8,3 +8,8 @@ export const SITE_TAGLINE = 'TECHNO / SEOUL';
 export const SITE_VERSION = 'v1.0.0';
 export const TERMINAL_URL = process.env.NEXT_PUBLIC_TERMINAL_URL || 'https://terminal.stann.kr';
 export const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL || 'https://stann.kr';
+
+/** Public artist profiles and contact from the official press kit (2026-11). */
+export const CONTACT_EMAIL = 'contact@stann.kr';
+export const INSTAGRAM_URL = 'https://www.instagram.com/stannlumo/';
+export const SOUNDCLOUD_URL = 'https://soundcloud.com/stannlumo';

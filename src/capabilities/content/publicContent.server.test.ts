@@ -172,10 +172,12 @@ describe('public server content projections', () => {
         sqlite.prepare("INSERT INTO link_platforms (id, lang, platform, url, icon, description, sort_order) VALUES (?, 'en', ?, ?, '', '', ?)").run(`link-${index}`, `Platform ${index}`, `https://example.com/${index}`, index);
       }
       const { previews } = await getHomeProjection('ko');
-      expect(previews.tracks.map((track) => track.id)).toEqual(['track-0', 'track-1', 'track-2']);
-      expect(previews.events.map((event) => event.id)).toEqual(['event-1', 'event-2']);
-      expect(previews.photos.map((photo) => photo.id)).toEqual(['photo-0', 'photo-1', 'photo-2']);
-      expect(previews.tracks[0]).toEqual({ id: 'track-0', title: 'Track 0', type: 'Original', year: '2026', platform: 'Bandcamp', link: '' });
+      expect(previews.tracks.map((track) => track.id)).toEqual(['track-0', 'track-1', 'track-2', 'track-3', 'track-4']);
+      // v5 home: the next three dates, and the latest past dates for the empty-schedule state.
+      expect(previews.events.map((event) => event.id)).toEqual(['event-1', 'event-2', 'event-3']);
+      expect(previews.pastEvents.map((event) => event.id)).toEqual(['event-0']);
+      expect(previews.photos.map((photo) => photo.id)).toEqual(['photo-0', 'photo-1', 'photo-2', 'photo-3']);
+      expect(previews.tracks[0]).toEqual({ id: 'track-0', title: 'Track 0', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00' });
       expect(previews.photos[0]).toEqual({ id: 'photo-0', caption: 'Photo 0', altText: '' });
       // Only names reach the home; URLs stay on the Link page.
       expect(previews.platforms).toEqual(['Platform 0', 'Platform 1', 'Platform 2', 'Platform 3']);

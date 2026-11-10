@@ -1,140 +1,188 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
 import Link from "../feature/PublicLink";
-import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useMotionPreference } from "@/hooks/useMotionPreference";
-import { SITE_NAME } from "@/constants/site";
-import type { ArtistInfoItem, HomePageMeta, HomeSection, HomePreviews } from "@/capabilities/content/content";
-import type { TerminalInfo } from "@/capabilities/terminal/terminalConfig";
+import { CONTACT_EMAIL, INSTAGRAM_URL, SITE_NAME } from "@/constants/site";
+import { hasKnownDuration, type ArtistInfoItem, type HomeEventPreview, type HomePreviews } from "@/capabilities/content/content";
+import { performanceDate, performanceLocation, performanceToday } from "@/capabilities/events/events";
 import { getPublicImageUrl } from "@/capabilities/media/media";
 import styles from "./HomePageClient.module.css";
-import KineticHeading from '../feature/KineticHeading';
-import { useHomeMotion } from './useHomeMotion';
+import MixPlayer from "./MixPlayer";
+
+/* v5 home — canvas boards Main (1440) and Mobile (390): https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ */
 
 interface HomePageClientProps {
   artistInfo: ArtistInfoItem[];
-  homeMeta: HomePageMeta;
-  homeSections: HomeSection[];
-  terminalInfo: TerminalInfo;
   previews?: HomePreviews;
 }
 
-export default function HomePageClient({ artistInfo, homeMeta, homeSections, terminalInfo, previews }: HomePageClientProps) {
-  const { t } = useTranslation();
+type Track = HomePreviews["tracks"][number];
+
+const COPY = {
+  ko: {
+    latestMix: "최근 믹스", allMixes: "모든 믹스 →", all: "전체 →",
+    datesAll: "전체 일정 · 지난 공연 →", noDates: "예정된 공연이 없습니다.", followDates: "다음 일정 소식 받기 ↗", past: "지난 공연",
+    bookingLead: "클럽·페스티벌·브랜드 이벤트 섭외", inquiry: "문의 보내기 →", photosAll: "사진 전체 →", viewImage: "이미지 보기",
+    newTab: " (새 창)", mixesLabel: "믹스와 릴리스",
+  },
+  en: {
+    latestMix: "Latest mix", allMixes: "All mixes →", all: "All →",
+    datesAll: "All dates · past shows →", noDates: "No upcoming dates.", followDates: "Get notified of new dates ↗", past: "Past",
+    bookingLead: "Clubs, festivals and brand events", inquiry: "Send inquiry →", photosAll: "All photos →", viewImage: "View image",
+    newTab: " (opens in a new tab)", mixesLabel: "Mixes and releases",
+  },
+} as const;
+
+const isMix = (track: Track) => /mix|set/i.test(track.type);
+
+function daysUntil(date: string, today: string): number {
+  return Math.round((Date.parse(`${performanceDate(date)}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
+}
+
+function trackMeta(track: Track): string {
+  return [isMix(track) ? "MIX" : track.type ? "RELEASE" : "", track.platform, track.year].filter(Boolean).join(" · ");
+}
+
+export default function HomePageClient({ artistInfo, previews }: HomePageClientProps) {
   const { language } = useLanguage();
-  const { isResolved, prefersReducedMotion } = useMotionPreference();
-  const panelId = useId();
-  const isMotionEnabled = isResolved && !prefersReducedMotion;
-  // The CMS owns order: the first four sections are panels, all remaining sections stay visible below.
-  const panels = homeSections.slice(0, 4);
-  const [selectedPath, setSelectedPath] = useState<string | null>(() => panels.find((section) => section.path === "/music")?.path ?? panels[0]?.path ?? null);
-  const homeRef = useRef<HTMLDivElement>(null);
-  const preparePanelTransition = useHomeMotion(homeRef, selectedPath, isMotionEnabled);
+  const copy = COPY[language === "ko" ? "ko" : "en"];
   const artistName = artistInfo.find((item) => item.key === "Name" || item.key === "이름")?.value || SITE_NAME;
-  const secondarySections = homeSections.slice(4);
-  const terminalDescription = terminalInfo.description.trim();
-  const newTabLabel = language === "ko" ? " (새 창)" : " (opens in a new tab)";
+  const tracks = previews?.tracks ?? [];
+  const latestMix = tracks.find(isMix) ?? tracks[0];
+  const cards = tracks.slice(0, 4);
+  const upcoming = previews?.events ?? [];
+  const past = previews?.pastEvents ?? [];
+  const next = upcoming[0];
+  const photos = previews?.photos ?? [];
+  const today = performanceToday();
+  const [firstName, ...restName] = artistName.split(/\s+/);
+
+  const external = (label: string) => <>{label}<span className="sr-only">{copy.newTab}</span></>;
+
+  const eventRow = (event: HomeEventPreview, index: number, isPast = false) => {
+    const city = performanceLocation(event);
+    const key = !isPast && event.raEventLink && event.raHasTickets
+      ? <a className={`${styles.rowKey} ${styles.signal}`} href={event.raEventLink} target="_blank" rel="noopener noreferrer">{external("TICKETS ↗")}</a>
+      : event.status === "TBA" ? <span className={styles.rowKeyMuted}>TBA</span>
+      : <Link className={styles.rowKey} href={`/events/${event.id}`}>INFO →</Link>;
+    return (
+      <li key={event.id} className={styles.dateRow} data-alt={index % 2 === 1}>
+        <time className={styles.mono} dateTime={performanceDate(event.date)}>{performanceDate(event.date)}</time>
+        <span className={styles.label}>{city || "—"}</span>
+        <Link className={styles.dateTitle} href={`/events/${event.id}`}>{event.venue ? `${event.venue} — ${event.title}` : event.title}</Link>
+        {key}
+      </li>
+    );
+  };
 
   return (
-    <div ref={homeRef} className={styles.home} data-motion={isMotionEnabled ? "on" : "off"}>
-      <header className={styles.intro}>
-        <KineticHeading title={artistName} />
-        {homeMeta.navTitle && <p>{homeMeta.navTitle}</p>}
-      </header>
-      <div className={styles.panels} data-home-panels>
-        {panels.map((section, index) => {
-          const isExpanded = section.path === selectedPath;
-          const contentId = `${panelId}-${index}`;
-          return (
-            <section key={`${section.path}-${index}`} className={styles.panel} data-expanded={isExpanded}>
-              <span className={styles.panelEdge} data-panel-edge aria-hidden="true" />
-              <span className={styles.panelIndex} data-panel-index aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-              <span className={styles.panelRule} data-panel-rule aria-hidden="true" />
-              <h2 data-panel-heading>
-                <button type="button" id={`${contentId}-trigger`} aria-expanded={isExpanded} aria-controls={contentId}
-                  onClick={(event) => { preparePanelTransition(event.detail > 0); setSelectedPath(isExpanded ? null : section.path); }}>
-                  <span className={styles.panelTitle} data-panel-title>{section.title}</span>
-                  <span className={styles.toggle} aria-hidden="true">{isExpanded ? "−" : "+"}</span>
-                </button>
-              </h2>
-              <div id={contentId} hidden={!isExpanded} className={styles.panelContent} data-panel-content>
-                {!['/music', '/events', '/archive', '/about'].includes(section.path) && section.description && <p>{section.description}</p>}
-                {section.path === '/music' && !!previews?.tracks.length && <ul className={styles.trackPreview}>
-                  {previews.tracks.map((track, trackIndex) => <li key={track.id} data-featured={trackIndex === 0}>
-                    <span>{[track.type, track.year].filter(Boolean).join(' / ')}</span>
-                    <strong>{track.title}</strong>
-                    {trackIndex === 0 && track.link && <a href={track.link} target="_blank" rel="noopener noreferrer">{t('music_listen_on', { platform: track.platform })}<span className="sr-only">{newTabLabel}</span></a>}
-                  </li>)}
-                </ul>}
-                {section.path === '/events' && !!previews?.events.length && <div className={styles.eventPreview}>
-                  {previews.events.map((event) => {
-                    const date = event.date.replace(/\./g, '-');
-                    const time = <time dateTime={date}>{date}</time>;
-                    // Without a poster the date takes the image column, like the meta column of tracks.
-                    return <Link key={event.id} href={`/events/${event.id}`} data-poster={Boolean(event.posterImageId)}>
-                      {event.posterImageId ? <img src={getPublicImageUrl(event.posterImageId)} alt="" loading="lazy" /> : time}
-                      <div>{event.posterImageId && time}<strong>{event.title}</strong><span>{event.venue}{event.status === 'Cancelled' ? ` / ${event.status}` : ''}</span></div>
-                    </Link>;
-                  })}
-                </div>}
-                {section.path === '/events' && !previews?.events.length && <p>{language === 'ko' ? '예정된 공연이 없습니다.' : 'No upcoming events.'}</p>}
-                {section.path === '/archive' && !!previews?.photos.length && <div className={styles.photoPreview}>
-                  {previews.photos.map((photo) => <Link key={photo.id} href={`/archive/${photo.id}`} aria-label={photo.caption || photo.altText || (language === 'ko' ? '이미지 보기' : 'View image')}><img src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.caption} loading="lazy" /></Link>)}
-                </div>}
-                {section.path === '/about' && artistInfo.length > 0 && <dl className={styles.artistPreview}>
-                  {artistInfo.filter((info) => !['name', '이름'].includes(info.key.toLowerCase())).map((info) => <div key={info.id}><dt>{info.key}</dt><dd>{info.value}</dd></div>)}
-                </dl>}
-                <Link href={section.path} className={styles.visit} data-hover>
-                  <span data-hover-label>{section.path === '/music' ? (language === 'ko' ? '전체 음악' : 'All recordings')
-                    : section.path === '/events' ? (language === 'ko' ? '전체 공연' : 'All events')
-                    : section.path === '/archive' ? (language === 'ko' ? '아카이브 열기' : 'Open archive')
-                    : section.path === '/about' ? (language === 'ko' ? '소개 읽기' : 'Read biography')
-                    : section.title}</span>
-                </Link>
-              </div>
-            </section>
-          );
-        })}
+    <div className={styles.home}>
+      <div className={styles.heroRow}>
+        <section className={styles.hero} aria-labelledby="home-title" style={{ backgroundImage: "url(/press/front.jpg)" }}>
+          <span className={`${styles.label} ${styles.badge}`}>Resident · Faust Seoul</span>
+          <div>
+            <p className={`${styles.label} ${styles.heroKicker}`}>DJ · Producer — Seoul</p>
+            <h1 id="home-title" className={styles.heroTitle}>{firstName}{restName.length > 0 && <><br />{restName.join(" ")}</>}</h1>
+          </div>
+        </section>
+
+        {latestMix && (
+          <section className={styles.mix} aria-labelledby="home-mix">
+            <div className={styles.band}><h2 id="home-mix" className={styles.label}>{copy.latestMix}</h2>{latestMix.platform && <span className={`${styles.label} ${styles.muted}`}>{latestMix.platform}</span>}</div>
+            <div className={styles.mixHead}>
+              <p className={styles.mixTitle}>{latestMix.title}</p>
+              <p className={styles.mixType}>{[latestMix.type, latestMix.platform].filter(Boolean).join(" · ")}</p>
+            </div>
+            <dl className={styles.mixFacts}>
+              {hasKnownDuration(latestMix.duration) && <div><dt className={styles.label}>Length</dt><dd className={styles.mono}>{latestMix.duration}</dd></div>}
+              {latestMix.year && <div><dt className={styles.label}>Year</dt><dd className={styles.mono}>{latestMix.year}</dd></div>}
+            </dl>
+            {latestMix.link && <MixPlayer key={latestMix.id} title={latestMix.title} link={latestMix.link} platform={latestMix.platform} language={language === "ko" ? "ko" : "en"} />}
+            <div className={styles.keyGrid}>
+              <Link className={styles.plateKey} href="/music">{copy.allMixes}</Link>
+            </div>
+          </section>
+        )}
       </div>
-      {(secondarySections.length > 0 || terminalInfo.url) && (
-        <div className={styles.secondary}>
-          {secondarySections.map((section, index) => (
-            <Link key={`${section.path}-${index}`} href={section.path}>
-              <h2 data-hover-label>{section.title}</h2>
-              {/* The CMS default for Link is filler; the real destinations say more. */}
-              {section.path === '/link'
-                ? !!previews?.platforms.length && <p>{previews.platforms.join(' · ')}</p>
-                : section.description && <p>{section.description}</p>}
-            </Link>
-          ))}
-          {terminalInfo.url && (
-            <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer">
-              <h2 data-hover-label>Terminal</h2>
-              <p>{terminalDescription && !/^terminal platform$/i.test(terminalDescription) ? terminalDescription : t("home_terminal_side_project")}</p>
-              <span className="sr-only">{newTabLabel}</span>
-            </a>
-          )}
+
+      {next && (
+        <div className={styles.next}>
+          <span className={`${styles.label} ${styles.lamp}`}><span aria-hidden="true" className={styles.dot} />Next · D-{String(Math.max(0, daysUntil(next.date, today))).padStart(2, "0")}</span>
+          <time className={styles.mono} dateTime={performanceDate(next.date)}>{performanceDate(next.date)}{next.time ? ` ${next.time}` : ""}</time>
+          <Link className={styles.nextTitle} href={`/events/${next.id}`}>{next.title}</Link>
+          <span className={styles.nextVenue}>{[next.venue, performanceLocation(next)].filter(Boolean).join(", ")}</span>
+          {next.raEventLink && next.raHasTickets
+            ? <a className={`${styles.rowKey} ${styles.signal}`} href={next.raEventLink} target="_blank" rel="noopener noreferrer">{external("TICKETS ↗")}</a>
+            : <Link className={styles.rowKey} href={`/events/${next.id}`}>INFO →</Link>}
         </div>
       )}
-      {terminalInfo.url && (!!terminalInfo.customFields?.length || terminalInfo.style?.showEmbed) && (
-        <section className={styles.terminal} aria-label="Terminal">
-          {!!terminalInfo.customFields?.length && (
-            <dl className={styles.fields}>
-              {terminalInfo.customFields.map((field) => (
-                <div key={field.id}>
-                  <dt>{field.fieldKey}</dt>
-                  <dd>{field.fieldType === "url" ? (
-                    <a href={field.fieldValue} target="_blank" rel="noopener noreferrer">{field.fieldValue}<span className="sr-only">{newTabLabel}</span></a>
-                  ) : <span data-badge={field.fieldType === "badge"}>{field.fieldValue}</span>}</dd>
-                </div>
-              ))}
-            </dl>
+
+      {cards.length > 0 && (
+        <section className={styles.plate} aria-labelledby="home-mixes">
+          <div className={styles.plateHead}><h2 id="home-mixes" className={styles.display}>Mixes &amp; releases</h2><Link href="/music">{copy.all}</Link></div>
+          <ul className={styles.cards} aria-label={copy.mixesLabel}>
+            {cards.map((track) => (
+              <li key={track.id}>
+                {track.link ? (
+                  <a className={styles.card} href={track.link} target="_blank" rel="noopener noreferrer">
+                    <span className={styles.cover} aria-hidden="true"><span className={styles.label}>{track.type}</span></span>
+                    <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span><span className="sr-only">{copy.newTab}</span></span>
+                  </a>
+                ) : (
+                  <Link className={styles.card} href="/music">
+                    <span className={styles.cover} aria-hidden="true"><span className={styles.label}>{track.type}</span></span>
+                    <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span></span>
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <div className={styles.splitRow}>
+        <section className={`${styles.plate} ${styles.dates}`} aria-labelledby="home-dates">
+          <div className={styles.plateHead}><h2 id="home-dates" className={styles.display}>Dates</h2><Link href="/events">{copy.datesAll}</Link></div>
+          {upcoming.length > 0 ? (
+            <ul className={styles.dateList}>{upcoming.map((event, index) => eventRow(event, index))}</ul>
+          ) : (
+            <>
+              <div className={styles.emptyDates}>
+                <p>{copy.noDates}</p>
+                <a className={styles.rowKey} href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">{external(copy.followDates)}</a>
+              </div>
+              {past.length > 0 && <>
+                <p className={`${styles.label} ${styles.subhead}`}>{copy.past}</p>
+                <ul className={styles.dateList}>{past.map((event, index) => eventRow(event, index, true))}</ul>
+              </>}
+            </>
           )}
-          {terminalInfo.style?.showEmbed && (
-            <iframe src={terminalInfo.url} style={{ height: terminalInfo.style.embedHeight }} title="Terminal" sandbox="allow-scripts allow-same-origin" loading="lazy" />
-          )}
+        </section>
+
+        <section className={styles.booking} aria-labelledby="home-booking">
+          <div className={styles.bookingHead}><h2 id="home-booking" className={styles.display}>Booking</h2><p>{copy.bookingLead}</p></div>
+          <dl className={styles.bookingFacts}>
+            <div><dt className={styles.label}>Contact</dt><dd className={styles.mono}><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></dd></div>
+            <div><dt className={styles.label}>Residency</dt><dd>Faust Seoul</dd></div>
+            <div><dt className={styles.label}>Formats</dt><dd>DJ set · Live set</dd></div>
+          </dl>
+          <div className={styles.bookingKeys}>
+            <Link className={styles.inkKey} href="/press-kit">PRESS KIT →</Link>
+            <Link className={styles.redKey} href="/contact">{copy.inquiry}</Link>
+          </div>
+        </section>
+      </div>
+
+      {photos.length > 0 && (
+        <section className={styles.plate} aria-labelledby="home-archive">
+          <div className={styles.plateHead}><h2 id="home-archive" className={styles.display}>Archive</h2><Link href="/archive">{copy.photosAll}</Link></div>
+          <div className={styles.strip}>
+            {photos.map((photo) => (
+              <Link key={photo.id} href={`/archive/${photo.id}`} aria-label={photo.caption || photo.altText || copy.viewImage}>
+                <img src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.caption} loading="lazy" />
+              </Link>
+            ))}
+          </div>
         </section>
       )}
     </div>

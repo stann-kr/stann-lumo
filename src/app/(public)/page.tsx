@@ -16,12 +16,6 @@ export default async function HomePage() {
   const projection = await getHomeProjection(await getRequestLocale());
 
   return (
-    <HomePageClient
-      previews={projection.previews}
-      artistInfo={projection.artistInfo}
-      homeMeta={projection.pageMeta.home}
-      homeSections={projection.homeSections}
-      terminalInfo={projection.terminalInfo}
-    />
+    <HomePageClient previews={projection.previews} artistInfo={projection.artistInfo} />
   );
 }
