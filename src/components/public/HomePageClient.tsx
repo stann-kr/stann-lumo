@@ -18,6 +18,16 @@ interface HomePageClientProps {
 
 type Track = HomePreviews["tracks"][number];
 
+/** Square cover plate: the uploaded artwork when there is one, otherwise the type label on a band plate. */
+function Cover({ track }: { track: Track }) {
+  return (
+    <span className={styles.cover} aria-hidden="true" data-art={Boolean(track.coverImageId)}>
+      {track.coverImageId && <img src={getPublicImageUrl(track.coverImageId)} alt="" loading="lazy" decoding="async" />}
+      <span className={styles.label}>{track.type}</span>
+    </span>
+  );
+}
+
 const COPY = {
   ko: {
     latestMix: "최근 믹스", allMixes: "모든 믹스 →", all: "전체 →",
@@ -95,7 +105,9 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
             </div>
             <dl className={styles.mixFacts}>
               {hasKnownDuration(latestMix.duration) && <div><dt className={styles.label}>Length</dt><dd className={styles.mono}>{latestMix.duration}</dd></div>}
-              {latestMix.year && <div><dt className={styles.label}>Year</dt><dd className={styles.mono}>{latestMix.year}</dd></div>}
+              {latestMix.recordedOn
+                ? <div><dt className={styles.label}>Rec</dt><dd className={styles.mono}><time dateTime={latestMix.recordedOn}>{latestMix.recordedOn.replaceAll("-", ".")}</time></dd></div>
+                : latestMix.year && <div><dt className={styles.label}>Year</dt><dd className={styles.mono}>{latestMix.year}</dd></div>}
             </dl>
             {latestMix.link && <MixPlayer key={latestMix.id} title={latestMix.title} link={latestMix.link} platform={latestMix.platform} language={language === "ko" ? "ko" : "en"} />}
             <div className={styles.keyGrid}>
@@ -125,12 +137,12 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
               <li key={track.id}>
                 {track.link ? (
                   <a className={styles.card} href={track.link} target="_blank" rel="noopener noreferrer">
-                    <span className={styles.cover} aria-hidden="true"><span className={styles.label}>{track.type}</span></span>
+                    <Cover track={track} />
                     <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span><span className="sr-only">{copy.newTab}</span></span>
                   </a>
                 ) : (
                   <Link className={styles.card} href="/music">
-                    <span className={styles.cover} aria-hidden="true"><span className={styles.label}>{track.type}</span></span>
+                    <Cover track={track} />
                     <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span></span>
                   </Link>
                 )}

@@ -23,6 +23,7 @@ import { sortArchivePhotos, type ArchiveBrowseState } from '@/capabilities/media
 import { performanceToday } from '@/capabilities/events/events';
 import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalCustomField, TerminalInfo } from '@/capabilities/terminal/terminalConfig';
+import { trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
 export type PublicLocale = 'en' | 'ko';
 
@@ -73,7 +74,7 @@ interface HomeSectionRow {
   icon: string;
 }
 
-interface TrackRow {
+interface TrackRow extends TrackMediaColumns {
   id: string;
   title: string;
   type: string;
@@ -195,6 +196,7 @@ function mapTracks(rowsToMap: TrackRow[]): Track[] {
     year: row.year,
     platform: row.platform,
     link: row.link,
+    ...trackMediaFields(row),
   }));
 }
 
@@ -363,7 +365,8 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
     localizedMetaRows(db, locale),
     localizedRows<HomeSectionRow>(db, 'SELECT title, description, path, icon FROM home_sections WHERE lang = ? ORDER BY sort_order', locale),
     getTerminalInfo(db),
-    localizedRows<TrackRow>(db, 'SELECT id, title, type, year, platform, link, duration FROM tracks WHERE lang = ? ORDER BY sort_order LIMIT 8', locale),
+    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, m.recorded_on AS recorded_on, m.cover_image_id AS cover_image_id
+      FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order LIMIT 8`, locale),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 3`, today),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE SUBSTR(REPLACE(date, '.', '-'), 1, 10) < ? ORDER BY REPLACE(date, '.', '-') DESC, sort_order LIMIT 3`, today),
     rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 4"),
@@ -375,7 +378,9 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
     homeSections: homeRows,
     terminalInfo,
     previews: {
-      tracks: trackRows.map(({ id, title, type, year, platform, link, duration }) => ({ id, title, type, year, platform, link, duration: duration ?? '' })),
+      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, recorded_on, cover_image_id }) => ({
+        id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }),
+      })),
       events: eventRows.map(mapHomeEvent),
       pastEvents: pastRows.map(mapHomeEvent),
       photos: photoRows.map(({ id, caption, alt_text }) => ({ id, caption, altText: alt_text })),
@@ -413,7 +418,8 @@ export const getMusicProjection = cache(async (locale: PublicLocale): Promise<Mu
   const db = getPublicDB();
   const [metaRows, trackRows] = await Promise.all([
     localizedMetaRows(db, locale),
-    localizedRows<TrackRow>(db, 'SELECT id, title, type, duration, year, platform, link FROM tracks WHERE lang = ? ORDER BY sort_order', locale),
+    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.duration, t.year, t.platform, t.link, ${TRACK_MEDIA_COLUMNS}
+      FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order`, locale),
   ]);
   const projection = { pageMeta: { music: buildPageMeta(metaRows).music }, tracks: mapTracks(trackRows) };
   assertPublicPayloadSafe(projection);

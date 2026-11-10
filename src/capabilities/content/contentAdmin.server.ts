@@ -13,6 +13,7 @@ import type {
   PhilosophyItem,
   Track,
 } from './content';
+import { normalizeTrackMediaInput, trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
 interface ArtistInfoRow {
   id: string;
@@ -27,7 +28,7 @@ interface HomeSectionRow {
   icon: string;
 }
 
-type TrackRow = Track;
+type TrackRow = Track & TrackMediaColumns;
 
 type LinkPlatformRow = LinkPlatform;
 
@@ -113,7 +114,7 @@ export async function replaceHomeSections(
 
 export async function fetchTracks(db: D1Database, lang: ContentLocale): Promise<Track[]> {
   const result = await db.prepare(
-    'SELECT * FROM tracks WHERE lang = ? ORDER BY sort_order',
+    `SELECT t.*, ${TRACK_MEDIA_COLUMNS} FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order`,
   ).bind(lang).all<TrackRow>();
 
   return result.results.map((row) => ({
@@ -124,14 +125,39 @@ export async function fetchTracks(db: D1Database, lang: ContentLocale): Promise<
     year: row.year,
     platform: row.platform,
     link: row.link,
+    ...trackMediaFields(row),
   }));
 }
 
+/** Thrown when a track carries mix text that cannot be stored (tracklist too long, malformed date). */
+export class TrackInputError extends Error {
+  constructor() {
+    super('Invalid track media input');
+    this.name = 'TrackInputError';
+  }
+}
+
+/**
+ * Replaces one language's track list and stores each track's language-neutral mix text.
+ * Cover images are kept; rows for ids that no longer exist in any language are removed and their
+ * cover media ids are returned so the caller can delete the stored objects.
+ */
 export async function replaceTracks(
   db: D1Database,
   lang: ContentLocale,
   items: Track[],
-): Promise<void> {
+): Promise<{ removedCoverIds: string[] }> {
+  const media = items.map((track) => normalizeTrackMediaInput(track));
+  if (media.some((entry) => entry === null)) throw new TrackInputError();
+  const ids = JSON.stringify(items.map((track) => track.id));
+
+  const orphanCovers = await db.prepare(
+    `SELECT cover_image_id FROM track_media
+     WHERE cover_image_id IS NOT NULL
+       AND track_id NOT IN (SELECT value FROM json_each(?))
+       AND track_id NOT IN (SELECT id FROM tracks WHERE lang != ?)`,
+  ).bind(ids, lang).all<{ cover_image_id: string }>();
+
   await db.batch([
     db.prepare('DELETE FROM tracks WHERE lang = ?').bind(lang),
     ...items.map((track, index) => db.prepare(
@@ -147,7 +173,14 @@ export async function replaceTracks(
       track.link,
       index,
     )),
+    ...items.map((track, index) => db.prepare(
+      `INSERT INTO track_media (track_id, tracklist, recorded_on, updated_at) VALUES (?, ?, ?, datetime('now'))
+       ON CONFLICT(track_id) DO UPDATE SET tracklist = excluded.tracklist, recorded_on = excluded.recorded_on, updated_at = excluded.updated_at`,
+    ).bind(track.id, media[index]!.tracklist, media[index]!.recordedOn)),
+    db.prepare('DELETE FROM track_media WHERE track_id NOT IN (SELECT id FROM tracks)'),
   ]);
+
+  return { removedCoverIds: orphanCovers.results.map((row) => row.cover_image_id) };
 }
 
 export async function fetchLinkPlatforms(

@@ -6,6 +6,7 @@ import PageLayout from "@/components/feature/PageLayout";
 import InfiniteList from "@/components/feature/InfiniteList";
 import Link from '../feature/PublicLink';
 import { hasKnownDuration, type MusicPageMeta, type Track } from "@/capabilities/content/content";
+import { tracklistLines } from "@/capabilities/content/trackMedia";
 import styles from "./MusicPageClient.module.css";
 
 interface MusicPageClientProps { musicMeta: MusicPageMeta; tracks: Track[]; }
@@ -20,15 +21,24 @@ function TrackRow({ track, featured }: { track: Track; featured: boolean }) {
       <h2 data-hover-label>{track.title}</h2>
       {track.link && <span className={styles.listen}>{t('music_listen_on', { platform: track.platform })}</span>}
     </div>
-    <div className={styles.meta}><span>{track.type}</span>{hasKnownDuration(track.duration) && <span className={styles.duration}>{track.duration}</span>}</div>
+    <div className={styles.meta}><span>{track.type}</span>{hasKnownDuration(track.duration) && <span className={styles.duration}>{track.duration}</span>}
+      {track.recordedOn && <span className={styles.duration}>{language === 'ko' ? '녹음 ' : 'Rec '}<time dateTime={track.recordedOn}>{track.recordedOn.replaceAll('-', '.')}</time></span>}</div>
     {track.link && <i className={styles.rowRule} aria-hidden="true" />}
   </>;
 
-  return track.link ? (
+  const lines = tracklistLines(track.tracklist);
+  const tracklist = lines.length > 0 && (
+    <details className={styles.tracklist}>
+      <summary>{language === 'ko' ? `트랙리스트 · ${lines.length}곡` : `Tracklist · ${lines.length}`}<span className="sr-only"> — {track.title}</span></summary>
+      <ol>{lines.map((line, index) => <li key={index}>{line}</li>)}</ol>
+    </details>
+  );
+
+  return <>{track.link ? (
     <a href={track.link} target="_blank" rel="noopener noreferrer" className={styles.row} data-featured={featured} aria-label={`${track.title} — ${t('music_listen_on', { platform: track.platform })}${newTabLabel}`}>
       {content}
     </a>
-  ) : <div className={styles.row} data-featured={featured}>{content}</div>;
+  ) : <div className={styles.row} data-featured={featured}>{content}</div>}{tracklist}</>;
 }
 
 export default function MusicPageClient({ musicMeta, tracks }: MusicPageClientProps) {

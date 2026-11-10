@@ -17,7 +17,7 @@ import { requireAdminSession } from '@/capabilities/auth/authRoute.server';
 function mediaErrorResponse(error: unknown): NextResponse | null {
   if (!(error instanceof MediaLifecycleError)) return null;
 
-  if (error.code === 'EVENT_NOT_FOUND') {
+  if (error.code === 'EVENT_NOT_FOUND' || error.code === 'TRACK_NOT_FOUND') {
     return NextResponse.json(
       { success: false, error: { code: 'NOT_FOUND', message: 'Event not found' } },
       { status: 404 },
