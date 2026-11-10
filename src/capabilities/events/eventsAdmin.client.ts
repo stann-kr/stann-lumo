@@ -1,8 +1,7 @@
 import { apiGet, apiPost, apiPut, apiRequest } from "@/services/apiClient";
 import type { ApiResponse } from "@/services/apiClient";
 import { notifyAdminUnauthorized } from "@/capabilities/auth/adminSessionEvents";
-import type { ContentLocale } from "@/capabilities/content/content";
-import type { EventsInfo, Performance } from "./events";
+import type { Performance } from "./events";
 import type { RAApiConfigUpdate, RAApiConfigView } from "./raConfig";
 import type { RaSyncStatus } from "./raSync";
 
@@ -119,12 +118,4 @@ export function restoreRaEventExclusion(raEventId: string) {
     method: "DELETE",
     body: JSON.stringify({ raEventId }),
   });
-}
-
-export function fetchEventsInfo(lang: ContentLocale) {
-  return apiGet<EventsInfo>(`/api/admin/events-info?lang=${lang}`);
-}
-
-export function updateEventsInfo(lang: ContentLocale, eventsInfo: EventsInfo) {
-  return apiPut<void>("/api/admin/events-info", { lang, eventsInfo });
 }

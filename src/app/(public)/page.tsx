@@ -4,10 +4,9 @@ import { createPublicMetadata } from '@/capabilities/site/publicMetadata';
 import { getHomeProjection, getRequestLocale } from '@/capabilities/content/publicContent.server';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const projection = await getHomeProjection(await getRequestLocale());
   return createPublicMetadata({
     title: 'STANN LUMO',
-    description: projection.pageMeta.home.navTitle || 'TECHNO / SEOUL — Official website of STANN LUMO',
+    description: 'TECHNO / SEOUL — Official website of STANN LUMO',
     path: '/',
   });
 }

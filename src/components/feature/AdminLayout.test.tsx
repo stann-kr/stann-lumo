@@ -79,7 +79,7 @@ describe('AdminLayout session expiry', () => {
 
   it('keeps unsaved edits on screen and offers a new-window sign-in until the session is back', async () => {
     const user = userEvent.setup();
-    mocks.pathname = '/admin/contact';
+    mocks.pathname = '/admin/music';
     render(<AdminLayout><Editor /></AdminLayout>);
     await user.click(screen.getByRole('button', { name: '내용 수정' }));
 
@@ -88,7 +88,7 @@ describe('AdminLayout session expiry', () => {
 
     const notice = await screen.findByRole('alert');
     expect(notice).toHaveTextContent('로그인이 만료되었습니다');
-    expect(screen.getByRole('link', { name: '새 창에서 로그인' })).toHaveAttribute('href', '/admin?next=%2Fadmin%2Fcontact');
+    expect(screen.getByRole('link', { name: '새 창에서 로그인' })).toHaveAttribute('href', '/admin?next=%2Fadmin%2Fmusic');
     expect(screen.getByRole('button', { name: '내용 수정' })).toBeInTheDocument();
     expect(mocks.replace).not.toHaveBeenCalled();
 

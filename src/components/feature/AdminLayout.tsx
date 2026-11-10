@@ -12,18 +12,12 @@ import styles from './AdminLayout.module.css';
 /** 편집 중 세션 재검증 주기 (ms) — 5분. 창으로 돌아올 때와 401 응답 때도 바로 확인한다. */
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
 
+/** 소개·연락처·링크 문구는 코드(siteContent.ts)에서 관리하므로 관리자는 자주 바뀌는 세 콘텐츠만 편집한다. */
 const NAV_GROUPS = [
   { label: '콘텐츠', items: [
     { label: '공연', path: '/admin/events', publicPath: '/events' },
     { label: '아카이브', path: '/admin/archive', publicPath: '/archive' },
     { label: '음악', path: '/admin/music', publicPath: '/music' },
-  ] },
-  { label: '사이트', items: [
-    { label: '홈', path: '/admin/home', publicPath: '/' },
-    { label: '소개', path: '/admin/about', publicPath: '/about' },
-    { label: '연락처', path: '/admin/contact', publicPath: '/contact' },
-    { label: '링크', path: '/admin/link', publicPath: '/link' },
-    { label: '디자인 참조', path: '/admin/theme', publicPath: '/' },
   ] },
 ];
 

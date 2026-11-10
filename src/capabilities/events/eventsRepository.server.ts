@@ -1,9 +1,8 @@
 import 'server-only';
 
-import type { ContentLocale } from '@/capabilities/content/content';
 import { fetchGalleryPhotoById } from '@/capabilities/media/mediaRepository.server';
 import type { D1Database } from '@/lib/db';
-import type { EventDetailData, EventsInfo, Performance } from './events';
+import type { EventDetailData, Performance } from './events';
 
 interface PerformanceRow {
   id: string;
@@ -30,15 +29,6 @@ interface PerformanceRow {
   ra_has_barcode: string | null;
   ra_promoter_id: string | null;
   ra_lineup_raw: string | null;
-}
-
-interface EventsInfoRow {
-  contact_email: string;
-  response_time: string;
-}
-
-interface EventsListRow {
-  value: string;
 }
 
 interface PerformancesRevisionRow {
@@ -236,47 +226,6 @@ export async function replacePerformancesAtRevision(
       revision,
     },
   };
-}
-
-export async function fetchEventsInfo(
-  db: D1Database,
-  lang: ContentLocale,
-): Promise<EventsInfo> {
-  const [infoResult, durationsResult, requirementsResult] = await db.batch([
-    db.prepare('SELECT * FROM events_info WHERE id = 1'),
-    db.prepare('SELECT * FROM events_set_durations WHERE lang = ? ORDER BY sort_order').bind(lang),
-    db.prepare('SELECT * FROM events_tech_requirements WHERE lang = ? ORDER BY sort_order').bind(lang),
-  ]);
-  const info = infoResult.results[0] as EventsInfoRow | undefined;
-  return {
-    setDurations: (durationsResult.results as EventsListRow[]).map((row) => row.value),
-    technicalRequirements: (requirementsResult.results as EventsListRow[]).map((row) => row.value),
-    contactEmail: info?.contact_email ?? '',
-    responseTime: info?.response_time ?? '',
-  };
-}
-
-export async function replaceEventsInfo(
-  db: D1Database,
-  lang: ContentLocale,
-  eventsInfo: EventsInfo,
-): Promise<void> {
-  const insertDurations = (eventsInfo.setDurations ?? []).map((value, index) => db.prepare(
-    'INSERT INTO events_set_durations (id, lang, value, sort_order) VALUES (?, ?, ?, ?)',
-  ).bind(`dur-${lang}-${index}`, lang, value, index));
-  const insertRequirements = (eventsInfo.technicalRequirements ?? []).map((value, index) => db.prepare(
-    'INSERT INTO events_tech_requirements (id, lang, value, sort_order) VALUES (?, ?, ?, ?)',
-  ).bind(`tech-${lang}-${index}`, lang, value, index));
-
-  await db.batch([
-    db.prepare(
-      'UPDATE events_info SET contact_email = ?, response_time = ? WHERE id = 1',
-    ).bind(eventsInfo.contactEmail, eventsInfo.responseTime),
-    db.prepare('DELETE FROM events_set_durations WHERE lang = ?').bind(lang),
-    db.prepare('DELETE FROM events_tech_requirements WHERE lang = ?').bind(lang),
-    ...insertDurations,
-    ...insertRequirements,
-  ]);
 }
 
 export async function fetchEventDetail(db: D1Database, id: string): Promise<EventDetailData | null> {
