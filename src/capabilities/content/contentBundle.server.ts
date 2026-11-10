@@ -13,6 +13,7 @@ import type {
   LinkPlatform,
   ContactItem,
 } from './content';
+import { trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 import type { EventsInfo, Performance } from '@/capabilities/events/events';
 import type { TerminalCustomField, TerminalInfo } from '@/capabilities/terminal/terminalConfig';
 
@@ -36,7 +37,7 @@ interface PageMetaRow {
 interface HomeSectionRow {
   id: string; lang: string; title: string; description: string; path: string; icon: string; sort_order: number;
 }
-interface TrackRow {
+interface TrackRow extends TrackMediaColumns {
   id: string; lang: string; title: string; type: string; duration: string; year: string; platform: string; link: string; sort_order: number;
 }
 interface PerformanceRow {
@@ -145,7 +146,7 @@ export async function fetchContentBundle(
       db.prepare('SELECT * FROM about_section_philosophy_items WHERE lang = ? ORDER BY item_order').bind(lang),
       db.prepare('SELECT * FROM page_meta WHERE lang = ?').bind(lang),
       db.prepare('SELECT * FROM home_sections WHERE lang = ? ORDER BY sort_order').bind(lang),
-      db.prepare('SELECT * FROM tracks WHERE lang = ? ORDER BY sort_order').bind(lang),
+      db.prepare(`SELECT t.*, ${TRACK_MEDIA_COLUMNS} FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order`).bind(lang),
       db.prepare('SELECT * FROM performances ORDER BY date DESC, sort_order'),
       db.prepare('SELECT * FROM events_info WHERE id = 1'),
       db.prepare('SELECT * FROM events_set_durations WHERE lang = ? ORDER BY sort_order').bind(lang),
@@ -164,7 +165,7 @@ export async function fetchContentBundle(
         db.prepare('SELECT * FROM about_section_philosophy_items WHERE lang = "en" ORDER BY item_order'),
         db.prepare('SELECT * FROM page_meta WHERE lang = "en"'),
         db.prepare('SELECT * FROM home_sections WHERE lang = "en" ORDER BY sort_order'),
-        db.prepare('SELECT * FROM tracks WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare(`SELECT t.*, ${TRACK_MEDIA_COLUMNS} FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = 'en' ORDER BY t.sort_order`),
         db.prepare('SELECT * FROM events_set_durations WHERE lang = "en" ORDER BY sort_order'),
         db.prepare('SELECT * FROM events_tech_requirements WHERE lang = "en" ORDER BY sort_order'),
         db.prepare('SELECT * FROM link_platforms WHERE lang = "en" ORDER BY sort_order'),
@@ -287,7 +288,7 @@ export async function fetchContentBundle(
     // Tracks
     const tracks: Track[] = trackRows.map((r) => ({
       id: r.id, title: r.title, type: r.type, duration: r.duration,
-      year: r.year, platform: r.platform, link: r.link,
+      year: r.year, platform: r.platform, link: r.link, ...trackMediaFields(r),
     }));
 
     // Performances

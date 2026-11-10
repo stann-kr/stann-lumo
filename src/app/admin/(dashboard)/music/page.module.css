@@ -1,0 +1,10 @@
+.cover { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 16px; align-items: start; }
+.coverFrame { aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; background: color-mix(in srgb, var(--color-secondary) 7%, transparent); }
+.coverFrame img { width: 100%; height: 100%; object-fit: cover; }
+.coverFrame span { font-size: .625rem; line-height: 1.5; text-align: center; color: var(--color-secondary); }
+.coverBody { display: grid; gap: 12px; }
+.coverHint { color: var(--color-secondary); font-size: .8125rem; }
+.coverActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.coverActions label { display: inline-flex; align-items: center; cursor: pointer; }
+.coverActions label[data-disabled='true'] { opacity: .4; cursor: not-allowed; }
+.coverActions label:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }

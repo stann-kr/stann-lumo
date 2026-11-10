@@ -68,9 +68,13 @@ export interface PageMeta {
   link: LinkPageMeta;
 }
 
+export type HomeEventPreview = Pick<Performance, 'id' | 'title' | 'date' | 'venue' | 'status' | 'posterImageId' | 'time' | 'location' | 'raEventLink' | 'raHasTickets'>;
+
 export interface HomePreviews {
-  tracks: Pick<Track, 'id' | 'title' | 'type' | 'year' | 'platform' | 'link'>[];
-  events: Pick<Performance, 'id' | 'title' | 'date' | 'venue' | 'status' | 'posterImageId'>[];
+  tracks: Pick<Track, 'id' | 'title' | 'type' | 'year' | 'platform' | 'link' | 'duration' | 'recordedOn' | 'coverImageId'>[];
+  events: HomeEventPreview[];
+  /** Most recent past dates, shown when nothing is scheduled. */
+  pastEvents: HomeEventPreview[];
   photos: { id: string; caption: string; altText: string }[];
   /** Platform names only; the Link page owns the actual URLs. */
   platforms: string[];
@@ -91,6 +95,12 @@ export interface Track {
   year: string;
   platform: string;
   link: string;
+  /** Language-neutral mix data from `track_media`; absent when nothing was entered. */
+  tracklist?: string;
+  /** Recording date, YYYY-MM-DD. */
+  recordedOn?: string;
+  /** R2 media id of the cover image, served by /api/media/<id>. */
+  coverImageId?: string;
 }
 
 /** Imported tracks carry a zero placeholder until a real length is entered. */

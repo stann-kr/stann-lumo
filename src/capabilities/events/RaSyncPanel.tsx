@@ -64,7 +64,7 @@ export default function RaSyncPanel({
           RA 동기화 상태
         </h3>
         <p className="mt-1 text-xs text-[var(--color-secondary)]/60 tracking-wider">
-          매일 오전 4:15(KST)에 확인하며, 정상 동기화는 2주마다 실행됩니다.
+          매일 오전 4:15(KST)에 확인하며, 정상 동기화는 매주 일요일에 실행됩니다.
         </p>
       </div>
 

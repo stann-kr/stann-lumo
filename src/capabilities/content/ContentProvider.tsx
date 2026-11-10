@@ -110,7 +110,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
 
   /**
    * 인메모리 콘텐츠 업데이트 — 어드민 페이지 편집 시 즉시 UI 반영용.
-   * 영구 저장은 각 어드민 페이지에서 adminService를 통해 D1에 직접 반영.
+   * 영구 저장은 각 어드민 페이지가 capability client(contentAdmin·eventsAdmin)로 D1에 직접 반영.
    */
   const updateContent = (updates: Partial<ContentData>) => {
     setAllContent((prev) => ({

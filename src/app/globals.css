@@ -19,6 +19,23 @@
   --color-text-muted: #a0a0a0; /* 본문·메타 보조 텍스트, black 표면에서 AA 대비 */
   --color-bg: var(--os-music-bg); /* #000000 */
   --color-bg-sidebar: #050505; /* lumo 고유 — 사이드바 */
+
+  /* ── v5 판(plate) 체계 — 캔버스 https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ ── */
+  --v5-field: #000;
+  --v5-plate: #141414;
+  --v5-plate-2: #1c1c1c;
+  --v5-band: #262626;
+  --v5-inset: #0c0c0c;
+  --v5-red: #ff0033;      /* 신호 전용: 재생·현재 트랙·다음 공연·TICKETS·BOOKING */
+  --v5-red-hover: #ff3355;
+  --v5-link: #ff4d6a;
+  --v5-bone: #e8e6df;
+  --v5-bone-2: #dcdad2;
+  --v5-bone-muted: #4a4842;
+  --v5-muted: #a3a3a3;
+  --v5-muted-2: #c4c4c4;
+  --v5-gap: 10px;
+  --v5-key-gap: 2px;
 }
 
 /* JetBrains Mono에는 한글이 없어 한국어 라벨의 단어 사이만 0.6em 고정폭 공백으로 벌어진다. */

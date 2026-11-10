@@ -8,12 +8,10 @@ import type {
   ArtistInfoItem,
   ContactItem,
   DynamicSection,
-  DynamicSectionType,
-  HomeSection,
   HomePreviews,
+  HomeEventPreview,
   LinkPlatform,
   PageMeta,
-  PhilosophyItem,
   Track,
 } from './content';
 import type { EventsInfo, Performance } from '@/capabilities/events/events';
@@ -21,7 +19,10 @@ import type { GalleryPhoto } from '@/capabilities/media/media';
 import { sortArchivePhotos, type ArchiveBrowseState } from '@/capabilities/media/archiveBrowsing';
 import { performanceToday } from '@/capabilities/events/events';
 import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
-import type { TerminalCustomField, TerminalInfo } from '@/capabilities/terminal/terminalConfig';
+import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
+import { SITE_ABOUT_SECTIONS, SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
+import { SITE_NAME } from '@/constants/site';
+import { trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
 export type PublicLocale = 'en' | 'ko';
 
@@ -32,47 +33,13 @@ export async function getRequestLocale(): Promise<PublicLocale> {
   return cookieStore.get(LANGUAGE_COOKIE)?.value === 'ko' ? 'ko' : 'en';
 }
 
-interface ArtistInfoRow {
-  id: string;
-  key: string;
-  value: string;
-}
-
-interface AboutSectionRow {
-  id: string;
-  title: string;
-  type: string;
-  section_order: number;
-}
-
-interface AboutParagraphRow {
-  section_id: string;
-  content: string;
-  item_order: number;
-}
-
-interface AboutPhilosophyRow {
-  id: string;
-  section_id: string;
-  quote: string;
-  description: string | null;
-  item_order: number;
-}
-
 interface PageMetaRow {
   page: string;
   key: string;
   value: string;
 }
 
-interface HomeSectionRow {
-  title: string;
-  description: string;
-  path: string;
-  icon: string;
-}
-
-interface TrackRow {
+interface TrackRow extends TrackMediaColumns {
   id: string;
   title: string;
   type: string;
@@ -94,47 +61,6 @@ interface PerformanceRow {
   ra_event_id: string | null;
   poster_image_id: string | null;
   status: string;
-}
-
-interface EventsInfoRow {
-  contact_email: string;
-  response_time: string;
-}
-
-interface EventsListRow {
-  value: string;
-}
-
-interface LinkPlatformRow {
-  id: string;
-  platform: string;
-  url: string;
-  icon: string;
-  description: string;
-}
-
-interface ContactInfoRow {
-  label: string;
-  value: string;
-  icon: string;
-}
-
-interface SiteConfigRow {
-  terminal_url: string | null;
-  terminal_description: string | null;
-  terminal_font_size: string | null;
-  terminal_animation_speed: string | null;
-  terminal_prompt_text: string | null;
-  terminal_show_embed: number | null;
-  terminal_embed_height: string | null;
-}
-
-interface TerminalCustomFieldRow {
-  id: string;
-  field_key: string;
-  field_value: string;
-  field_type: string;
-  sort_order: number;
 }
 
 interface GalleryPhotoRow {
@@ -181,10 +107,6 @@ async function localizedMetaRows(db: D1Database, locale: PublicLocale): Promise<
   return primary;
 }
 
-function mapArtistInfo(rowsToMap: ArtistInfoRow[]): ArtistInfoItem[] {
-  return rowsToMap.map((row) => ({ id: row.id, key: row.key, value: row.value }));
-}
-
 function mapTracks(rowsToMap: TrackRow[]): Track[] {
   return rowsToMap.map((row) => ({
     id: row.id,
@@ -194,6 +116,7 @@ function mapTracks(rowsToMap: TrackRow[]): Track[] {
     year: row.year,
     platform: row.platform,
     link: row.link,
+    ...trackMediaFields(row),
   }));
 }
 
@@ -262,102 +185,61 @@ function buildPageMeta(rowsToMap: PageMetaRow[]): PageMeta {
   };
 }
 
-function mapAboutSections(
-  sectionRows: AboutSectionRow[],
-  paragraphRows: AboutParagraphRow[],
-  philosophyRows: AboutPhilosophyRow[],
-): DynamicSection[] {
-  return sectionRows.map((section) => {
-    const base = {
-      id: section.id,
-      title: section.title,
-      type: section.type as DynamicSectionType,
-      order: section.section_order,
-    };
-    if (section.type === 'philosophy-items') {
-      const items: PhilosophyItem[] = philosophyRows
-        .filter((row) => row.section_id === section.id)
-        .map((row) => ({ id: row.id, quote: row.quote, description: row.description ?? '' }));
-      return { ...base, items };
-    }
-    return {
-      ...base,
-      paragraphs: paragraphRows.filter((row) => row.section_id === section.id).map((row) => row.content),
-    };
-  });
-}
-
-async function getTerminalInfo(db: D1Database): Promise<TerminalInfo> {
-  const [siteConfig, fieldRows] = await Promise.all([
-    db.prepare('SELECT * FROM site_config WHERE id = 1').first<SiteConfigRow>(),
-    rows<TerminalCustomFieldRow>(db, 'SELECT * FROM terminal_custom_fields ORDER BY sort_order ASC'),
-  ]);
-  const customFields: TerminalCustomField[] = fieldRows.map((row) => ({
-    id: row.id,
-    fieldKey: row.field_key,
-    fieldValue: row.field_value,
-    fieldType: row.field_type as TerminalCustomField['fieldType'],
-    sortOrder: row.sort_order,
-  }));
-  return {
-    url: siteConfig?.terminal_url ?? '',
-    description: siteConfig?.terminal_description ?? '',
-    customFields,
-    style: {
-      fontSize: (siteConfig?.terminal_font_size as 'sm' | 'md' | 'lg') ?? 'md',
-      animationSpeed: (siteConfig?.terminal_animation_speed as 'slow' | 'normal' | 'fast') ?? 'normal',
-      promptText: siteConfig?.terminal_prompt_text ?? '>',
-      showEmbed: (siteConfig?.terminal_show_embed ?? 0) === 1,
-      embedHeight: siteConfig?.terminal_embed_height ?? '400px',
-    },
-  };
-}
-
 export interface PublicShellProjection {
   artistName: string;
 }
 
 export const getPublicShellProjection = cache(async (locale: PublicLocale): Promise<PublicShellProjection> => {
-  const db = getPublicDB();
-
-  const artistRows = await localizedRows<ArtistInfoRow>(db, 'SELECT id, key, value FROM artist_info WHERE lang = ? ORDER BY sort_order', locale);
-  const artistName = artistRows.find((row) => row.key === 'Name' || row.key === '이름')?.value ?? 'STANN LUMO';
-  const projection = { artistName };
+  void locale;
+  const projection = { artistName: SITE_ARTIST_INFO.find((item) => item.key === 'Name')?.value ?? SITE_NAME };
   assertPublicPayloadSafe(projection);
   return projection;
 });
 
+interface HomePerformanceRow {
+  id: string; title: string; date: string; venue: string; status: string; poster_image_id: string | null;
+  time: string | null; location: string | null; ra_event_link: string | null; ra_has_tickets: number | string | null;
+}
+
+const HOME_EVENT_COLUMNS = 'id, title, date, venue, status, poster_image_id, time, location, ra_event_link, ra_has_tickets';
+
+function mapHomeEvent(row: HomePerformanceRow): HomeEventPreview {
+  return {
+    id: row.id, title: row.title, date: row.date, venue: row.venue, status: row.status as Performance['status'],
+    ...(row.poster_image_id && { posterImageId: row.poster_image_id }),
+    ...(row.time && { time: row.time }),
+    ...(row.location && { location: row.location }),
+    ...(row.ra_event_link && { raEventLink: row.ra_event_link }),
+    raHasTickets: Number(row.ra_has_tickets) === 1,
+  };
+}
+
 export interface HomeProjection {
   previews: HomePreviews;
   artistInfo: ArtistInfoItem[];
-  pageMeta: Pick<PageMeta, 'home'>;
-  homeSections: HomeSection[];
-  terminalInfo: TerminalInfo;
 }
 
 export const getHomeProjection = cache(async (locale: PublicLocale): Promise<HomeProjection> => {
   const db = getPublicDB();
 
-  const [artistRows, metaRows, homeRows, terminalInfo, trackRows, eventRows, photoRows, platformRows] = await Promise.all([
-    localizedRows<ArtistInfoRow>(db, 'SELECT id, key, value FROM artist_info WHERE lang = ? ORDER BY sort_order', locale),
-    localizedMetaRows(db, locale),
-    localizedRows<HomeSectionRow>(db, 'SELECT title, description, path, icon FROM home_sections WHERE lang = ? ORDER BY sort_order', locale),
-    getTerminalInfo(db),
-    localizedRows<TrackRow>(db, 'SELECT id, title, type, year, platform, link FROM tracks WHERE lang = ? ORDER BY sort_order LIMIT 3', locale),
-    rows<PerformanceRow>(db, "SELECT id, title, date, venue, status, poster_image_id FROM performances WHERE REPLACE(date, '.', '-') >= date('now', '+9 hours') ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 2"),
-    rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 3"),
-    localizedRows<{ platform: string }>(db, 'SELECT platform FROM link_platforms WHERE lang = ? ORDER BY sort_order LIMIT 4', locale),
+  const today = performanceToday();
+  const [trackRows, eventRows, pastRows, photoRows] = await Promise.all([
+    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, m.recorded_on AS recorded_on, m.cover_image_id AS cover_image_id
+      FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order LIMIT 8`, locale),
+    rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 3`, today),
+    rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE SUBSTR(REPLACE(date, '.', '-'), 1, 10) < ? ORDER BY REPLACE(date, '.', '-') DESC, sort_order LIMIT 3`, today),
+    rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 4"),
   ]);
   const projection = {
-    artistInfo: mapArtistInfo(artistRows),
-    pageMeta: { home: buildPageMeta(metaRows).home },
-    homeSections: homeRows,
-    terminalInfo,
+    artistInfo: SITE_ARTIST_INFO,
     previews: {
-      tracks: trackRows.map(({ id, title, type, year, platform, link }) => ({ id, title, type, year, platform, link })),
-      events: eventRows.map(({ id, title, date, venue, status, poster_image_id }) => ({ id, title, date, venue, status: status as Performance['status'], ...(poster_image_id && { posterImageId: poster_image_id }) })),
+      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, recorded_on, cover_image_id }) => ({
+        id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }),
+      })),
+      events: eventRows.map(mapHomeEvent),
+      pastEvents: pastRows.map(mapHomeEvent),
       photos: photoRows.map(({ id, caption, alt_text }) => ({ id, caption, altText: alt_text })),
-      platforms: platformRows.map(({ platform }) => platform),
+      platforms: SITE_LINK_PLATFORMS.slice(0, 4).map(({ platform }) => platform),
     },
   };
   assertPublicPayloadSafe(projection);
@@ -370,14 +252,8 @@ export interface AboutProjection {
 }
 
 export const getAboutProjection = cache(async (locale: PublicLocale): Promise<AboutProjection> => {
-  const db = getPublicDB();
-  const [artistRows, sections, paragraphs, philosophy] = await Promise.all([
-    localizedRows<ArtistInfoRow>(db, 'SELECT id, key, value FROM artist_info WHERE lang = ? ORDER BY sort_order', locale),
-    localizedRows<AboutSectionRow>(db, 'SELECT id, title, type, section_order FROM about_sections WHERE lang = ? ORDER BY section_order', locale),
-    localizedRows<AboutParagraphRow>(db, 'SELECT section_id, content, item_order FROM about_section_paragraphs WHERE lang = ? ORDER BY item_order', locale),
-    localizedRows<AboutPhilosophyRow>(db, 'SELECT id, section_id, quote, description, item_order FROM about_section_philosophy_items WHERE lang = ? ORDER BY item_order', locale),
-  ]);
-  const projection = { artistInfo: mapArtistInfo(artistRows), aboutSections: mapAboutSections(sections, paragraphs, philosophy) };
+  void locale;
+  const projection = { artistInfo: SITE_ARTIST_INFO, aboutSections: SITE_ABOUT_SECTIONS };
   assertPublicPayloadSafe(projection);
   return projection;
 });
@@ -391,7 +267,8 @@ export const getMusicProjection = cache(async (locale: PublicLocale): Promise<Mu
   const db = getPublicDB();
   const [metaRows, trackRows] = await Promise.all([
     localizedMetaRows(db, locale),
-    localizedRows<TrackRow>(db, 'SELECT id, title, type, duration, year, platform, link FROM tracks WHERE lang = ? ORDER BY sort_order', locale),
+    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.duration, t.year, t.platform, t.link, ${TRACK_MEDIA_COLUMNS}
+      FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order`, locale),
   ]);
   const projection = { pageMeta: { music: buildPageMeta(metaRows).music }, tracks: mapTracks(trackRows) };
   assertPublicPayloadSafe(projection);
@@ -439,24 +316,8 @@ export interface ContactProjection {
 }
 
 export const getContactProjection = cache(async (locale: PublicLocale): Promise<ContactProjection> => {
-  const db = getPublicDB();
-  const [metaRows, contactRows, eventInfoRow, durations, requirements] = await Promise.all([
-    localizedMetaRows(db, locale),
-    localizedRows<ContactInfoRow>(db, 'SELECT label, value, icon FROM contact_info WHERE lang = ? ORDER BY sort_order', locale),
-    db.prepare('SELECT contact_email, response_time FROM events_info WHERE id = 1').first<EventsInfoRow>(),
-    localizedRows<EventsListRow>(db, 'SELECT value FROM events_set_durations WHERE lang = ? ORDER BY sort_order', locale),
-    localizedRows<EventsListRow>(db, 'SELECT value FROM events_tech_requirements WHERE lang = ? ORDER BY sort_order', locale),
-  ]);
-  const projection = {
-    pageMeta: { contact: buildPageMeta(metaRows).contact },
-    contactInfo: contactRows,
-    eventsInfo: {
-      setDurations: durations.map((row) => row.value),
-      technicalRequirements: requirements.map((row) => row.value),
-      contactEmail: eventInfoRow?.contact_email ?? '',
-      responseTime: eventInfoRow?.response_time ?? '',
-    },
-  };
+  void locale;
+  const projection = { pageMeta: { contact: SITE_CONTACT_META }, contactInfo: SITE_CONTACT_INFO, eventsInfo: SITE_BOOKING_INFO };
   assertPublicPayloadSafe(projection);
   return projection;
 });
@@ -468,13 +329,8 @@ export interface LinkProjection {
 }
 
 export const getLinkProjection = cache(async (locale: PublicLocale): Promise<LinkProjection> => {
-  const db = getPublicDB();
-  const [metaRows, platformRows, terminalInfo] = await Promise.all([
-    localizedMetaRows(db, locale),
-    localizedRows<LinkPlatformRow>(db, 'SELECT id, platform, url, icon, description FROM link_platforms WHERE lang = ? ORDER BY sort_order', locale),
-    getTerminalInfo(db),
-  ]);
-  const projection = { pageMeta: { link: buildPageMeta(metaRows).link }, linkPlatforms: platformRows, terminalInfo };
+  void locale;
+  const projection = { pageMeta: { link: SITE_LINK_META }, linkPlatforms: SITE_LINK_PLATFORMS, terminalInfo: SITE_TERMINAL_INFO };
   assertPublicPayloadSafe(projection);
   return projection;
 });

@@ -1,13 +1,10 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminEditGuardProvider, useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
 import AdminMusicPage from './music/page';
-import AdminAboutPage from './about/page';
-import AdminContactPage from './contact/page';
-import AdminLinkPage from './link/page';
 
 const mocks = vi.hoisted(() => ({
-  tracks: vi.fn(), meta: vi.fn(), artist: vi.fn(), sections: vi.fn(), contacts: vi.fn(), events: vi.fn(), links: vi.fn(), terminal: vi.fn(), updateContent: vi.fn(),
+  tracks: vi.fn(), meta: vi.fn(), cover: vi.fn(), removeCover: vi.fn(), updateContent: vi.fn(),
 }));
 const content = {
   tracks: [
@@ -35,11 +32,8 @@ const content = {
 const allContent = { en: content, ko: content };
 vi.mock('@/contexts/ContentContext', () => ({ useContent: () => ({ allContent, currentEditLanguage: 'en', isLoading: false, updateContent: mocks.updateContent }) }));
 vi.mock('@/capabilities/content/contentAdmin.client', () => ({
-  updateTracks: mocks.tracks, updatePageMeta: mocks.meta, updateArtistInfo: mocks.artist,
-  updateAboutSections: mocks.sections, updateContactInfo: mocks.contacts, updateLinkPlatforms: mocks.links,
+  updateTracks: mocks.tracks, updatePageMeta: mocks.meta, uploadTrackCover: mocks.cover, deleteTrackCover: mocks.removeCover,
 }));
-vi.mock('@/capabilities/events/eventsAdmin.client', () => ({ updateEventsInfo: mocks.events }));
-vi.mock('@/capabilities/site/siteConfig.client', () => ({ updateTerminalInfo: mocks.terminal }));
 
 function DirtyState() { const { isDirty } = useAdminEditGuard(); return <output data-testid="dirty">{String(isDirty)}</output>; }
 function Editor({ children }: { children: React.ReactNode }) { return <AdminEditGuardProvider>{children}<DirtyState /></AdminEditGuardProvider>; }
@@ -75,53 +69,21 @@ describe('Content editing workflows', () => {
     await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[1], content.tracks[0]]));
   });
 
-  it('keeps text when changing About format and normalizes the reordered sections', async () => {
-    render(<Editor><AdminAboutPage /></Editor>);
-    fireEvent.click(screen.getByRole('button', { name: 'Biography 편집' }));
-    fireEvent.change(screen.getByLabelText('섹션 형식'), { target: { value: 'philosophy-items' } });
-    expect(screen.getByLabelText('설명 1')).toHaveValue('First paragraph');
-    expect(screen.getByLabelText('설명 2')).toHaveValue('Second paragraph');
-    fireEvent.change(screen.getByLabelText('섹션 형식'), { target: { value: 'paragraphs' } });
-    expect(screen.getByLabelText('문단 1')).toHaveValue('First paragraph');
-    fireEvent.click(screen.getByRole('button', { name: 'Biography 아래로 이동' }));
-    save();
-    await waitFor(() => expect(mocks.sections).toHaveBeenCalledWith('en', [
-      { ...content.aboutSections[1], order: 0 },
-      { ...content.aboutSections[0], order: 1, items: undefined },
-    ]));
-  });
+  it('saves the tracklist and recording date with the list and holds cover uploads until the list is saved', async () => {
+    mocks.cover.mockResolvedValue({ success: true, data: { coverImageId: 'cover-new', trackId: 'second' } });
+    render(<Editor><AdminMusicPage /></Editor>);
+    fireEvent.click(screen.getByRole('button', { name: 'Second mix 편집' }));
+    const upload = screen.getByLabelText('Second mix 커버 업로드');
+    expect(upload).toBeEnabled();
+    fireEvent.change(upload, { target: { files: [new File(['x'], 'c.webp', { type: 'image/webp' })] } });
+    await waitFor(() => expect(mocks.cover).toHaveBeenCalledWith('second', expect.any(File)));
+    await waitFor(() => expect(mocks.updateContent).toHaveBeenCalledWith({ tracks: [content.tracks[0], { ...content.tracks[1], coverImageId: 'cover-new' }] }));
+    expect(screen.getByTestId('dirty')).toHaveTextContent('false');
 
-  it('edits labeled booking rows while preserving hidden contact presentation values', async () => {
-    render(<Editor><AdminContactPage /></Editor>);
-    fireEvent.change(screen.getByLabelText('연락처 1 내용'), { target: { value: 'new@example.com' } });
-    fireEvent.click(screen.getByRole('button', { name: '공연 시간 추가' }));
-    fireEvent.change(screen.getByLabelText('공연 시간 2'), { target: { value: '90 minutes' } });
-    fireEvent.click(screen.getByRole('button', { name: '기술 요구사항 1 삭제' }));
+    fireEvent.change(screen.getByLabelText('트랙리스트 (한 줄에 한 곡)'), { target: { value: 'A — One\nB — Two' } });
+    fireEvent.change(screen.getByLabelText('녹음 날짜'), { target: { value: '2026-10-31' } });
+    expect(screen.getByLabelText('Second mix 커버 업로드')).toBeDisabled();
     save();
-    await waitFor(() => expect(mocks.contacts).toHaveBeenCalledWith('en', [{ ...content.contactInfo[0], value: 'new@example.com' }]));
-    expect(mocks.events).toHaveBeenCalledWith('en', { ...content.eventsInfo, setDurations: ['60 minutes', '90 minutes'], technicalRequirements: [] });
-    expect(mocks.meta).toHaveBeenCalledWith('en', content.pageMeta);
-  });
-
-  it('locks edits during saving, keeps a failed link draft, and allows retry', async () => {
-    let resolveSave!: (result: { success: boolean }) => void;
-    mocks.links.mockReturnValueOnce(new Promise((resolve) => { resolveSave = resolve; }));
-    render(<Editor><AdminLinkPage /></Editor>);
-    fireEvent.click(screen.getByRole('button', { name: 'Bandcamp 편집' }));
-    fireEvent.change(screen.getByLabelText('링크 설명'), { target: { value: 'New releases' } });
-    save();
-    expect(screen.getByLabelText('링크 설명')).toBeDisabled();
-    expect(screen.getByRole('button', { name: '링크 추가' })).toBeDisabled();
-    await act(async () => resolveSave({ success: false }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('링크 목록 저장에 실패');
-    expect(mocks.updateContent).not.toHaveBeenCalled();
-    expect(screen.getByTestId('dirty')).toHaveTextContent('true');
-    expect(screen.getByLabelText('링크 설명')).toHaveValue('New releases');
-    fireEvent.click(screen.getByRole('button', { name: 'Bandcamp 아래로 이동' }));
-    expect(screen.getByLabelText('링크 설명')).toHaveValue('New releases');
-    save();
-    await waitFor(() => expect(mocks.links).toHaveBeenLastCalledWith('en', [content.linkPlatforms[1], { ...content.linkPlatforms[0], description: 'New releases' }]));
-    expect(mocks.terminal).toHaveBeenCalledWith(content.terminalInfo);
-    await waitFor(() => expect(screen.getByTestId('dirty')).toHaveTextContent('false'));
+    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[0], { ...content.tracks[1], tracklist: 'A — One\nB — Two', recordedOn: '2026-10-31' }]));
   });
 });

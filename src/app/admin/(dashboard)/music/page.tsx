@@ -5,17 +5,22 @@ import AdminCard from '@/components/base/AdminCard';
 import AdminSectionHeader from '@/components/base/AdminSectionHeader';
 import FormInput from '@/components/base/FormInput';
 import FormSelect from '@/components/base/FormSelect';
+import FormTextarea from '@/components/base/FormTextarea';
+import LoadingImage from '@/capabilities/media/LoadingImage';
+import { getPublicImageUrl, MAX_UPLOAD_BYTES, POSTER_UPLOAD_TYPES } from '@/capabilities/media/media';
 import SuccessMessage from '@/components/base/SuccessMessage';
 import SaveErrorMessage from '@/components/base/SaveErrorMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import AdminEditorItem from '@/capabilities/admin/AdminEditorItem';
 import collection from '@/capabilities/admin/AdminCollection.module.css';
+import styles from './page.module.css';
 import { useListEditor } from '@/capabilities/admin/useListEditor';
 import { useItemReorder } from '@/capabilities/admin/useItemReorder';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
 import { runSave } from '@/capabilities/admin/saveResult';
-import { updateTracks, updatePageMeta } from '@/capabilities/content/contentAdmin.client';
+import { updateTracks, updatePageMeta, uploadTrackCover, deleteTrackCover } from '@/capabilities/content/contentAdmin.client';
+import { MAX_TRACKLIST_LENGTH } from '@/capabilities/content/trackMedia';
 import { hasKnownDuration, type Track, type PageMeta } from '@/capabilities/content/content';
 
 const TRACK_TYPES = ['Original', 'Live Set', 'DJ Mix', 'Remix'];
@@ -34,10 +39,15 @@ export default function AdminMusicPage() {
   const [type, setType] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [coverBusyId, setCoverBusyId] = useState<string | null>(null);
+  const [coverMessage, setCoverMessage] = useState<{ id: string; text: string; error: boolean } | null>(null);
 
   useEffect(() => { setPageMeta(content.pageMeta); }, [content.pageMeta]);
   useEffect(() => { setQuery(''); setType('all'); setExpandedId(null); setDeleteId(null); }, [currentEditLanguage]);
-  const { markSaved } = useUnsavedChanges({ pageMeta, tracks }, `${currentEditLanguage}:${isLoading}`);
+  // Covers are stored on upload, so they are not part of the unsaved list snapshot.
+  const editableTracks = tracks.map((track) => ({ ...track, coverImageId: undefined }));
+  const { isDirty, markSaved } = useUnsavedChanges({ pageMeta, tracks: editableTracks }, `${currentEditLanguage}:${isLoading}`);
+  const savedIds = new Set(content.tracks.map((track) => track.id));
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const isFiltered = Boolean(normalizedQuery) || type !== 'all';
   const visibleTracks = tracks.map((track, index) => ({ track, index })).filter(({ track }) => {
@@ -53,6 +63,32 @@ export default function AdminMusicPage() {
     setQuery(''); setType('all'); setExpandedId(newTrack.id);
   };
   const updateTrackField = (index: number, field: keyof Track, value: string) => updateTrack(index, { ...tracks[index], [field]: value });
+  const changeCover = async (trackId: string, file?: File) => {
+    if (isDirty || !savedIds.has(trackId)) {
+      setCoverMessage({ id: trackId, text: '음악 목록을 먼저 저장한 뒤 커버를 바꿔 주세요.', error: true });
+      return;
+    }
+    if (file && (!POSTER_UPLOAD_TYPES.includes(file.type) || file.size > MAX_UPLOAD_BYTES)) {
+      setCoverMessage({ id: trackId, text: 'JPG, PNG, WebP, AVIF, GIF 형식과 최대 10MB만 지원합니다.', error: true });
+      return;
+    }
+    setCoverBusyId(trackId); setCoverMessage(null);
+    try {
+      const result = file ? await uploadTrackCover(trackId, file) : await deleteTrackCover(trackId);
+      if (!result.success) throw new Error('cover');
+      const coverImageId = file && result.data && typeof result.data === 'object' && 'coverImageId' in result.data ? result.data.coverImageId : undefined;
+      const next = content.tracks.map((track) => {
+        if (track.id !== trackId) return track;
+        const next = { ...track, coverImageId };
+        if (!coverImageId) delete next.coverImageId;
+        return next;
+      });
+      updateContent({ tracks: next });
+      setCoverMessage({ id: trackId, text: file ? '커버를 저장했습니다.' : '커버를 제거했습니다.', error: false });
+    } catch {
+      setCoverMessage({ id: trackId, text: '커버 변경에 실패했습니다. 다시 시도해 주세요.', error: true });
+    } finally { setCoverBusyId(null); }
+  };
   const saveChanges = async () => {
     if (isSaving || isLoading) return;
     setIsSaving(true); setSaveError('');
@@ -99,6 +135,27 @@ export default function AdminMusicPage() {
                   {Array.from(new Set([...PLATFORMS, track.platform])).map((value) => <option key={value} value={value}>{value}</option>)}
                 </FormSelect>
                 <FormInput label="재생 링크" type="url" value={track.link} onChange={(value) => updateTrackField(index, 'link', value)} placeholder="https://" />
+                <FormInput label="녹음 날짜" type="date" value={track.recordedOn ?? ''} onChange={(value) => updateTrackField(index, 'recordedOn', value)} />
+              </div>
+              <FormTextarea label="트랙리스트 (한 줄에 한 곡)" rows={8} maxLength={MAX_TRACKLIST_LENGTH} value={track.tracklist ?? ''}
+                onChange={(value) => updateTrackField(index, 'tracklist', value)} placeholder={'Artist — Title\nArtist — Title'} />
+              <div className={styles.cover}>
+                <div className={styles.coverFrame}>
+                  {track.coverImageId ? <LoadingImage src={getPublicImageUrl(track.coverImageId)} alt="" quiet /> : <span>커버<br />없음</span>}
+                </div>
+                <div className={styles.coverBody}>
+                  <p className={styles.coverHint}>{savedIds.has(track.id) ? '커버는 올리는 즉시 공개 화면에 반영됩니다. 정사각형 이미지, 최대 10MB.' : '새 음악은 먼저 저장한 뒤 커버를 올릴 수 있습니다.'}</p>
+                  <div className={styles.coverActions}>
+                    <label className={collection.button} data-disabled={coverBusyId !== null || isDirty || !savedIds.has(track.id)}>
+                      {coverBusyId === track.id ? '처리 중…' : track.coverImageId ? '커버 교체' : '커버 업로드'}
+                      <input type="file" className="sr-only" accept={POSTER_UPLOAD_TYPES.join(',')} aria-label={`${track.title || '제목 없는 음악'} 커버 ${track.coverImageId ? '교체' : '업로드'}`}
+                        disabled={coverBusyId !== null || isDirty || !savedIds.has(track.id)}
+                        onChange={(event) => { const file = event.target.files?.[0]; if (file) void changeCover(track.id, file); event.target.value = ''; }} />
+                    </label>
+                    {track.coverImageId && <button type="button" className={collection.dangerButton} disabled={coverBusyId !== null || isDirty} onClick={() => void changeCover(track.id)}>커버 제거</button>}
+                  </div>
+                  {coverMessage?.id === track.id && <p role={coverMessage.error ? 'alert' : 'status'} className={styles.coverHint}>{coverMessage.text}</p>}
+                </div>
               </div>
             </div>
           </AdminEditorItem>)}
