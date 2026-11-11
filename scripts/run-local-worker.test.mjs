@@ -40,6 +40,8 @@ test('public preview uses only explicit remote media bindings without deployment
   const config = buildPublicPreviewConfig(source, '/tmp/preview', '/repo');
   assert.deepEqual(config.d1_databases, [{ binding: 'DB', database_name: 'production-db', database_id: 'production-id', remote: true }]);
   assert.deepEqual(config.r2_buckets, [{ binding: 'MEDIA', bucket_name: 'production-media', remote: true }]);
+  // Offline Images: preview resizes never reach the account's billed transformations.
+  assert.deepEqual(config.images, { binding: 'IMAGES' });
   assert.deepEqual(config.vars, { MIGRATE_ENABLED: 'false', NEXTJS_ENV: 'development' });
   for (const key of ['routes', 'triggers', 'env']) assert.equal(key in config, false);
   assert.throws(() => buildPublicPreviewConfig({}, '/tmp/preview'), /requires/);

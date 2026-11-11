@@ -31,7 +31,8 @@ export function trackArtSource(link?: string | null): TrackArtSource | null {
 }
 
 export function trackCoverUrl(track: { id: string; link?: string; coverImageId?: string }): string | undefined {
-  if (track.coverImageId) return getPublicImageUrl(track.coverImageId);
-  if (trackArtSource(track.link)) return `/api/track-art/${encodeURIComponent(track.id)}`;
+  // Covers are shown at most a few hundred CSS pixels wide, so the grid width serves every place they appear.
+  if (track.coverImageId) return getPublicImageUrl(track.coverImageId, 640);
+  if (trackArtSource(track.link)) return `/api/track-art/${encodeURIComponent(track.id)}?w=640`;
   return undefined;
 }

@@ -38,7 +38,7 @@ function EventRow({ event, today, featured = false, past = false }: { event: Per
       <span className={`${v5.label} ${styles.status}`} data-cancelled={event.status === 'Cancelled'}>
         {showStatus ? event.status : past ? '' : <>{featured && <span className={v5.lamp} aria-hidden="true" />}D-{String(days).padStart(2, '0')}</>}
       </span>
-      {event.posterImageId ? <LoadingImage src={getPublicImageUrl(event.posterImageId)} alt="" className={styles.poster} quiet />
+      {event.posterImageId ? <LoadingImage src={getPublicImageUrl(event.posterImageId, 640)} alt="" className={styles.poster} quiet />
         : <span className={styles.arrow} aria-hidden="true">→</span>}
     </Link>
   );

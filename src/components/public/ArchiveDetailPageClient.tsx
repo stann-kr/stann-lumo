@@ -59,7 +59,7 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
         <div className={styles.media}>
           {photo.mediaType === 'video_youtube' && photo.videoYoutubeId ? <iframe src={`https://www.youtube.com/embed/${photo.videoYoutubeId}`} allow="encrypted-media; fullscreen" allowFullScreen title={photo.altText || photo.filename} />
             : photo.mediaType === 'video_file' ? <video src={`/api/media/${photo.id}`} controls preload="metadata" aria-label={itemLabel} />
-            : <LoadingImage src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.filename} loading="eager" natural />}
+            : <LoadingImage src={getPublicImageUrl(photo.id, 1600)} alt={photo.altText || photo.filename} loading="eager" natural />}
         </div>
         <div className={styles.info}>
           {/* Nearly every item is an image; only a video needs its kind spelled out. */}

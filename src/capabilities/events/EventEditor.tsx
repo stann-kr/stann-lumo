@@ -27,7 +27,7 @@ export default function EventEditor({ event, isNew, posterBusy, posterError, has
   return <article className={styles.event} aria-label={event.title || '새 공연'} aria-busy={posterBusy}>
     <div className={styles.row}>
       <div className={styles.poster}>
-        {event.posterImageId ? <LoadingImage src={getPublicImageUrl(event.posterImageId)} alt="" quiet /> : <span>포스터<br />없음</span>}
+        {event.posterImageId ? <LoadingImage src={getPublicImageUrl(event.posterImageId, 640)} alt="" quiet /> : <span>포스터<br />없음</span>}
       </div>
       <button className={styles.summary} type="button" aria-label={`${event.title || '새 공연'} 편집`} aria-expanded={expanded} aria-controls={panelId} onClick={() => setExpanded(!expanded)}>
         <span className={styles.date}>{event.date || '날짜 미정'}{event.time && ` · ${event.time}`}</span>

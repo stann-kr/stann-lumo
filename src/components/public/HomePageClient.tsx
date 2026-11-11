@@ -208,7 +208,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
           <div className={styles.strip}>
             {photos.map((photo) => (
               <Link key={photo.id} href={`/archive/${photo.id}`} aria-label={photo.caption || photo.altText || copy.viewImage}>
-                <LoadingImage src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.caption} quiet className={styles.stripImage} />
+                <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.caption} quiet className={styles.stripImage} />
               </Link>
             ))}
           </div>

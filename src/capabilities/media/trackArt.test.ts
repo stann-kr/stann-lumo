@@ -16,9 +16,9 @@ describe('trackArtSource', () => {
   });
 
   it('prefers the uploaded cover, then platform art, then nothing', () => {
-    expect(trackCoverUrl({ id: 't1', link: 'https://youtu.be/3ruhGQjoels', coverImageId: 'gallery/x' })).toBe('/api/media/gallery%2Fx?v=2');
-    expect(trackCoverUrl({ id: 't 1', link: 'https://youtu.be/3ruhGQjoels' })).toBe('/api/track-art/t%201');
-    expect(trackCoverUrl({ id: 't1', link: 'https://example.bandcamp.com/album/x' })).toBe('/api/track-art/t1');
+    expect(trackCoverUrl({ id: 't1', link: 'https://youtu.be/3ruhGQjoels', coverImageId: 'gallery/x' })).toBe('/api/media/gallery%2Fx?v=2&w=640');
+    expect(trackCoverUrl({ id: 't 1', link: 'https://youtu.be/3ruhGQjoels' })).toBe('/api/track-art/t%201?w=640');
+    expect(trackCoverUrl({ id: 't1', link: 'https://example.bandcamp.com/album/x' })).toBe('/api/track-art/t1?w=640');
     expect(trackCoverUrl({ id: 't1', link: 'https://example.com/x' })).toBeUndefined();
   });
 });

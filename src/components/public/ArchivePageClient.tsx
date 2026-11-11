@@ -31,7 +31,7 @@ function GridItem({ photo, browse }: { photo: GalleryPhoto; browse: ArchiveBrows
         <div className={styles.media} data-video={photo.mediaType !== 'image'}>
           {photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt={photo.altText || photo.filename} quiet />
             : photo.mediaType === 'video_file' ? <video src={`/api/media/${photo.id}`} preload="none" muted playsInline aria-hidden="true" />
-            : <LoadingImage src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.filename} quiet />}
+            : <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.filename} quiet />}
         </div>
         {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
       </Link>

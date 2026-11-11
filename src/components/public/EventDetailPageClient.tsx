@@ -38,7 +38,7 @@ export default function EventDetailPageClient({ event, posterPhoto }: { event: P
             </a>
           )}
         </aside>
-        {posterPhoto && <div className={`${v5.inset} ${styles.poster}`}><LoadingImage src={getPublicImageUrl(posterPhoto.id)} alt={posterPhoto.altText || event.title} loading="eager" natural /></div>}
+        {posterPhoto && <div className={`${v5.inset} ${styles.poster}`}><LoadingImage src={getPublicImageUrl(posterPhoto.id, 1600)} alt={posterPhoto.altText || event.title} loading="eager" natural /></div>}
       </div>
     </PageLayout>
   );

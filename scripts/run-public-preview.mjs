@@ -20,6 +20,8 @@ export function buildPublicPreviewConfig(source, directory, root = repositoryRoo
     assets: { directory: path.join(root, '.open-next/assets') },
     d1_databases: [{ binding: 'DB', database_name: database.database_name, database_id: database.database_id, remote: true }],
     r2_buckets: [{ binding: 'MEDIA', bucket_name: media.bucket_name, remote: true }],
+    // Local, offline Images: resizes without a remote call or a billed transformation.
+    images: { binding: 'IMAGES' },
     vars: { MIGRATE_ENABLED: 'false', NEXTJS_ENV: 'development' },
   };
 }
