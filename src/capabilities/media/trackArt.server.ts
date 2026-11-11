@@ -37,31 +37,7 @@ async function soundcloudArtUrl(pageUrl: string, fetcher: typeof fetch): Promise
   return isAllowedArtUrl(data?.thumbnail_url) ? data.thumbnail_url : null;
 }
 
-/** Bandcamp has no oEmbed; its og:image sits in the first few KB of the page, so only that head is read. */
-const BANDCAMP_HEAD_BYTES = 64 * 1024;
-const OG_IMAGE = /<meta\s+property="og:image"\s+content="([^"]+)"/i;
-
-async function bandcampArtUrl(pageUrl: string, fetcher: typeof fetch): Promise<string | null> {
-  const response = await fetcher(pageUrl, { ...EDGE_CACHE, redirect: 'manual', signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
-  if (!response.ok || !response.body) return null;
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let head = '';
-  try {
-    while (head.length < BANDCAMP_HEAD_BYTES) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      head += decoder.decode(value, { stream: true });
-      const match = OG_IMAGE.exec(head);
-      if (match) return isAllowedArtUrl(match[1]) ? match[1] : null;
-    }
-    return null;
-  } finally {
-    await reader.cancel().catch(() => {});
-  }
-}
-
-/** Fetches the platform artwork for a track link. Only SoundCloud oEmbed, the linked *.bandcamp.com page, *.sndcdn.com, *.bcbits.com and i.ytimg.com are contacted. */
+/** Fetches the platform artwork for a track link. Only SoundCloud oEmbed, *.sndcdn.com, *.bcbits.com and i.ytimg.com are contacted. */
 export async function fetchTrackArt(source: TrackArtSource, fetcher: typeof fetch = fetch): Promise<TrackArt | null> {
   try {
     if (source.provider === 'youtube') {
@@ -72,7 +48,8 @@ export async function fetchTrackArt(source: TrackArtSource, fetcher: typeof fetc
       }
       return null;
     }
-    const artUrl = source.provider === 'bandcamp' ? await bandcampArtUrl(source.url, fetcher) : await soundcloudArtUrl(source.url, fetcher);
+    if (source.provider === 'bandcamp') return await fetchImage(source.artUrl, fetcher);
+    const artUrl = await soundcloudArtUrl(source.url, fetcher);
     return artUrl ? await fetchImage(artUrl, fetcher) : null;
   } catch {
     return null;

@@ -5,7 +5,7 @@ import PublicPageLoading from './PublicPageLoading';
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { SITE_NAME, TERMINAL_URL, INSTAGRAM_URL, SOUNDCLOUD_URL } from "../../constants/site";
+import { SITE_NAME } from "../../constants/site";
 import LumoWordmark from "../base/LumoWordmark";
 import styles from "./PublicSiteShell.module.css";
 import { useShellMotion } from './useShellMotion';
@@ -41,7 +41,6 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
   const mainNavigationLabel = language === "ko" ? "주요 탐색" : "Primary navigation";
   const mobileNavigationLabel = language === "ko" ? "모바일 탐색" : "Mobile navigation";
   const skipLinkLabel = language === "ko" ? "본문으로 건너뛰기" : "Skip to main content";
-  const newTabLabel = language === "ko" ? " (새 창)" : " (opens in a new tab)";
 
   useEffect(() => {
     const keyboard = () => { motionInputRef.current = 'keyboard'; };
@@ -184,10 +183,13 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     }
   };
 
-  const navigation = (label: string) => (
+  // No footer: on the paged lists it was only reachable after every page had loaded. Desktop carries Links as a sixth key;
+  // the mobile menu lists Contact and Links below the main items. Social profiles live on /link.
+  const desktopItems = [...navItems, { label: "Links", path: "/link" }];
+  const navigation = (label: string, items = navItems) => (
     <nav aria-label={label}>
       <ul className={styles.navList}>
-        {navItems.map((item) => (
+        {items.map((item) => (
           <li key={item.path}>
             <Link href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>
               {item.label}
@@ -212,7 +214,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
         <a href="#main-content" className={styles.skipLink}>{skipLinkLabel}</a>
         <header className={styles.header}>
           <Link ref={brandRef} href="/" className={styles.brand} aria-label={artistName}><LumoWordmark className={styles.wordmark} title={artistName} /></Link>
-          <div className={styles.desktopNav}>{navigation(mainNavigationLabel)}</div>
+          <div className={styles.desktopNav}>{navigation(mainNavigationLabel, desktopItems)}</div>
           <div className={styles.tools}>
             <div className={styles.desktopOnly}>{languageControls}</div>
             <Link href="/contact" className={styles.booking} aria-current={isCurrent("/contact") ? "page" : undefined}>Booking</Link>
@@ -226,13 +228,6 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
         <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed}>
           <div inert={isNavigating || undefined} className={`${styles.content} ${isNavigating ? styles.pendingContent : ''}`}>{children}</div>
         </main>
-        <footer inert={isNavigating || undefined} className={`${styles.footer} ${isNavigating ? styles.pendingContent : ''}`} data-revealed={revealed}>
-          <span className={styles.copyright}>© {artistName} · Seoul</span>
-          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram ↗<span className="sr-only">{newTabLabel}</span></a>
-          <a href={SOUNDCLOUD_URL} target="_blank" rel="noopener noreferrer">SoundCloud ↗<span className="sr-only">{newTabLabel}</span></a>
-          <Link href="/link">Links →</Link>
-          <a href={TERMINAL_URL} target="_blank" rel="noopener noreferrer">Terminal ↗<span className="sr-only">{newTabLabel}</span></a>
-        </footer>
         {isNavigating ? <PublicPageLoading overlay /> : !revealed && <PublicPageLoading overlay gate />}
       </div>
       {mobileMenuOpen && (
