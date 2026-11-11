@@ -69,6 +69,8 @@
    The reveal is a transition, not an animation: if the failsafe already showed the page, a late reveal has nothing
    to change and does not fade the page out and in again. Hiding has no transition, so a new path never fades out. */
 .main[data-revealed='false'] > .content { opacity: 0; animation: gate-failsafe 0s linear 2.6s forwards; }
+/* After hydration the script's capped gate (useRevealGate) decides; the failsafe would show images still arriving. */
+.main[data-gate='script'][data-revealed='false'] > .content { animation: none; }
 @keyframes gate-failsafe { to { opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
   .main[data-revealed='true'] > .content:not(.pendingContent) { transition: opacity 360ms cubic-bezier(.23, 1, .32, 1); }

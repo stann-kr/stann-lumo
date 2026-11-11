@@ -45,6 +45,16 @@ describe('requested public pages', () => {
     expect(screen.queryByText('Skeleton')).not.toBeInTheDocument();
   });
 
+  it('starts from a server-rendered first page without requesting it again', async () => {
+    const loadPage = vi.fn().mockResolvedValue(page(4));
+    render(<PagedList {...props} initialPage={page()} loadPage={loadPage} />);
+    expect(screen.getAllByRole('link')).toHaveLength(4);
+    expect(loadPage).not.toHaveBeenCalled();
+    act(() => observers.at(-1)!.intersect());
+    await waitFor(() => expect(screen.getAllByRole('link')).toHaveLength(8));
+    expect(loadPage).toHaveBeenCalledExactlyOnceWith(4, expect.any(AbortSignal));
+  });
+
   it('preserves content on failure, waits for retry and restores manual keyboard focus', async () => {
     const loadPage = vi.fn().mockResolvedValueOnce(page()).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(page(4));
     render(<PagedList {...props} loadPage={loadPage} />);

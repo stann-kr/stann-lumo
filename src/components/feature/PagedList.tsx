@@ -14,12 +14,14 @@ interface PagedListProps<T extends { id: string }> {
   restoreCount?: number;
   onItemsRendered?: () => void;
   restoreFromHash?: boolean;
+  /** The first screen rendered on the server, so it arrives with the HTML instead of after hydration and a request. */
+  initialPage?: PublicPage<T>;
   loadPage: (offset: number, signal: AbortSignal) => Promise<PublicPage<T>>;
   renderItem: (item: T, index: number, visibleCount: number) => ReactNode;
   skeleton: ReactNode;
 }
 
-export default function PagedList<T extends { id: string }>({ total: initialTotal, label, className, listRef: suppliedRef, restoreCount = 0, restoreFromHash = false, onItemsRendered, loadPage, renderItem, skeleton }: PagedListProps<T>) {
+export default function PagedList<T extends { id: string }>({ total: initialTotal, label, className, listRef: suppliedRef, restoreCount = 0, restoreFromHash = false, onItemsRendered, initialPage, loadPage, renderItem, skeleton }: PagedListProps<T>) {
   const { t } = useTranslation();
   const id = useId();
   const ownRef = useRef<HTMLUListElement>(null);
@@ -27,9 +29,9 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
   const sentinelRef = useRef<HTMLLIElement>(null);
   const requestRef = useRef<AbortController | null>(null);
   const focusIndex = useRef<number | null>(null);
-  const [items, setItems] = useState<T[]>([]);
-  const [total, setTotal] = useState(initialTotal);
-  const [offset, setOffset] = useState<number | null>(initialTotal ? 0 : null);
+  const [items, setItems] = useState<T[]>(() => initialPage?.items ?? []);
+  const [total, setTotal] = useState(initialPage?.total ?? initialTotal);
+  const [offset, setOffset] = useState<number | null>(initialPage ? initialPage.nextOffset : initialTotal ? 0 : null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const hasMore = offset !== null;
