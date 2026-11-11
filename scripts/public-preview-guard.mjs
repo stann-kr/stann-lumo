@@ -1,6 +1,6 @@
 const PUBLIC_PAGE = /^\/(?:about|music|contact|link|press-kit|events(?:\/[^/]+)?|archive(?:\/[^/]+)?)?\/?$/;
 const PUBLIC_API = /^\/api\/(?:content\/(?:en|ko)|archive|events(?:\/[^/]+)?|media\/[^/]+|track-art\/[^/]+)\/?$/;
-const PUBLIC_ASSET = /^\/(?:_next\/(?:static\/.+|image)|(?:apple-)?icon\.png|favicon\.ico|robots\.txt|sitemap\.xml|press\/[\w-]+\.jpg)$/;
+const PUBLIC_ASSET = /^\/(?:_next\/(?:static\/.+|image)|(?:apple-)?icon\.png|favicon\.ico|robots\.txt|sitemap\.xml|press\/(?:[\w-]+\.jpg|poster\/[\w-]+\.jpg|video\/[\w-]+\.mp4))$/;
 
 export function createPublicPreview(handler) {
   return {
