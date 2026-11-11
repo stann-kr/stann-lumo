@@ -31,7 +31,7 @@ export const PRESS_KIT_COPY: Record<PressKitLocale, PressKitCopy> = {
     liveSet: 'Stann Lumo는 DJ 셋과 함께 Ableton Live로 구성한 라이브 셋을 선보인다. 직접 전개하는 TERMINAL이 그 무대로, Faust Seoul에서 열린 TERMINAL 01(2026년 3월)과 TERMINAL 02(2026년 5월)에서 라이브 셋을 공연했다.',
     terminal: 'TERMINAL은 Stann Lumo가 전개하는 관련 디지털/라이브 인터페이스 프로젝트다. 그의 음악 세계를 시각적·공간적으로 확장하는 별도 프로젝트로, 사운드를 둘러싼 맥락과 라이브 경험을 다룬다. 2026년부터 Faust Seoul에서 이벤트로 이어지고 있다.',
     festivalKorea: '국내 페스티벌',
-    videoNote: `공연 영상 11편은 용량이 커서 요청 시 전달합니다. ${CONTACT_EMAIL}로 받을 곳과 용도를 알려 주세요.`,
+    videoNote: `공연 영상 12편을 원본 MP4로 내려받을 수 있습니다. 다른 자료가 필요하면 ${CONTACT_EMAIL}로 문의해 주세요.`,
     logoNote: '로고를 늘리거나 색을 바꾸거나 외곽선·효과를 넣지 마세요. 주변 여백은 글자 높이 이상 확보해 주세요.',
   },
   en: {
@@ -46,7 +46,7 @@ export const PRESS_KIT_COPY: Record<PressKitLocale, PressKitCopy> = {
     liveSet: 'Alongside his DJ sets, Stann Lumo performs a live set built in Ableton Live. TERMINAL is where he presents it: he has performed live at TERMINAL 01 (March 2026) and TERMINAL 02 (May 2026) at Faust Seoul.',
     terminal: 'TERMINAL is a related digital/live interface project developed by Stann Lumo. A separate project that extends his musical world visually and spatially, it deals with the context around the sound and the live experience. Since 2026 it has taken shape as a series of nights at Faust Seoul.',
     festivalKorea: 'Festival, Korea',
-    videoNote: `The 11 performance clips are large files and are sent on request. Email ${CONTACT_EMAIL} with where and how they will be used.`,
+    videoNote: `All 12 performance clips download as original MP4 files. For anything else, email ${CONTACT_EMAIL}.`,
     logoNote: 'Please do not stretch, recolor, outline, or add effects. Keep clear space of at least the letter height.',
   },
 };
@@ -106,11 +106,23 @@ export const PRESS_LOGO_FILES = [
 
 export const PRESS_PDFS = { ko: `${DL}/stann-lumo-press-kit-ko.pdf`, en: `${DL}/stann-lumo-press-kit-en.pdf` } as const;
 
-export const PRESS_VIDEOS = [
-  { venue: 'Faust, Seoul', count: 5 },
-  { venue: 'HÖR, Berlin', count: 3 },
-  { venue: 'High Tech Seoul', count: 3 },
-] as const;
+/** Performance clips live in R2 under `press/video/<file>` and are served by `/press/video/[file]`; posters are static. */
+export const PRESS_VIDEO_PATH = '/press/video';
+
+export interface PressVideoClip { file: string; duration: string; size: string }
+
+const clip = (file: string, duration: string, size: string): PressVideoClip => ({ file: `stann-lumo-${file}.mp4`, duration, size });
+
+export const PRESS_VIDEOS: { venue: string; clips: PressVideoClip[] }[] = [
+  { venue: 'Faust, Seoul', clips: [clip('faust-1', '0:18', '17.5MB'), clip('faust-2', '1:18', '85.3MB'), clip('faust-3', '0:13', '12.0MB'), clip('faust-4', '0:43', '50.4MB'), clip('faust-5', '1:03', '74.0MB')] },
+  { venue: 'HÖR, Berlin', clips: [clip('hor-berlin-1', '0:27', '3.6MB'), clip('hor-berlin-2', '0:30', '4.1MB'), clip('hor-berlin-3', '0:29', '4.0MB'), clip('hor-berlin-4', '0:44', '33.8MB')] },
+  { venue: 'High Tech Seoul', clips: [clip('high-tech-seoul-1', '0:25', '6.6MB'), clip('high-tech-seoul-2', '0:15', '12.3MB'), clip('high-tech-seoul-3', '0:23', '26.5MB')] },
+];
+
+/** The only files the video route will read from R2. */
+export const PRESS_VIDEO_FILES: ReadonlySet<string> = new Set(PRESS_VIDEOS.flatMap((venue) => venue.clips.map((item) => item.file)));
+
+export const pressVideoPoster = (file: string) => `/press/poster/${file.replace(/\.mp4$/, '.jpg')}`;
 
 export const PRESS_CONTACT = [
   { label: 'Web', value: 'lumo.stann.kr', url: 'https://lumo.stann.kr/' },

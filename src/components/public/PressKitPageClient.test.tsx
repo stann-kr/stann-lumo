@@ -21,6 +21,11 @@ describe('PressKitPageClient', () => {
     const logo = within(screen.getByRole('region', { name: 'Logo' }));
     expect(logo.getAllByRole('link')).toHaveLength(8);
     expect(logo.getByRole('link', { name: 'Download White SVG' })).toHaveAttribute('href', '/press/download/logo/StannLumo_Logo_White.svg');
+    const video = within(screen.getByRole('region', { name: 'Performance video' }));
+    const clips = video.getAllByRole('link');
+    expect(clips).toHaveLength(12);
+    expect(clips.every((link) => link.hasAttribute('download') && link.getAttribute('href')!.startsWith('/press/video/stann-lumo-'))).toBe(true);
+    expect(video.getByRole('link', { name: 'Download HÖR, Berlin clip 04 (33.8MB)' })).toHaveAttribute('href', '/press/video/stann-lumo-hor-berlin-4.mp4');
     expect(screen.getAllByRole('link', { name: 'KO PDF' })[0]).toHaveAttribute('href', '/press/download/stann-lumo-press-kit-ko.pdf');
     const contact = within(screen.getByRole('region', { name: 'Booking · Press' }));
     expect(contact.getByRole('link', { name: 'Email booking →' })).toHaveAttribute('href', expect.stringMatching(/^mailto:contact@stann\.kr\?subject=/));
