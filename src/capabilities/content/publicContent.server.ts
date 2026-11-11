@@ -400,3 +400,9 @@ export const getArchiveDetail = cache(async (id: string): Promise<{ photo: Galle
   assertPublicPayloadSafe(projection);
   return projection;
 });
+
+/** The outbound link of a public track, used only to look up its platform artwork. */
+export async function getTrackLink(id: string): Promise<string | null> {
+  const row = await getPublicDB().prepare('SELECT link FROM tracks WHERE id = ? LIMIT 1').bind(id).first<{ link: string | null }>();
+  return row?.link ?? null;
+}

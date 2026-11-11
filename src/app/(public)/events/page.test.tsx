@@ -85,7 +85,7 @@ describe('public events', () => {
     expect(within(facts).getByRole('link')).toHaveAttribute('href', event.raEventLink);
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
     rerender(<EventDetailPageClient event={event} posterPhoto={{ id: 'poster', altText: 'Event poster' } as GalleryPhoto} />);
-    expect(screen.getByRole('img', { name: 'Event poster' })).toHaveAttribute('src', '/api/media/poster?v=2');
+    expect(screen.getByRole('img', { name: 'Event poster' })).toHaveAttribute('src', '/api/media/poster?v=2&w=1600');
     expect(screen.getByText('STANN LUMO')).toBeVisible();
   });
 

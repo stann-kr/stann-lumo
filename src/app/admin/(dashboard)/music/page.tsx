@@ -141,7 +141,7 @@ export default function AdminMusicPage() {
                 onChange={(value) => updateTrackField(index, 'tracklist', value)} placeholder={'Artist — Title\nArtist — Title'} />
               <div className={styles.cover}>
                 <div className={styles.coverFrame}>
-                  {track.coverImageId ? <LoadingImage src={getPublicImageUrl(track.coverImageId)} alt="" quiet /> : <span>커버<br />없음</span>}
+                  {track.coverImageId ? <LoadingImage src={getPublicImageUrl(track.coverImageId, 640)} alt="" quiet /> : <span>커버<br />없음</span>}
                 </div>
                 <div className={styles.coverBody}>
                   <p className={styles.coverHint}>{savedIds.has(track.id) ? '커버는 올리는 즉시 공개 화면에 반영됩니다. 정사각형 이미지, 최대 10MB.' : '새 음악은 먼저 저장한 뒤 커버를 올릴 수 있습니다.'}</p>

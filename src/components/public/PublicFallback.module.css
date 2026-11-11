@@ -1,8 +1,10 @@
-/* Transparent so the public shell's ambient background continues behind 404 and error states without a seam. */
-.fallback { display: flex; flex-direction: column; align-items: start; justify-content: center; gap: 1.5rem; min-height: 70svh; padding: 4rem var(--page-gutter, 1.25rem); font-family: var(--font-display, 'Apple SD Gothic Neo', Arial, sans-serif); color: var(--color-primary, white); }
-.fallback h1 { max-width: 16ch; font-size: clamp(2.5rem, 6vw, 6rem); font-weight: 800; line-height: 1.05; letter-spacing: -.04em; overflow-wrap: anywhere; }
-.fallback p { max-width: 60ch; color: var(--color-secondary); }
-.fallback .code { font: .8rem 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--color-accent); }
-.actions { display: flex; flex-wrap: wrap; gap: 1rem; }
-.actions a, .actions button { display: inline-flex; align-items: center; min-height: 44px; padding: .75rem 1.25rem; border: 1px solid var(--color-muted); }
-@media (hover: hover) and (pointer: fine) { .actions a:hover, .actions button:hover { border-color: var(--color-accent); color: var(--color-accent); } }
+/* v5 fallback plate for 404 and route errors. */
+.fallback { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; min-height: 60svh; padding: 28px 24px; background: var(--v5-plate); color: var(--color-primary); }
+.fallback h1 { max-width: 16ch; font-weight: 900; font-size: clamp(2.5rem, 7vw, 6rem); line-height: .9; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
+.fallback p { max-width: 60ch; color: var(--v5-muted-2); }
+.fallback .code { display: flex; align-items: center; gap: 8px; font: 11px/1.4 var(--os-font-mono); letter-spacing: .14em; color: var(--v5-link); }
+.fallback .code::before { content: ''; width: 8px; height: 8px; background: var(--v5-red); }
+.actions { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 8px; }
+.actions a, .actions button { display: inline-flex; align-items: center; min-height: 48px; padding: 0 20px; background: var(--v5-band); font-weight: 700; font-size: .8125rem; letter-spacing: .06em; text-transform: uppercase; }
+.actions a:hover, .actions button:hover { background: var(--color-primary); color: #000; }
+@media (max-width: 640px) { .fallback { padding: 22px 16px; } }

@@ -64,7 +64,7 @@ function FocalPicker({ photoId, focalX, focalY, onFocalChange }: FocalPickerProp
       title="클릭하여 포컬 포인트 설정"
     >
       <img
-        src={getPublicImageUrl(photoId)}
+        src={getPublicImageUrl(photoId, 640)}
         alt=""
         className="w-full h-full object-cover"
         style={{ objectPosition: `${focalX}% ${focalY}%` }}
@@ -347,7 +347,7 @@ const AdminGalleryPage = () => {
               onConfirm={() => confirmDelete(() => void handleDeletePhoto(index))} onCancel={closeConfirm} /> : <>
               <div className={styles.row}>
                 <div className={styles.thumbnail}>
-                  {photo.mediaType === 'image' ? <LoadingImage src={getPublicImageUrl(photo.id)} alt="" quiet /> :
+                  {photo.mediaType === 'image' ? <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt="" quiet /> :
                     photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt="" quiet /> : <span>영상</span>}
                 </div>
                 <button type="button" className={styles.summary} aria-expanded={selectedId === photo.id} aria-controls={`media-editor-${photo.id}`}

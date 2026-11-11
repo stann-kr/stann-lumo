@@ -11,6 +11,7 @@ import PagedList from '@/components/feature/PagedList';
 import LoadingImage from '@/capabilities/media/LoadingImage';
 import { fetchPublicPage } from '@/capabilities/content/publicPagination';
 import { useLanguage } from '@/contexts/LanguageContext';
+import v5 from '@/styles/v5.module.css';
 import styles from './ArchivePageClient.module.css';
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import { ARCHIVE_PAGE_SIZE, archiveBrowseState, archiveHref, archiveItemAnchor, archiveReturnHref, type ArchiveBrowseState } from '@/capabilities/media/archiveBrowsing';
@@ -28,13 +29,13 @@ function GridItem({ photo, browse }: { photo: GalleryPhoto; browse: ArchiveBrows
         window.history.replaceState(null, '', href);
       }}>
         <div className={styles.media} data-video={photo.mediaType !== 'image'}>
-          {photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt={photo.altText || photo.filename} data-hover-image />
+          {photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt={photo.altText || photo.filename} quiet />
             : photo.mediaType === 'video_file' ? <video src={`/api/media/${photo.id}`} preload="none" muted playsInline aria-hidden="true" />
-            : <LoadingImage src={getPublicImageUrl(photo.id)} alt={photo.altText || photo.filename} data-hover-image />}
+            : <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.filename} quiet />}
         </div>
         {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
       </Link>
-      {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time className={styles.date} dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
+      {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time className={`${v5.mono} ${styles.date}`} dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
     </article>
   );
 }
@@ -71,29 +72,28 @@ export default function ArchivePageClient({ total }: { total: number }) {
     target.scrollIntoView?.({ block: 'center', behavior: 'instant' });
   }, [total, currentPage]);
   return (
-    <PageLayout title={t('gallery_title')} motionRevision={`${sort}:${seed}:${currentPage}`} animateEntry={false}>
-      {total === 0 ? <div className={styles.empty}><p className="text-[var(--color-text-muted)] text-sm font-mono tracking-widest">{t('gallery_empty')}</p></div> : <div className="space-y-6">
-        <div className="flex flex-col gap-3 border-b border-[var(--color-muted)] pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs font-mono text-[var(--color-text-muted)]">{t('gallery_total', { total })}</p>
-          <fieldset className="min-w-0">
+    <PageLayout title={t('gallery_title')} motionRevision={`${sort}:${seed}:${currentPage}`} animateEntry={false}
+      meta={total > 0 && <div className={v5.readout}><span className={v5.label}>{t('gallery_items')}</span><span>{String(total).padStart(2, '0')}</span></div>}>
+      {total === 0 ? <p className={`${v5.plate} ${v5.pad} ${styles.empty}`}>{t('gallery_empty')}</p> : <section className={v5.plate} aria-label={t('gallery_title')}>
+        <div className={styles.toolbar}>
+          <span className={`${v5.label} ${styles.total}`} aria-hidden="true">{t('gallery_sort')}</span>
+          <fieldset className={styles.sort}>
             <legend className="sr-only">{t('gallery_sort')}</legend>
-            <div className="flex items-center gap-1">
-              {(['newest', 'random', 'oldest'] as const).map((value) => (
-                <label key={value} className="relative flex-1 cursor-pointer sm:flex-none">
-                  <input type="radio" name="archive-sort" value={value} checked={sort === value} className="peer sr-only" onChange={() => {
-                    window.history.replaceState(null, '', archiveHref({ sort: value, seed: value === 'random' ? crypto.getRandomValues(new Uint32Array(1))[0]! || 1 : seed, page: 1, from: '' }));
-                  }} />
-                  <span className="flex min-h-11 items-center justify-center border-b-2 border-transparent px-3 font-mono text-xs uppercase tracking-wider text-[var(--color-text-muted)] hover:text-[var(--color-primary)] peer-checked:border-[var(--color-accent)] peer-checked:bg-[var(--color-accent)]/10 peer-checked:text-[var(--color-primary)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-accent)]">{t(`gallery_sort_${value}`)}</span>
-                </label>
-              ))}
-            </div>
+            {(['newest', 'random', 'oldest'] as const).map((value) => (
+              <label key={value} className={styles.sortKey}>
+                <input type="radio" name="archive-sort" value={value} checked={sort === value} className="sr-only" onChange={() => {
+                  window.history.replaceState(null, '', archiveHref({ sort: value, seed: value === 'random' ? crypto.getRandomValues(new Uint32Array(1))[0]! || 1 : seed, page: 1, from: '' }));
+                }} />
+                <span>{t(`gallery_sort_${value}`)}</span>
+              </label>
+            ))}
           </fieldset>
         </div>
         <PagedList key={`${sort}:${seed}`} total={total} loadPage={loadPage} restoreCount={currentPage * ARCHIVE_PAGE_SIZE} restoreFromHash={currentPage === 1}
           onItemsRendered={restorePosition} skeleton={<div className={styles.skeleton}><div /><span /></div>}
           listRef={listRef} label={t('gallery_items')} className={styles.grid}
           renderItem={(photo, _index, visibleCount) => <GridItem photo={photo} browse={{ ...browse, page: Math.ceil(visibleCount / ARCHIVE_PAGE_SIZE) }} />} />
-      </div>}
+      </section>}
     </PageLayout>
   );
 }

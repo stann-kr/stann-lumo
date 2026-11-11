@@ -7,6 +7,7 @@ import PageLayout from "@/components/feature/PageLayout";
 import type { LinkPageMeta, LinkPlatform } from "@/capabilities/content/content";
 import type { TerminalInfo } from "@/capabilities/terminal/terminalConfig";
 import { SITE_NAME } from '@/constants/site';
+import v5 from '@/styles/v5.module.css';
 import styles from './LinkPageClient.module.css';
 
 interface LinkPageClientProps { linkMeta: LinkPageMeta; linkPlatforms: LinkPlatform[]; terminalInfo: TerminalInfo; }
@@ -22,7 +23,7 @@ function destinationLabel(url: string): string {
 function Destination({ description, url, defaults }: { description: string; url: string; defaults: string[] }) {
   const text = description.trim();
   const isFiller = !text || defaults.includes(text.toLowerCase());
-  return isFiller ? <p data-kind="url">{destinationLabel(url)}</p> : <p>{text}</p>;
+  return isFiller ? <p data-kind="url" className={v5.mono}>{destinationLabel(url)}</p> : <p>{text}</p>;
 }
 
 export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }: LinkPageClientProps) {
@@ -31,26 +32,29 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
   const newTabLabel = language === 'ko' ? '새 창에서 열기' : 'Opens in a new tab';
   return (
     <PageLayout title={linkMeta.title || t("link_title")} subtitle={linkMeta.subtitle}>
-      <ul className={styles.platforms}>
-        {linkPlatforms.map((link) => <li key={link.id}>
-          <a href={link.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>
-            <h2 data-hover-label>{link.platform}</h2>
-            <Destination description={link.description} url={link.url} defaults={['platform description', `${SITE_NAME} ${link.platform}`.toLowerCase(), link.platform.toLowerCase()]} />
-            <span className="sr-only">{newTabLabel}</span>
-            <i className={styles.rowRule} data-hover-rule aria-hidden="true" />
-          </a>
-        </li>)}
-      </ul>
-      {terminalInfo.url && <section className={styles.terminal}>
-        <p>{t("link_side_project")}</p>
-        <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer" className={styles.row} data-hover>
-          <h2 data-hover-label>{linkMeta.terminalTitle || 'Terminal'}</h2>
+      <section className={v5.plate} aria-labelledby="link-platforms">
+        <div className={v5.band}><h2 id="link-platforms" className={v5.label}>Platforms</h2><span className={`${v5.label} ${v5.muted}`}>{String(linkPlatforms.length).padStart(2, '0')}</span></div>
+        <ul className={styles.platforms}>
+          {linkPlatforms.map((link) => <li key={link.id}>
+            <a href={link.url} target="_blank" rel="noopener noreferrer" className={styles.row}>
+              <h3>{link.platform}</h3>
+              <Destination description={link.description} url={link.url} defaults={['platform description', `${SITE_NAME} ${link.platform}`.toLowerCase(), link.platform.toLowerCase()]} />
+              <span className={styles.arrow} aria-hidden="true">↗</span>
+              <span className="sr-only">{newTabLabel}</span>
+            </a>
+          </li>)}
+        </ul>
+      </section>
+      {terminalInfo.url && <section className={v5.plate} aria-labelledby="link-terminal">
+        <div className={v5.band}><h2 id="link-terminal" className={v5.label}>{t("link_side_project")}</h2><span className={`${v5.label} ${v5.muted}`}>Since 2026 · Faust Seoul</span></div>
+        <a href={terminalInfo.url} target="_blank" rel="noopener noreferrer" className={styles.row}>
+          <h3>{linkMeta.terminalTitle || 'Terminal'}</h3>
           <Destination description={terminalInfo.description} url={terminalInfo.url} defaults={['terminal platform']} />
+          <span className={styles.arrow} aria-hidden="true">↗</span>
           <span className="sr-only">{newTabLabel}</span>
-          <i className={styles.rowRule} data-hover-rule aria-hidden="true" />
         </a>
       </section>}
-      <footer className={styles.footer}><Link href="/contact">{t("link_footer_contact")}</Link></footer>
+      <footer className={styles.footer}><Link className={`${v5.key} ${v5.red}`} href="/contact">{t("link_footer_contact")} →</Link></footer>
     </PageLayout>
   );
 }
