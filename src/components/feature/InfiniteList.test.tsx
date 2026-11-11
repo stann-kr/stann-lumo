@@ -30,7 +30,7 @@ describe('infinite public lists', () => {
 
   it('automatically extends Music ten at a time, ignores duplicate signals and retains existing rows and focus', () => {
     render(<MusicPageClient tracks={tracks} musicMeta={{ title: 'Music', subtitle: '' }} />);
-    const links = () => within(screen.getByRole('list', { name: 'Music' })).getAllByRole('link');
+    const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('link');
     expect(links()).toHaveLength(10);
     const first = links()[0]!;
     first.focus();
@@ -50,7 +50,7 @@ describe('infinite public lists', () => {
   it('supports manual loading without IntersectionObserver and focuses the first new item through the last batch', () => {
     vi.stubGlobal('IntersectionObserver', undefined);
     render(<MusicPageClient tracks={tracks} musicMeta={{ title: 'Music', subtitle: '' }} />);
-    const links = () => within(screen.getByRole('list', { name: 'Music' })).getAllByRole('link');
+    const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('link');
     fireEvent.click(screen.getByRole('button', { name: 'list_load_more' }));
     expect(links()[10]).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: 'list_load_more' }));

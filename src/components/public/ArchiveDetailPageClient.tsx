@@ -5,6 +5,7 @@ import Link, { usePublicNavigation } from '../feature/PublicLink';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { captionIncludesDate, getPublicImageUrl, type GalleryPhoto } from '@/capabilities/media/media';
+import v5 from '@/styles/v5.module.css';
 import styles from './ArchiveDetailPageClient.module.css';
 import LoadingImage from '@/capabilities/media/LoadingImage';
 import { useContentMotion } from '../feature/useContentMotion';
@@ -51,8 +52,8 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
   return (
     <article ref={pageRef} className={styles.page} aria-label={`Archive item: ${itemLabel}`}>
       <header className={styles.header}>
-        <Link href={backHref} scroll={false}>{t('gallery_title')}</Link>
-        <h1><span className={styles.order}>{t('gallery_sort_' + browse.sort)}</span> <span className={styles.position}>{index + 1} / {total}</span><span className="sr-only"> — {itemLabel}</span></h1>
+        <Link href={backHref} scroll={false} className={styles.back}>{t('gallery_title')}</Link>
+        <h1 className={v5.label}><span className={styles.order}>{t('gallery_sort_' + browse.sort)}</span> <span className={styles.position}>{index + 1} / {total}</span><span className="sr-only"> — {itemLabel}</span></h1>
       </header>
       <div className={styles.detail}>
         <div className={styles.media}>
@@ -62,17 +63,21 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
         </div>
         <div className={styles.info}>
           {/* Nearly every item is an image; only a video needs its kind spelled out. */}
-          {photo.mediaType !== 'image' && <p className={styles.type}>{photo.mediaType === 'video_youtube' ? 'YouTube' : (isKorean ? '영상' : 'Video')}</p>}
+          {photo.mediaType !== 'image' && <div className={v5.band}><p className={v5.label}>{photo.mediaType === 'video_youtube' ? 'YouTube' : (isKorean ? '영상' : 'Video')}</p></div>}
           {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
-          {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
-          {photo.linkedEventId && <Link href={`/events/${photo.linkedEventId}`} className={styles.event}>{isKorean ? '공연 보기' : 'View event'}</Link>}
+          {(photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate)) || photo.linkedEventId ? (
+            <div className={styles.facts}>
+              {photo.eventDate && !captionIncludesDate(photo.caption, photo.eventDate) && <time className={v5.mono} dateTime={photo.eventDate.replace(/\./g, '-')}>{photo.eventDate}</time>}
+              {photo.linkedEventId && <Link href={`/events/${photo.linkedEventId}`} className={styles.event}>{isKorean ? '공연 보기' : 'View event'} →</Link>}
+            </div>
+          ) : null}
           <nav className={styles.navigation} aria-label={isKorean ? '아카이브 탐색' : 'Archive navigation'}>
-            {previousHref ? <Link href={previousHref} aria-label={previousLabel} aria-keyshortcuts="ArrowLeft">{isKorean ? '이전' : 'Previous'}</Link>
-              : <button type="button" aria-label={isKorean ? '이전 아카이브 항목 없음' : 'No previous archive item'} disabled>{isKorean ? '이전' : 'Previous'}</button>}
-            {nextHref ? <Link href={nextHref} aria-label={nextLabel} aria-keyshortcuts="ArrowRight">{isKorean ? '다음' : 'Next'}</Link>
-              : <button type="button" aria-label={isKorean ? '다음 아카이브 항목 없음' : 'No next archive item'} disabled>{isKorean ? '다음' : 'Next'}</button>}
+            {previousHref ? <Link href={previousHref} className={v5.key} aria-label={previousLabel} aria-keyshortcuts="ArrowLeft">← {isKorean ? '이전' : 'Previous'}</Link>
+              : <button type="button" className={v5.key} aria-label={isKorean ? '이전 아카이브 항목 없음' : 'No previous archive item'} disabled>← {isKorean ? '이전' : 'Previous'}</button>}
+            {nextHref ? <Link href={nextHref} className={v5.key} aria-label={nextLabel} aria-keyshortcuts="ArrowRight">{isKorean ? '다음' : 'Next'} →</Link>
+              : <button type="button" className={v5.key} aria-label={isKorean ? '다음 아카이브 항목 없음' : 'No next archive item'} disabled>{isKorean ? '다음' : 'Next'} →</button>}
           </nav>
-          <p className={styles.hint}>{isKorean ? '← → 이전·다음 / Esc 목록으로' : '← → Previous / next · Esc back to archive'}</p>
+          <p className={`${v5.label} ${styles.hint}`}>{isKorean ? '← → 이전·다음 / Esc 목록으로' : '← → Previous / next · Esc back to archive'}</p>
         </div>
       </div>
     </article>

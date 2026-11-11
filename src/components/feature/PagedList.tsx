@@ -90,7 +90,7 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
     <ul ref={listRef} id={id} tabIndex={-1} aria-label={label} aria-busy={loading} className={className}>
       {items.map((item, index) => <li key={item.id} tabIndex={-1}>{renderItem(item, index, items.length)}</li>)}
       {hasMore && Array.from({ length: Math.min(PUBLIC_BATCH_SIZE, Math.max(1, total - items.length)) }, (_, index) => (
-        <li key={`pending-${index}`} ref={index === 0 ? sentinelRef : undefined} aria-hidden="true">{skeleton}</li>
+        <li key={`pending-${index}`} ref={index === 0 ? sentinelRef : undefined} aria-hidden="true" data-pending="">{skeleton}</li>
       ))}
     </ul>
     {/* A list that fits in one batch needs no visible counter; screen readers still get the status. */}

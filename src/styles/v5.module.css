@@ -1,0 +1,48 @@
+/* v5 plate primitives shared by the inner public pages (Home and Press kit predate this module and keep their own copies).
+   Black field, plates separated by gaps, filled bands for sub-heads, alternating row tones, filled keys.
+   Red is reserved for signal keys: play, current item, next gig, tickets, booking/inquiry. */
+.label { font-family: var(--os-font-mono); font-size: 11px; font-weight: 400; letter-spacing: .14em; line-height: 1.4; text-transform: uppercase; word-spacing: var(--mono-word-spacing, normal); }
+.mono { font-family: var(--os-font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--v5-muted); }
+.display { font-weight: 900; font-size: clamp(1.75rem, 3.2vw, 2.75rem); line-height: 1; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
+
+.stack { display: flex; flex-direction: column; gap: var(--v5-gap); }
+.plate { min-width: 0; background: var(--v5-plate); }
+.inset { min-width: 0; background: var(--v5-inset); }
+.band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 36px; padding: 8px 20px; background: var(--v5-band); }
+.band :where(h2, h3) { font: inherit; }
+.pad { padding: 20px; }
+
+.rows { display: flex; flex-direction: column; list-style: none; }
+.rows > :where(li, div, a) { background: var(--v5-plate); }
+.rows > :where(li, div, a):nth-child(even) { background: var(--v5-plate-2); }
+
+.key {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px;
+  background: var(--v5-band); color: var(--color-primary); font-weight: 700; font-size: .8125rem; letter-spacing: .06em; text-transform: uppercase; text-align: center;
+}
+.key:hover { background: #333; }
+.key[aria-pressed='true'], .key[aria-current] { background: var(--color-primary); color: #000; }
+.key:disabled, .key[aria-disabled='true'] { color: var(--v5-muted); background: var(--v5-plate-2); }
+.red { background: var(--v5-red); color: #000; }
+.red:hover { background: var(--v5-red-hover); }
+.ink { background: #000; color: #fff; }
+.ink:hover { background: var(--v5-band); }
+.keys { display: flex; flex-wrap: wrap; gap: var(--v5-key-gap); }
+
+/* Mono readout tile beside a title plate (counts, dates). */
+.readout { display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; padding: 14px 20px; background: var(--v5-plate-2); }
+.readout:nth-child(even) { background: var(--v5-band); }
+.readout > :first-child { color: var(--v5-muted); }
+.readout > :last-child { font-family: var(--os-font-mono); font-size: clamp(1.75rem, 3vw, 2.25rem); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.readout[data-signal='true'] > :last-child { color: var(--v5-link); }
+
+.lamp { display: inline-block; width: 8px; height: 8px; flex: none; background: var(--v5-red); }
+
+@media (max-width: 640px) {
+  .stack { gap: 8px; }
+  .band, .pad { padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .key { transition: background-color var(--os-dur-fast) linear, color var(--os-dur-fast) linear; }
+}

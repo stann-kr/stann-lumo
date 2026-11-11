@@ -15,6 +15,15 @@ function youtubeId(url: URL): string | null {
   return ['live', 'embed', 'shorts'].includes(kind) ? id || null : null;
 }
 
+/** The 11-character video id of a YouTube watch, live, embed, shorts or youtu.be link. */
+export function youtubeVideoId(link: string): string | null {
+  let url: URL;
+  try { url = new URL(link); } catch { return null; }
+  if (url.protocol !== 'https:') return null;
+  const id = youtubeId(url);
+  return id && YOUTUBE_ID.test(id) ? id : null;
+}
+
 export function mixEmbed(link: string): MixEmbed | null {
   let url: URL;
   try { url = new URL(link); } catch { return null; }

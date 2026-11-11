@@ -10,6 +10,7 @@ import LumoWordmark from "../base/LumoWordmark";
 import styles from "./PublicSiteShell.module.css";
 import { useShellMotion } from './useShellMotion';
 import { PublicMotionInputContext, type MotionInput } from './publicMotion';
+import { useRevealGate } from './useRevealGate';
 
 interface PublicSiteShellProps {
   children: ReactNode;
@@ -28,6 +29,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
   const motionInputRef = useRef<MotionInput>('pointer');
   useShellMotion(shellRef, pathname, mobileMenuOpen, motionInputRef);
   const mainRef = useRef<HTMLElement | null>(null);
+  const revealed = useRevealGate(mainRef, pathname);
   const brandRef = useRef<HTMLAnchorElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileDialogRef = useRef<HTMLDivElement | null>(null);
@@ -221,17 +223,17 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
             </button>
           </div>
         </header>
-        <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main}>
-          <div inert={isNavigating || undefined} className={isNavigating ? styles.pendingContent : undefined}>{children}</div>
+        <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed}>
+          <div inert={isNavigating || undefined} className={`${styles.content} ${isNavigating ? styles.pendingContent : ''}`}>{children}</div>
         </main>
-        <footer inert={isNavigating || undefined} className={`${styles.footer} ${isNavigating ? styles.pendingContent : ''}`}>
+        <footer inert={isNavigating || undefined} className={`${styles.footer} ${isNavigating ? styles.pendingContent : ''}`} data-revealed={revealed}>
           <span className={styles.copyright}>© {artistName} · Seoul</span>
           <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram ↗<span className="sr-only">{newTabLabel}</span></a>
           <a href={SOUNDCLOUD_URL} target="_blank" rel="noopener noreferrer">SoundCloud ↗<span className="sr-only">{newTabLabel}</span></a>
           <Link href="/link">Links →</Link>
           <a href={TERMINAL_URL} target="_blank" rel="noopener noreferrer">Terminal ↗<span className="sr-only">{newTabLabel}</span></a>
         </footer>
-        {isNavigating && <PublicPageLoading overlay />}
+        {isNavigating ? <PublicPageLoading overlay /> : !revealed && <PublicPageLoading overlay gate />}
       </div>
       {mobileMenuOpen && (
         <div className={styles.menuLayer}>

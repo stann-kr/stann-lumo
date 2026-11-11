@@ -9,8 +9,9 @@
 .heroRow { display: flex; flex-wrap: wrap; gap: var(--v5-gap); }
 .hero {
   flex: 999 1 640px; min-width: 0; min-height: clamp(460px, 52vw, 700px); display: flex; flex-direction: column; justify-content: space-between;
-  padding: 24px 28px; background: var(--v5-plate-2) center 30% / cover no-repeat;
+  position: relative; isolation: isolate; padding: 24px 28px; background: var(--v5-plate-2);
 }
+.heroImage { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
 .badge { align-self: flex-start; padding: 6px 10px; background: #000; color: var(--v5-muted-2); }
 .heroKicker { margin-bottom: 12px; color: var(--v5-muted-2); }
 .heroTitle { font-weight: 900; font-size: clamp(5.75rem, 11.7vw, 10.5rem); line-height: .86; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
@@ -25,6 +26,20 @@
 .mixFacts > div:nth-child(even) { background: var(--v5-band); }
 .mixFacts dt { color: var(--v5-muted); }
 .mixFacts dd { font-size: 1.25rem; }
+/* recent mixes deck: the loaded mix is the current item, so it carries the red lamp */
+.deck { display: flex; flex-direction: column; margin-top: var(--v5-gap); list-style: none; }
+.deckRow {
+  display: grid; grid-template-columns: 22px 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 56px;
+  padding: 8px 20px 8px 16px; border-left: 4px solid transparent; background: var(--v5-plate-2); text-align: left;
+}
+.deck li:nth-child(even) .deckRow { background: var(--v5-plate); }
+.deckRow:hover { background: var(--v5-band) !important; }
+.deckRow[aria-pressed='true'] { border-left-color: var(--v5-red); color: var(--v5-link); }
+.deckIndex { font-size: 12px; color: var(--v5-muted); }
+.deckRow[aria-pressed='true'] .deckIndex { color: var(--v5-link); }
+.deckCover { width: 40px; padding: 0; }
+.deckTitle { font-size: .875rem; font-weight: 500; overflow-wrap: anywhere; }
+.deckMeta { font-size: 12px; color: var(--v5-muted); white-space: nowrap; }
 .keyGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--v5-key-gap); margin-top: auto; padding-top: var(--v5-gap); }
 .plateKey { display: block; padding: 14px 20px; background: var(--v5-plate-2); font-size: .875rem; font-weight: 500; }
 .plateKey:hover, .card:hover, .dateRow:hover { background: var(--v5-band); }
@@ -53,9 +68,6 @@
 .plateHead a:hover { text-decoration: underline; }
 .cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--v5-key-gap); list-style: none; }
 .card { display: flex; flex-direction: column; height: 100%; background: var(--v5-plate-2); }
-.cover { position: relative; aspect-ratio: 1; display: flex; align-items: flex-end; padding: 12px; overflow: hidden; background: var(--v5-band); color: var(--v5-muted); }
-.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.cover[data-art='true'] > .label { position: relative; padding: 4px 8px; background: #000; color: var(--v5-muted-2); }
 .cardBody { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px 16px; }
 .cardBody strong { font-size: 1.0625rem; overflow-wrap: anywhere; }
 .cardBody .mono { font-size: 12px; color: var(--v5-muted); }
@@ -92,7 +104,7 @@
 /* archive strip */
 .strip { display: grid; grid-template-columns: 2fr 1fr 1fr 2fr; gap: var(--v5-key-gap); height: 260px; }
 .strip a { display: block; min-width: 0; background: var(--v5-band); overflow: hidden; }
-.strip img { width: 100%; height: 100%; object-fit: cover; }
+.strip .stripImage > img { object-fit: cover; }
 
 @media (max-width: 1199px) {
   .next { grid-template-columns: 120px minmax(0, 1fr) 140px; grid-template-areas: 'lamp title key' 'date venue key'; gap: 4px 16px; padding-block: 10px; }
@@ -108,6 +120,7 @@
   .hero { min-height: 460px; padding: 16px; }
   .heroTitle { font-size: clamp(4rem, 23.5vw, 5.75rem); }
   .band, .mixHead, .mixFacts > div, .plateKey { padding-inline: 16px; }
+  .deckRow { padding-right: 16px; padding-left: 12px; }
   .next { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lamp key' 'title key' 'date key' 'venue key'; padding-left: 16px; }
   .plateHead { padding: 16px; }
   .display { font-size: 1.75rem; }
@@ -124,5 +137,5 @@
   .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 160px; height: auto; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .plateKey, .card, .dateRow, .rowKey, .inkKey, .redKey { transition: background-color var(--os-dur-fast) linear; }
+  .plateKey, .card, .dateRow, .rowKey, .inkKey, .redKey, .deckRow { transition: background-color var(--os-dur-fast) linear, border-color var(--os-dur-fast) linear; }
 }

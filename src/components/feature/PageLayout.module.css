@@ -1,10 +1,27 @@
-.page { padding: clamp(1.5rem, 3vw, 3rem) var(--page-gutter, 1.25rem) clamp(4rem, 8vw, 8rem); max-width: 1800px; margin-inline: auto; }
-.header { position: relative; padding-bottom: clamp(1.5rem, 3vw, 3rem); }
-.header h1 { font-family: var(--font-display, sans-serif); font-size: clamp(1.25rem, 2vw, 2rem); font-weight: 700; line-height: 1.15; letter-spacing: -.025em; overflow-wrap: anywhere; }
-.header[data-size='label'] h1 { text-transform: uppercase; }
+/* v5 title plate for inner pages — derived from the canvas Home/Press kit plates (no inner-page board exists). */
+.page { display: flex; flex-direction: column; gap: var(--v5-gap); }
+.header { display: flex; flex-wrap: wrap; align-items: stretch; background: var(--v5-plate); }
+.titleBlock { flex: 999 1 420px; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 28px 24px 22px; }
+.header h1 { font-weight: 900; font-size: clamp(3.25rem, 8vw, 7rem); line-height: .86; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
 .header h1 span { display: block; }
-.header[data-size='display'] h1 { max-width: 26ch; font-size: clamp(2rem, 4.5vw, 5rem); font-weight: 800; letter-spacing: -.045em; }
-.header p { margin-top: .75rem; max-width: 65ch; font-size: .95rem; color: var(--color-secondary); overflow-wrap: anywhere; }
-.eyebrow { margin-bottom: 1rem; }
-.eyebrow a { display: inline-flex; align-items: center; min-height: 44px; font: .75rem/1.6 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); letter-spacing: .08em; text-transform: uppercase; color: var(--color-secondary); }
-@media (hover: hover) and (pointer: fine) { .eyebrow a:hover { color: var(--color-accent); } }
+.header[data-size='display'] h1 { max-width: 22ch; font-size: clamp(2.25rem, 5vw, 4.5rem); line-height: .92; }
+.header p { margin-top: 14px; max-width: 60ch; font-size: .9375rem; color: var(--v5-muted-2); overflow-wrap: anywhere; }
+.eyebrow { margin: -12px 0 18px -16px; }
+.eyebrow a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px;
+  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; word-spacing: var(--mono-word-spacing, normal); color: var(--v5-muted-2);
+}
+.eyebrow a::before { content: '←'; content: '←' / ''; margin-right: 8px; }
+.eyebrow a:hover { background: var(--v5-band); color: var(--color-primary); }
+.meta { flex: 1 1 280px; min-width: 0; display: flex; align-items: stretch; }
+.meta > * { flex: 1 1 0; min-width: 0; }
+
+@media (max-width: 640px) {
+  .titleBlock { padding: 22px 16px 18px; }
+  .header h1 { font-size: clamp(3rem, 16vw, 4.5rem); }
+  .header[data-size='display'] h1 { font-size: clamp(2rem, 10vw, 3rem); }
+  .eyebrow { margin: -8px 0 12px -16px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .eyebrow a { transition: background-color var(--os-dur-fast) linear, color var(--os-dur-fast) linear; }
+}
