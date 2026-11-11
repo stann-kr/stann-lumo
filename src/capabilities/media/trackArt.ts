@@ -2,16 +2,14 @@ import { getPublicImageUrl } from './media';
 import { youtubeVideoId } from './mixEmbed';
 
 /**
- * Cover art for a track. An uploaded cover wins; otherwise a SoundCloud, YouTube or Bandcamp link supplies the platform's own
+ * Cover art for a track. An uploaded cover wins; otherwise a SoundCloud or YouTube link supplies the platform's own
  * artwork through the same-origin /api/track-art route, so visitors never contact the platform before pressing play.
+ * Bandcamp is not a source: it answers Cloudflare Workers with a bot check instead of the release page (verified
+ * 2026-11-11 on oEmbed, feed, page and API paths), so a Bandcamp release needs an uploaded cover.
  */
 export type TrackArtSource =
   | { provider: 'youtube'; videoId: string }
-  | { provider: 'soundcloud'; url: string }
-  | { provider: 'bandcamp'; url: string };
-
-const BANDCAMP_PAGE = /^\/(?:album|track)\/[\w-]+\/?$/;
-const BANDCAMP_HOST = /^[a-z0-9-]+\.bandcamp\.com$/;
+  | { provider: 'soundcloud'; url: string };
 
 export function trackArtSource(link?: string | null): TrackArtSource | null {
   if (!link) return null;
@@ -20,9 +18,6 @@ export function trackArtSource(link?: string | null): TrackArtSource | null {
   let url: URL;
   try { url = new URL(link); } catch { return null; }
   if (url.protocol !== 'https:') return null;
-  if (BANDCAMP_HOST.test(url.hostname) && BANDCAMP_PAGE.test(url.pathname)) {
-    return { provider: 'bandcamp', url: `https://${url.hostname}${url.pathname.replace(/\/$/, '')}` };
-  }
   if (url.hostname.replace(/^(www|m)\./, '') !== 'soundcloud.com') return null;
   const path = url.pathname.split('/').filter(Boolean);
   // A profile link still has artwork (the avatar); anything deeper than user/set/track is not a SoundCloud page.
