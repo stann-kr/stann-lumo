@@ -7,6 +7,8 @@ export const REVEAL_GATE_CAP_MS = 2000;
 const POLL_MS = 50;
 /** LoadingImage frames report their own state; list skeletons mark themselves with data-pending. */
 const PENDING_SELECTOR = '[data-load-state="loading"], [data-pending]';
+/** The route loading fallback streamed ahead of a slow page; the real first screen has not arrived yet. */
+const ROUTE_FALLBACK_SELECTOR = '[data-route-loading]';
 
 function isInViewport(element: Element): boolean {
   const rect = element.getBoundingClientRect();
@@ -26,19 +28,42 @@ function isFirstScreenSettled(root: HTMLElement): boolean {
 }
 
 /**
+ * Whether the script has taken the reveal over from the CSS failsafe. The failsafe exists for no-JS and stalled
+ * scripts; once the page is hydrated the gate's own cap bounds the wait, so the page is not shown at 2.6s with its
+ * first-screen images still arriving one by one. If the failsafe already showed the page before hydration, the hold
+ * waits for the reveal: hiding the visible page again would make it flicker.
+ */
+function useScriptHold(rootRef: RefObject<HTMLElement | null>, revealed: boolean): boolean {
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    if (held) return;
+    const content = rootRef.current?.firstElementChild;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the failsafe state is only readable in the browser.
+    if (revealed || (content && getComputedStyle(content).opacity === '0')) setHeld(true);
+  }, [held, revealed, rootRef]);
+  return held;
+}
+
+/**
  * Holds a newly rendered page until the media on its first screen has arrived, so the page appears whole
  * instead of as an empty layout that fills in image by image. Returns whether the current path may be shown.
  * The state is keyed by path: a new path is hidden in the same render that commits it.
  */
-export function useRevealGate(rootRef: RefObject<HTMLElement | null>, pathname: string): boolean {
+export function useRevealGate(rootRef: RefObject<HTMLElement | null>, pathname: string): { revealed: boolean; held: boolean } {
   const [revealedPath, setRevealedPath] = useState<string | null>(null);
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const started = performance.now();
+    let started = performance.now();
     let timer = 0;
     const check = () => {
+      // The cap measures the wait for media, so it starts when the streamed page replaces the fallback.
+      if (root.querySelector(ROUTE_FALLBACK_SELECTOR)) {
+        started = performance.now();
+        timer = window.setTimeout(check, POLL_MS);
+        return;
+      }
       if (isFirstScreenSettled(root) || performance.now() - started >= REVEAL_GATE_CAP_MS) {
         setRevealedPath(pathname);
         return;
@@ -50,5 +75,6 @@ export function useRevealGate(rootRef: RefObject<HTMLElement | null>, pathname: 
     return () => window.clearTimeout(timer);
   }, [pathname, rootRef]);
 
-  return revealedPath === pathname;
+  const revealed = revealedPath === pathname;
+  return { revealed, held: useScriptHold(rootRef, revealed) };
 }

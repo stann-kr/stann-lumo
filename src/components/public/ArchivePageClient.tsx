@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import PageLayout from '@/components/feature/PageLayout';
 import PagedList from '@/components/feature/PagedList';
 import LoadingImage from '@/capabilities/media/LoadingImage';
-import { fetchPublicPage } from '@/capabilities/content/publicPagination';
+import { fetchPublicPage, type PublicPage } from '@/capabilities/content/publicPagination';
 import { useLanguage } from '@/contexts/LanguageContext';
 import v5 from '@/styles/v5.module.css';
 import styles from './ArchivePageClient.module.css';
@@ -18,7 +18,7 @@ import { ARCHIVE_PAGE_SIZE, archiveBrowseState, archiveHref, archiveItemAnchor, 
 
 const RETURN_POSITION_KEY = 'lumo:archive:return-position';
 
-function GridItem({ photo, browse }: { photo: GalleryPhoto; browse: ArchiveBrowseState }) {
+function GridItem({ photo, browse, eager }: { photo: GalleryPhoto; browse: ArchiveBrowseState; eager: boolean }) {
   const { language } = useLanguage();
   const label = photo.caption || photo.altText || photo.filename;
   return (
@@ -29,9 +29,9 @@ function GridItem({ photo, browse }: { photo: GalleryPhoto; browse: ArchiveBrows
         window.history.replaceState(null, '', href);
       }}>
         <div className={styles.media} data-video={photo.mediaType !== 'image'}>
-          {photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt={photo.altText || photo.filename} quiet />
+          {photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt={photo.altText || photo.filename} quiet loading={eager ? 'eager' : 'lazy'} />
             : photo.mediaType === 'video_file' ? <video src={`/api/media/${photo.id}`} preload="none" muted playsInline aria-hidden="true" />
-            : <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.filename} quiet />}
+            : <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.filename} quiet loading={eager ? 'eager' : 'lazy'} />}
         </div>
         {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
       </Link>
@@ -40,7 +40,10 @@ function GridItem({ photo, browse }: { photo: GalleryPhoto; browse: ArchiveBrows
   );
 }
 
-export default function ArchivePageClient({ total }: { total: number }) {
+/** The server's first screen applies only to the order it was rendered for. */
+interface InitialArchive { sort: ArchiveBrowseState['sort']; seed: number; page: PublicPage<GalleryPhoto>; }
+
+export default function ArchivePageClient({ total, initial }: { total: number; initial?: InitialArchive }) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const { sort, seed, page } = archiveBrowseState(searchParams);
@@ -49,6 +52,8 @@ export default function ArchivePageClient({ total }: { total: number }) {
   const totalPages = Math.max(1, Math.ceil(total / ARCHIVE_PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const browse = { sort, seed, page: currentPage, from: '' };
+  const initialPage = initial && initial.sort === sort && initial.seed === seed ? initial.page : undefined;
+  const eagerCount = initialPage?.items.length ?? 0;
   const loadPage = useCallback((offset: number, signal: AbortSignal) => fetchPublicPage<GalleryPhoto>(`/api/archive?sort=${sort}&seed=${seed}&offset=${offset}`, signal), [sort, seed]);
   const restorePosition = useCallback(() => {
     const href = `${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -89,10 +94,10 @@ export default function ArchivePageClient({ total }: { total: number }) {
             ))}
           </fieldset>
         </div>
-        <PagedList key={`${sort}:${seed}`} total={total} loadPage={loadPage} restoreCount={currentPage * ARCHIVE_PAGE_SIZE} restoreFromHash={currentPage === 1}
+        <PagedList key={`${sort}:${seed}`} total={total} initialPage={initialPage} loadPage={loadPage} restoreCount={currentPage * ARCHIVE_PAGE_SIZE} restoreFromHash={currentPage === 1}
           onItemsRendered={restorePosition} skeleton={<div className={styles.skeleton}><div /><span /></div>}
           listRef={listRef} label={t('gallery_items')} className={styles.grid}
-          renderItem={(photo, _index, visibleCount) => <GridItem photo={photo} browse={{ ...browse, page: Math.ceil(visibleCount / ARCHIVE_PAGE_SIZE) }} />} />
+          renderItem={(photo, index, visibleCount) => <GridItem photo={photo} eager={index < eagerCount} browse={{ ...browse, page: Math.ceil(visibleCount / ARCHIVE_PAGE_SIZE) }} />} />
       </section>}
     </PageLayout>
   );
