@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type RefObject } from 'react';
 
-/** Longest a page waits for its first-screen media before it is shown anyway. The CSS failsafe in the shell is slightly longer. */
+/** Longest a hydrated page waits for its first-screen media before it is shown anyway; the shell's CSS failsafe covers the time before hydration. */
 export const REVEAL_GATE_CAP_MS = 2000;
 const POLL_MS = 50;
 /** LoadingImage frames report their own state; list skeletons mark themselves with data-pending. */

@@ -17,9 +17,10 @@
   touch-action: none;
   animation: pending-show 0s linear 180ms both;
 }
-/* The gate never outlives the shell's 2.6s CSS failsafe, even without JS. */
+/* The gate never outlives the shell's CSS failsafe (2.6s without JS, 8s with a stalled script). */
 .gate { animation: pending-show 0s linear 220ms both, gate-hide 0s linear 2.6s forwards; }
-.gate.held { animation: pending-show 0s linear 220ms both; }
+:global(html[data-js]) .gate { animation: pending-show 0s linear 220ms both, gate-hide 0s linear 8s forwards; }
+.gate.held, :global(html[data-js]) .gate.held { animation: pending-show 0s linear 220ms both; }
 @keyframes pending-show { from { visibility: hidden; } to { visibility: visible; } }
 @keyframes gate-hide { to { visibility: hidden; } }
 .indicator { display: grid; justify-items: center; gap: 14px; }
