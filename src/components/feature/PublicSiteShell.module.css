@@ -65,10 +65,13 @@
 .content { min-width: 0; }
 .pendingContent { animation: pending-hide 0s linear 180ms both; }
 /* Reveal gate (useRevealGate): a new page stays hidden until its first-screen media has arrived, then appears whole.
-   The delayed animation is the failsafe for no-JS or a stalled script — the page always shows within 2.6s.
+   The delayed animation is the failsafe for no-JS (2.6s) or a stalled script (8s).
    The reveal is a transition, not an animation: if the failsafe already showed the page, a late reveal has nothing
    to change and does not fade the page out and in again. Hiding has no transition, so a new path never fades out. */
 .main[data-revealed='false'] > .content { opacity: 0; animation: gate-failsafe 0s linear 2.6s forwards; }
+/* With a running script, first-screen images only show after hydration (LoadingImage), so the failsafe waits for a
+   stalled bundle instead of revealing placeholders. Without JS it stays at 2.6s. */
+:global(html[data-js]) .main[data-revealed='false'] > .content { animation-delay: 8s; }
 /* After hydration the script's capped gate (useRevealGate) decides; the failsafe would show images still arriving. */
 .main[data-gate='script'][data-revealed='false'] > .content { animation: none; }
 @keyframes gate-failsafe { to { opacity: 1; } }

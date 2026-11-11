@@ -27,6 +27,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
         {/* iOS 상태바 / 안전영역 배경색 — globals.css :root --color-bg 와 동기화 */}
         <meta name="theme-color" content="#000000" />
+        {/* Marks a running script before the bundle arrives, so the reveal gate's CSS failsafe can wait for hydration
+            instead of showing image placeholders on slow connections (PublicSiteShell.module.css). */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js=''" }} />
         {/* One font request discovered with the document, instead of CSS @imports found only after the app stylesheet loads. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
