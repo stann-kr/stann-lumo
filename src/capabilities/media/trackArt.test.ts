@@ -5,12 +5,13 @@ import { fetchTrackArt } from './trackArt.server';
 const image = (type = 'image/jpeg', status = 200) => new Response(new Uint8Array([1, 2, 3]), { status, headers: { 'content-type': type } });
 
 describe('trackArtSource', () => {
-  it('finds artwork sources for SoundCloud pages and YouTube videos only', () => {
+  it('finds artwork sources for SoundCloud pages, YouTube videos and recorded Bandcamp releases only', () => {
     expect(trackArtSource('https://www.youtube.com/live/3ruhGQjoels?si=x')).toEqual({ provider: 'youtube', videoId: '3ruhGQjoels' });
     expect(trackArtSource('https://soundcloud.com/stannlumo/tresor-berlin-february-5th-2025?si=a')).toEqual({ provider: 'soundcloud', url: 'https://soundcloud.com/stannlumo/tresor-berlin-february-5th-2025' });
     expect(trackArtSource('https://soundcloud.com/stannlumo')).toEqual({ provider: 'soundcloud', url: 'https://soundcloud.com/stannlumo' });
-    // Bandcamp answers Workers with a bot check, so its releases rely on an uploaded cover.
-    for (const link of ['https://ameniiarecords.bandcamp.com/album/frame-dragging', 'https://ameniiarecords.bandcamp.com/', 'https://bandcamp.com/album/x', 'https://a.bandcamp.com.evil.example/album/x', 'http://a.bandcamp.com/album/x', 'http://soundcloud.com/a/b', 'https://evil.example/soundcloud.com/a', 'https://soundcloud.com/', 'nope', '', undefined]) {
+    // Bandcamp answers Workers with a bot check, so only releases with recorded artwork have a source.
+    expect(trackArtSource('https://ameniiarecords.bandcamp.com/album/frame-dragging/?from=x')).toEqual({ provider: 'bandcamp', artUrl: 'https://f4.bcbits.com/img/a3040184544_5.jpg' });
+    for (const link of ['https://ameniiarecords.bandcamp.com/album/unrecorded', 'https://ameniiarecords.bandcamp.com/', 'https://bandcamp.com/album/x', 'https://a.bandcamp.com.evil.example/album/x', 'http://a.bandcamp.com/album/x', 'http://soundcloud.com/a/b', 'https://evil.example/soundcloud.com/a', 'https://soundcloud.com/', 'nope', '', undefined]) {
       expect(trackArtSource(link)).toBeNull();
     }
   });
@@ -18,6 +19,7 @@ describe('trackArtSource', () => {
   it('prefers the uploaded cover, then platform art, then nothing', () => {
     expect(trackCoverUrl({ id: 't1', link: 'https://youtu.be/3ruhGQjoels', coverImageId: 'gallery/x' })).toBe('/api/media/gallery%2Fx?v=2&w=640');
     expect(trackCoverUrl({ id: 't 1', link: 'https://youtu.be/3ruhGQjoels' })).toBe('/api/track-art/t%201?w=640');
+    expect(trackCoverUrl({ id: 't1', link: 'https://ameniiarecords.bandcamp.com/album/in-to-the-b' })).toBe('/api/track-art/t1?w=640');
     expect(trackCoverUrl({ id: 't1', link: 'https://example.bandcamp.com/album/x' })).toBeUndefined();
     expect(trackCoverUrl({ id: 't1', link: 'https://example.com/x' })).toBeUndefined();
   });
@@ -45,6 +47,12 @@ describe('fetchTrackArt', () => {
     const hostile = vi.fn<typeof fetch>().mockResolvedValueOnce(Response.json({ thumbnail_url: 'https://evil.example/x.jpg' }));
     expect(await fetchTrackArt({ provider: 'soundcloud', url: 'https://soundcloud.com/a/b' }, hostile)).toBeNull();
     expect(hostile).toHaveBeenCalledTimes(1);
+  });
+
+  it('fetches recorded Bandcamp artwork straight from bcbits without contacting Bandcamp', async () => {
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValueOnce(image());
+    expect((await fetchTrackArt({ provider: 'bandcamp', artUrl: 'https://f4.bcbits.com/img/a1_5.jpg' }, fetcher))?.contentType).toBe('image/jpeg');
+    expect(fetcher.mock.calls.map(([url]) => String(url))).toEqual(['https://f4.bcbits.com/img/a1_5.jpg']);
   });
 
   it('does not follow image redirects, using the only non-follow mode Workers accept', async () => {

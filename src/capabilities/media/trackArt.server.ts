@@ -14,7 +14,7 @@ function isAllowedArtUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && (url.hostname.endsWith('.sndcdn.com') || url.hostname === 'i.ytimg.com');
+    return url.protocol === 'https:' && (url.hostname.endsWith('.sndcdn.com') || url.hostname.endsWith('.bcbits.com') || url.hostname === 'i.ytimg.com');
   } catch { return false; }
 }
 
@@ -37,7 +37,7 @@ async function soundcloudArtUrl(pageUrl: string, fetcher: typeof fetch): Promise
   return isAllowedArtUrl(data?.thumbnail_url) ? data.thumbnail_url : null;
 }
 
-/** Fetches the platform artwork for a track link. Only SoundCloud oEmbed, *.sndcdn.com and i.ytimg.com are contacted. */
+/** Fetches the platform artwork for a track link. Only SoundCloud oEmbed, *.sndcdn.com, *.bcbits.com and i.ytimg.com are contacted. */
 export async function fetchTrackArt(source: TrackArtSource, fetcher: typeof fetch = fetch): Promise<TrackArt | null> {
   try {
     if (source.provider === 'youtube') {
@@ -48,6 +48,7 @@ export async function fetchTrackArt(source: TrackArtSource, fetcher: typeof fetc
       }
       return null;
     }
+    if (source.provider === 'bandcamp') return await fetchImage(source.artUrl, fetcher);
     const artUrl = await soundcloudArtUrl(source.url, fetcher);
     return artUrl ? await fetchImage(artUrl, fetcher) : null;
   } catch {
