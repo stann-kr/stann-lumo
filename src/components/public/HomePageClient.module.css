@@ -18,17 +18,10 @@
 
 .mix { flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; background: var(--v5-plate); }
 .band { display: flex; justify-content: space-between; gap: 12px; padding: 8px 20px; background: var(--v5-band); }
-.mixStack { display: grid; }
-.mixPanel { grid-area: 1 / 1; display: flex; flex-direction: column; justify-content: space-between; }
-.mixPanel[data-current='false'] { visibility: hidden; }
 .mixHead { padding: 20px 20px 16px; }
-.mixTitle { font-weight: 900; font-size: clamp(1.875rem, 2.8vw, 2.5rem); line-height: .95; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
+.mixTitle { font-weight: 900; font-size: clamp(1.75rem, 2.4vw, 2.25rem); line-height: .95; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .mixType { margin-top: 8px; font-size: .875rem; color: var(--v5-muted-2); }
-.mixFacts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
-.mixFacts > div { padding: 10px 20px; background: var(--v5-plate-2); }
-.mixFacts > div:nth-child(even) { background: var(--v5-band); }
-.mixFacts dt { color: var(--v5-muted); }
-.mixFacts dd { font-size: 1.25rem; }
 /* recent mixes deck: the loaded mix is the current item, so it carries the red lamp */
 .deck { display: flex; flex-direction: column; margin-top: var(--v5-gap); list-style: none; }
 .deckRow {
@@ -122,7 +115,7 @@
   .home { gap: 8px; }
   .hero { min-height: 460px; padding: 16px; }
   .heroTitle { font-size: clamp(4rem, 23.5vw, 5.75rem); }
-  .band, .mixHead, .mixFacts > div, .plateKey { padding-inline: 16px; }
+  .band, .mixHead, .plateKey { padding-inline: 16px; }
   .deckRow { padding-right: 16px; padding-left: 12px; }
   .next { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lamp key' 'title key' 'date key' 'venue key'; padding-left: 16px; }
   .plateHead { padding: 16px; }

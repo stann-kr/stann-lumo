@@ -338,7 +338,8 @@ describe('Home v5', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('STANNLUMO');
     const mix = screen.getByRole('region', { name: 'Latest mix' });
     expect(within(mix).getByText('Tresor Berlin')).toBeVisible();
-    expect(within(mix).getByText('1:58:24')).toBeVisible();
+    // Type, year and length share one line under the player screen; the host is named beside it.
+    expect(within(mix).getByText('DJ Mix · 2025 · 1:58:24')).toBeVisible();
     expect(within(mix).getByRole('link', { name: /Listen on SoundCloud/ })).toHaveAttribute('href', 'https://music.example/tresor');
     const cards = within(screen.getByRole('list', { name: 'Mixes and releases' })).getAllByRole('link');
     expect(cards.map((card) => card.getAttribute('href'))).toEqual(['https://music.example/frame', 'https://music.example/tresor']);

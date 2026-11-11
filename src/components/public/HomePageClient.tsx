@@ -54,6 +54,8 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   const recentMixes = tracks.filter(isMix).slice(0, 4);
   const deck = recentMixes.length > 0 ? recentMixes : tracks.slice(0, 1);
   const [selectedMixId, setSelectedMixId] = useState<string | null>(null);
+  // Once a mix is playing, choosing another deck entry loads that mix's player in the same screen.
+  const [playerOpen, setPlayerOpen] = useState(false);
   const latestMix = deck.find((track) => track.id === selectedMixId) ?? deck[0];
   const cards = tracks.slice(0, 4);
   const upcoming = previews?.events ?? [];
@@ -62,6 +64,9 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   const photos = previews?.photos ?? [];
   const today = performanceToday();
   const [firstName, ...restName] = artistName.split(/\s+/);
+
+  /** Type, recording date (or year) and length on one line under the player screen; the bar names the host itself. */
+  const mixFacts = (mix: (typeof deck)[number]) => [mix.type, mix.recordedOn ? `Rec ${mix.recordedOn.replaceAll("-", ".")}` : mix.year, hasKnownDuration(mix.duration) ? mix.duration : ""].filter(Boolean).join(" · ");
 
   const external = (label: string) => <>{label}<span className="sr-only">{copy.newTab}</span></>;
 
@@ -99,28 +104,15 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
             <div className={styles.band}><h2 id="home-mix" className={styles.label}>{copy.latestMix}</h2>{deck.length > 1
               ? <span className={`${styles.label} ${styles.muted}`}>{String(deck.indexOf(latestMix) + 1).padStart(2, "0")} / {String(deck.length).padStart(2, "0")}</span>
               : latestMix.platform && <span className={`${styles.label} ${styles.muted}`}>{latestMix.platform}</span>}</div>
-            {/* Every deck entry's heading and facts share one grid cell, so switching mixes never changes the column's
-                height and the hero beside it keeps its size; only the selected entry is visible. */}
-            <div className={styles.mixStack}>
-              {(deck.length > 1 ? deck : [latestMix]).map((mix) => {
-                const current = mix.id === latestMix.id;
-                return (
-                  <div key={mix.id} className={styles.mixPanel} data-current={current} aria-hidden={!current || undefined} inert={!current || undefined}>
-                    <div className={styles.mixHead}>
-                      <p className={styles.mixTitle}>{mix.title}</p>
-                      <p className={styles.mixType}>{[mix.type, mix.platform].filter(Boolean).join(" · ")}</p>
-                    </div>
-                    <dl className={styles.mixFacts}>
-                      {hasKnownDuration(mix.duration) && <div><dt className={styles.label}>Length</dt><dd className={styles.mono}>{mix.duration}</dd></div>}
-                      {mix.recordedOn
-                        ? <div><dt className={styles.label}>Rec</dt><dd className={styles.mono}><time dateTime={mix.recordedOn}>{mix.recordedOn.replaceAll("-", ".")}</time></dd></div>
-                        : mix.year && <div><dt className={styles.label}>Year</dt><dd className={styles.mono}>{mix.year}</dd></div>}
-                    </dl>
-                  </div>
-                );
-              })}
-            </div>
-            {latestMix.link && <MixPlayer key={latestMix.id} title={latestMix.title} link={latestMix.link} platform={latestMix.platform} language={language === "ko" ? "ko" : "en"} />}
+            {/* The mix's title and facts live in the player's fixed screen and bar, so switching mixes or pressing play
+                never changes the column's height and the hero beside it keeps its size. */}
+            {latestMix.link ? (
+              <MixPlayer key={latestMix.id} title={latestMix.title} link={latestMix.link} platform={latestMix.platform} language={language === "ko" ? "ko" : "en"}
+                poster={<TrackCover track={latestMix} showType={false} eager />} heading={<p className={styles.mixTitle}>{latestMix.title}</p>}
+                facts={mixFacts(latestMix)} open={playerOpen} onOpen={() => setPlayerOpen(true)} />
+            ) : (
+              <div className={styles.mixHead}><p className={styles.mixTitle}>{latestMix.title}</p><p className={styles.mixType}>{[mixFacts(latestMix), latestMix.platform].filter(Boolean).join(" · ")}</p></div>
+            )}
             {deck.length > 1 && (
               <ul className={styles.deck} aria-label={copy.recentMixes}>
                 {deck.map((track, index) => {
