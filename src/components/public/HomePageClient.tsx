@@ -99,16 +99,27 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
             <div className={styles.band}><h2 id="home-mix" className={styles.label}>{copy.latestMix}</h2>{deck.length > 1
               ? <span className={`${styles.label} ${styles.muted}`}>{String(deck.indexOf(latestMix) + 1).padStart(2, "0")} / {String(deck.length).padStart(2, "0")}</span>
               : latestMix.platform && <span className={`${styles.label} ${styles.muted}`}>{latestMix.platform}</span>}</div>
-            <div className={styles.mixHead}>
-              <p className={styles.mixTitle}>{latestMix.title}</p>
-              <p className={styles.mixType}>{[latestMix.type, latestMix.platform].filter(Boolean).join(" · ")}</p>
+            {/* Every deck entry's heading and facts share one grid cell, so switching mixes never changes the column's
+                height and the hero beside it keeps its size; only the selected entry is visible. */}
+            <div className={styles.mixStack}>
+              {(deck.length > 1 ? deck : [latestMix]).map((mix) => {
+                const current = mix.id === latestMix.id;
+                return (
+                  <div key={mix.id} className={styles.mixPanel} data-current={current} aria-hidden={!current || undefined} inert={!current || undefined}>
+                    <div className={styles.mixHead}>
+                      <p className={styles.mixTitle}>{mix.title}</p>
+                      <p className={styles.mixType}>{[mix.type, mix.platform].filter(Boolean).join(" · ")}</p>
+                    </div>
+                    <dl className={styles.mixFacts}>
+                      {hasKnownDuration(mix.duration) && <div><dt className={styles.label}>Length</dt><dd className={styles.mono}>{mix.duration}</dd></div>}
+                      {mix.recordedOn
+                        ? <div><dt className={styles.label}>Rec</dt><dd className={styles.mono}><time dateTime={mix.recordedOn}>{mix.recordedOn.replaceAll("-", ".")}</time></dd></div>
+                        : mix.year && <div><dt className={styles.label}>Year</dt><dd className={styles.mono}>{mix.year}</dd></div>}
+                    </dl>
+                  </div>
+                );
+              })}
             </div>
-            <dl className={styles.mixFacts}>
-              {hasKnownDuration(latestMix.duration) && <div><dt className={styles.label}>Length</dt><dd className={styles.mono}>{latestMix.duration}</dd></div>}
-              {latestMix.recordedOn
-                ? <div><dt className={styles.label}>Rec</dt><dd className={styles.mono}><time dateTime={latestMix.recordedOn}>{latestMix.recordedOn.replaceAll("-", ".")}</time></dd></div>
-                : latestMix.year && <div><dt className={styles.label}>Year</dt><dd className={styles.mono}>{latestMix.year}</dd></div>}
-            </dl>
             {latestMix.link && <MixPlayer key={latestMix.id} title={latestMix.title} link={latestMix.link} platform={latestMix.platform} language={language === "ko" ? "ko" : "en"} />}
             {deck.length > 1 && (
               <ul className={styles.deck} aria-label={copy.recentMixes}>
