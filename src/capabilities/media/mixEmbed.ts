@@ -35,7 +35,7 @@ export function mixEmbed(link: string): MixEmbed | null {
   }
   if (url.hostname.replace(/^(www|m)\./, '') === 'soundcloud.com' && url.pathname.split('/').filter(Boolean).length >= 2) {
     const track = `https://soundcloud.com${url.pathname}`;
-    const params = new URLSearchParams({ url: track, auto_play: 'true', color: '#ff0033', hide_related: 'true', show_comments: 'false', show_reposts: 'false', show_teaser: 'false', visual: 'false' });
+    const params = new URLSearchParams({ url: track, auto_play: 'true', color: '#ff0033', hide_related: 'true', show_comments: 'false', show_reposts: 'false', show_teaser: 'false', visual: 'true' });
     return { provider: 'soundcloud', src: `https://w.soundcloud.com/player/?${params}` };
   }
   return null;
