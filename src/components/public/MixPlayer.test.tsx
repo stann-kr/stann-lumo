@@ -18,4 +18,12 @@ describe('MixPlayer', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Bandcamp에서 듣기/ })).toHaveAttribute('target', '_blank');
   });
+
+  it('keeps the player open in the same screen when the deck switches to another mix', () => {
+    const view = render(<MixPlayer key="a" open title="Tresor" platform="SoundCloud" language="en" link="https://soundcloud.com/stannlumo/tresor-berlin-february-5th-2025" />);
+    expect(screen.getByTitle('Tresor player')).toHaveAttribute('src', expect.stringContaining('visual=true'));
+    view.rerender(<MixPlayer key="b" open title="HÖR" platform="YouTube" language="en" link="https://www.youtube.com/watch?v=abcdefghijk" />);
+    expect(screen.getByTitle('HÖR player')).toHaveAttribute('src', expect.stringMatching(/^https:\/\/www\.youtube-nocookie\.com\/embed\/abcdefghijk/));
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
 });
