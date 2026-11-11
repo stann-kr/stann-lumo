@@ -348,7 +348,7 @@ describe('Home v5', () => {
     expect(within(booking).getByRole('link', { name: 'Send inquiry →' })).toHaveAttribute('href', '/contact');
     expect(within(booking).getByRole('link', { name: 'contact@stann.kr' })).toHaveAttribute('href', 'mailto:contact@stann.kr');
     expect(screen.getByRole('link', { name: 'Real poster' })).toHaveAttribute('href', '/archive/poster');
-    expect(screen.getByRole('img', { name: 'Poster' })).toHaveAttribute('src', '/api/media/poster?v=2');
+    expect(screen.getByRole('img', { name: 'Poster' })).toHaveAttribute('src', '/api/media/poster?v=2&w=640');
   });
 
   it('signals the next date with a countdown and only offers tickets that exist', () => {

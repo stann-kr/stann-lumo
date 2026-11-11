@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchGalleryObject, headGalleryObject, resolveByteRange } from '@/capabilities/media/mediaRepository.server';
-import { getR2, type R2Object, type R2ObjectBody } from '@/lib/db';
+import { cachedResize, parseImageWidth, resizeImage } from '@/capabilities/media/imageResize.server';
+import type { ImageWidth } from '@/capabilities/media/media';
+import { getImages, getR2, type R2Bucket, type R2Object, type R2ObjectBody } from '@/lib/db';
 
 function notFound() {
   return NextResponse.json(
@@ -22,6 +24,19 @@ function mediaHeaders(object: R2Object): Headers {
   });
   if (object.httpEtag) headers.set('ETag', object.httpEtag);
   return headers;
+}
+
+/** A page-sized WebP of an uploaded image, or null when it is not resizable here and the original must be served. */
+async function resized(r2: R2Bucket, id: string, width: ImageWidth): Promise<Response | null> {
+  const images = getImages();
+  if (!images) return null;
+  const object = await fetchGalleryObject(r2, id);
+  if (!object || !hasBody(object)) return null;
+  const output = await resizeImage(images, object.body, object.httpMetadata?.contentType ?? '', width);
+  if (!output) return null;
+  return new Response(output.body, {
+    headers: { 'Content-Type': output.contentType, 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' },
+  });
 }
 
 export async function GET(
@@ -55,6 +70,14 @@ export async function GET(
         headers.set('Content-Length', String(length));
         return new Response(part.body, { status: 206, headers });
       }
+    }
+
+    // Ranges are for video seeking; a width asks for a resized still, which is produced whole.
+    const width = rangeHeader ? null : parseImageWidth(request.nextUrl.searchParams.get('w'));
+    if (width) {
+      const key = new URL(`/api/media/${encodeURIComponent(id)}?w=${width}`, request.url).toString();
+      const image = await cachedResize(key, () => resized(r2, id, width));
+      if (image) return image;
     }
 
     const ifNoneMatch = request.headers.get('if-none-match');

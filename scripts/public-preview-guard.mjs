@@ -1,6 +1,6 @@
-const PUBLIC_PAGE = /^\/(?:about|music|contact|link|events(?:\/[^/]+)?|archive(?:\/[^/]+)?)?\/?$/;
-const PUBLIC_API = /^\/api\/(?:content\/(?:en|ko)|archive|events(?:\/[^/]+)?|media\/[^/]+)\/?$/;
-const PUBLIC_ASSET = /^\/(?:_next\/(?:static\/.+|image)|(?:apple-)?icon\.png|favicon\.ico|robots\.txt|sitemap\.xml)$/;
+const PUBLIC_PAGE = /^\/(?:about|music|contact|link|press-kit|events(?:\/[^/]+)?|archive(?:\/[^/]+)?)?\/?$/;
+const PUBLIC_API = /^\/api\/(?:content\/(?:en|ko)|archive|events(?:\/[^/]+)?|media\/[^/]+|track-art\/[^/]+)\/?$/;
+const PUBLIC_ASSET = /^\/(?:_next\/(?:static\/.+|image)|(?:apple-)?icon\.png|favicon\.ico|robots\.txt|sitemap\.xml|press\/[\w-]+\.jpg)$/;
 
 export function createPublicPreview(handler) {
   return {

@@ -46,7 +46,17 @@
   font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
 }
 .main { flex: 1; min-width: 0; scroll-margin-top: 1rem; }
+.content { min-width: 0; }
 .pendingContent { animation: pending-hide 0s linear 180ms both; }
+/* Reveal gate (useRevealGate): a new page stays hidden until its first-screen media has arrived, then appears whole.
+   The delayed animation is the failsafe for no-JS or a stalled script — the page always shows within 2.6s.
+   The reveal is a transition, not an animation: if the failsafe already showed the page, a late reveal has nothing
+   to change and does not fade the page out and in again. Hiding has no transition, so a new path never fades out. */
+.main[data-revealed='false'] > .content, .footer[data-revealed='false'] { opacity: 0; animation: gate-failsafe 0s linear 2.6s forwards; }
+@keyframes gate-failsafe { to { opacity: 1; } }
+@media (prefers-reduced-motion: no-preference) {
+  .main[data-revealed='true'] > .content:not(.pendingContent), .footer[data-revealed='true']:not(.pendingContent) { transition: opacity 360ms cubic-bezier(.23, 1, .32, 1); }
+}
 @keyframes pending-hide { from { visibility: visible; } to { visibility: hidden; } }
 
 /* footer plate */

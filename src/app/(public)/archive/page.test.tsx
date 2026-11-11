@@ -103,7 +103,7 @@ describe('GalleryPage', () => {
     expect(screen.getByRole('list')).toContainElement(nightSignal.closest('li'));
     expect(nightSignal).toHaveAttribute('href', '/archive/night-signal');
     act(() => nightSignal.focus());
-    await waitFor(() => expect(within(nightSignal).getByRole('img')).toHaveAttribute('src', '/api/media/night-signal?v=2'));
+    await waitFor(() => expect(within(nightSignal).getByRole('img')).toHaveAttribute('src', '/api/media/night-signal?v=2&w=640'));
     expect(liveCut).toHaveAttribute('href', '/archive/live-cut');
     expect(nightSignal.closest('article')).toContainElement(nightSignal);
     expect(container.querySelectorAll('div[onclick]')).toHaveLength(0);

@@ -26,6 +26,9 @@
       "bucket_name": "stann-lumo-media"
     }
   ],
+  "images": {
+    "binding": "IMAGES"
+  },
   "triggers": {
     "crons": ["15 19 * * *"]
   },
@@ -48,6 +51,9 @@
           "bucket_name": "stann-lumo-media-dev"
         }
       ],
+      "images": {
+        "binding": "IMAGES"
+      },
       "triggers": {
         "crons": []
       },

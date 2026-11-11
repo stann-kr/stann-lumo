@@ -73,6 +73,11 @@ export function captionIncludesDate(caption: string, date?: string): boolean {
 }
 
 // Bypass incomplete image responses retained under the original immutable URLs.
-export function getPublicImageUrl(id: string): string {
-  return `/api/media/${encodeURIComponent(id)}?v=2`;
+/** Widths the media and track-art routes resize to: grid thumbnails and covers, and full-screen detail views. */
+export const IMAGE_WIDTHS = [640, 1600] as const;
+export type ImageWidth = typeof IMAGE_WIDTHS[number];
+
+/** Without a width the original upload is served (Open Graph, downloads); page images pass the width they are shown at. */
+export function getPublicImageUrl(id: string, width?: ImageWidth): string {
+  return `/api/media/${encodeURIComponent(id)}?v=2${width ? `&w=${width}` : ''}`;
 }

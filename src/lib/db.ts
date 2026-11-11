@@ -66,12 +66,23 @@ export interface R2Bucket {
   delete(keys: string | string[]): Promise<void>;
 }
 
+/** The subset of the Cloudflare Images binding this site uses. */
+export interface ImagesBinding {
+  input(stream: ReadableStream<Uint8Array>): {
+    transform(options: { width: number; fit?: 'scale-down' }): {
+      output(options: { format: 'image/webp'; quality?: number }): Promise<{ response(): Response }>;
+    };
+  };
+}
+
 // ── @opennextjs/cloudflare 전역 CloudflareEnv 인터페이스 확장 ─────────────────
 // 로컬 export 대신 global 확장 — getCloudflareContext() 반환 타입과 일치
 declare global {
   interface CloudflareEnv {
     DB: D1Database;
     MEDIA: R2Bucket;
+    /** Cloudflare Images binding for resized page images; absent under plain Node dev. */
+    IMAGES?: ImagesBinding;
     ADMIN_PASSWORD: string;
     /** 마이그레이션 엔드포인트 활성화 플래그 — 기본 비활성 */
     MIGRATE_ENABLED?: string;
@@ -106,6 +117,11 @@ export function getDB(): D1Database | null {
  */
 export function getR2(): R2Bucket | null {
   return getRequestCtx()?.env.MEDIA ?? null;
+}
+
+/** Cloudflare Images binding, or undefined where images are served unresized. */
+export function getImages() {
+  return getRequestCtx()?.env.IMAGES;
 }
 
 /**

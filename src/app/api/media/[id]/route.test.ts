@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getR2, type R2Bucket, type R2GetOptions } from '@/lib/db';
+import { getImages, getR2, type ImagesBinding, type R2Bucket, type R2GetOptions } from '@/lib/db';
 import { GET } from './route';
 
-vi.mock('@/lib/db', () => ({ getR2: vi.fn() }));
+vi.mock('server-only', () => ({}));
+vi.mock('@/lib/db', () => ({ getR2: vi.fn(), getImages: vi.fn() }));
 
 const bytes = new TextEncoder().encode('0123456789');
 const meta = { key: 'gallery/clip', size: bytes.length, httpEtag: '"v1"', httpMetadata: { contentType: 'video/mp4' } };
@@ -63,5 +64,47 @@ describe('GET /api/media/[id]', () => {
   it('answers 404 for unknown media, with or without a range', async () => {
     expect((await request({}, 'missing')).status).toBe(404);
     expect((await request({ range: 'bytes=0-1' }, 'missing')).status).toBe(404);
+  });
+});
+
+describe('GET /api/media/[id] with a width', () => {
+  const photo = { key: 'gallery/photo', size: bytes.length, httpEtag: '"p1"', httpMetadata: { contentType: 'image/jpeg' } };
+  const photos: R2Bucket = {
+    ...bucket,
+    async get(key) { return key === photo.key ? { ...photo, body: new Response(bytes).body!, arrayBuffer: async () => bytes.buffer, text: async () => '', blob: async () => new Blob([bytes]) } : null; },
+  };
+  const transform = vi.fn();
+  const images = (fail = false): ImagesBinding => ({
+    input: (stream) => ({
+      transform: (options) => {
+        transform(options);
+        return { output: async () => { if (fail) throw new Error('9422'); await new Response(stream).arrayBuffer(); return { response: () => new Response('webp', { headers: { 'content-type': 'image/webp' } }) }; } };
+      },
+    }),
+  });
+  const fetchPhoto = (query: string) => GET(new NextRequest(`https://lumo.test/api/media/photo?v=2${query}`), { params: Promise.resolve({ id: 'photo' }) });
+
+  beforeEach(() => { vi.mocked(getR2).mockReturnValue(photos); transform.mockClear(); });
+
+  it('serves a scaled-down WebP for an allowed width', async () => {
+    vi.mocked(getImages).mockReturnValue(images());
+    const response = await fetchPhoto('&w=640');
+    expect(transform).toHaveBeenCalledWith({ width: 640, fit: 'scale-down' });
+    expect(response.headers.get('Content-Type')).toBe('image/webp');
+    expect(await response.text()).toBe('webp');
+  });
+
+  it('serves the original when the width is not offered, the binding is missing, or the transformation fails', async () => {
+    vi.mocked(getImages).mockReturnValue(images());
+    expect(await (await fetchPhoto('&w=123')).text()).toBe('0123456789');
+    expect(transform).not.toHaveBeenCalled();
+
+    vi.mocked(getImages).mockReturnValue(undefined);
+    expect(await (await fetchPhoto('&w=640')).text()).toBe('0123456789');
+
+    vi.mocked(getImages).mockReturnValue(images(true));
+    const fallback = await fetchPhoto('&w=640');
+    expect(fallback.headers.get('Content-Type')).toBe('image/jpeg');
+    expect(await fallback.text()).toBe('0123456789');
   });
 });

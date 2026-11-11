@@ -1,27 +1,37 @@
+/* v5 loading plate: mono label over a red scan key, on the black field below the header plate. */
 .loading {
-  min-height: calc(100svh - 4.5rem - env(safe-area-inset-top, 0px));
+  min-height: calc(100svh - 76px - env(safe-area-inset-top, 0px));
   display: grid;
   place-items: center;
-  padding: 2rem var(--page-gutter, 1.25rem);
+  padding: 2rem 1.25rem;
+  background: var(--v5-plate);
   color: var(--color-primary);
 }
 .overlay {
   position: fixed;
-  inset: calc(4.5rem + env(safe-area-inset-top, 0px)) 0 0;
+  /* header plate (56px) plus the field gap above and below it */
+  inset: calc(56px + 2 * var(--v5-gap) + env(safe-area-inset-top, 0px)) 0 0;
   z-index: 30;
   min-height: 0;
+  background: transparent;
   touch-action: none;
   animation: pending-show 0s linear 180ms both;
 }
+/* The gate never outlives the shell's 2.6s CSS failsafe, even without JS. */
+.gate { animation: pending-show 0s linear 220ms both, gate-hide 0s linear 2.6s forwards; }
 @keyframes pending-show { from { visibility: hidden; } to { visibility: visible; } }
-.indicator { display: grid; justify-items: center; gap: 1.25rem; }
-.label { font: .75rem/1.6 'JetBrains Mono', monospace; word-spacing: var(--mono-word-spacing, normal); letter-spacing: .12em; text-transform: uppercase; }
-.track { display: block; width: 10rem; height: 1px; overflow: hidden; background: var(--color-muted); }
-.track > span { display: block; width: 40%; height: 100%; background: var(--color-accent); }
+@keyframes gate-hide { to { visibility: hidden; } }
+.indicator { display: grid; justify-items: center; gap: 14px; }
+.label { font: 11px/1.6 var(--os-font-mono); word-spacing: var(--mono-word-spacing, normal); letter-spacing: .14em; text-transform: uppercase; color: var(--v5-muted-2); }
+.track { display: block; width: 160px; height: 4px; overflow: hidden; background: var(--v5-band); }
+.track > span { display: block; width: 40%; height: 100%; background: var(--v5-red); }
 @media (prefers-reduced-motion: no-preference) {
   .loading[data-motion='on'] .track > span { animation: loading-scan 1s linear infinite; }
 }
 @keyframes loading-scan {
   from { transform: translateX(-100%); }
   to { transform: translateX(250%); }
+}
+@media (max-width: 640px) {
+  .overlay { inset: calc(56px + 16px + env(safe-area-inset-top, 0px)) 0 0; }
 }
