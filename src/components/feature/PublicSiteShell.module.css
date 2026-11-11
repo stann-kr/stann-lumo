@@ -1,5 +1,5 @@
 /* v5 shell: black field, plates separated by 10px gaps, red only for signal keys (BOOKING).
-   Canvas boards: Main (header/footer), Mobile, MobileMenu — https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ */
+   Canvas boards: Main (header), Mobile, MobileMenu — https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ */
 .shell {
   composes: root from '../../styles/designV2.module.css';
   --page-gutter: clamp(1.25rem, 4vw, 5rem);
@@ -19,17 +19,33 @@
   padding: calc(var(--shell-pad) + env(safe-area-inset-top, 0px)) max(var(--shell-pad), env(safe-area-inset-right, 0px)) calc(var(--shell-pad) + env(safe-area-inset-bottom, 0px)) max(var(--shell-pad), env(safe-area-inset-left, 0px));
 }
 
-/* header plate */
-.header { display: flex; flex-wrap: wrap; align-items: stretch; min-height: 56px; background: var(--v5-plate); }
-.brand { display: flex; align-items: center; padding: 0 20px; color: var(--color-primary); }
+/* header: a row of plates on the black field, 2px seams like every other v5 table. Nav items are numbered mono keys;
+   the current page is the filled (white) key, as in the Archive sort keys. Red stays on BOOKING only. */
+.header { display: flex; flex-wrap: wrap; align-items: stretch; gap: 2px; min-height: 56px; }
+.brand { display: flex; align-items: center; padding: 0 20px; color: var(--color-primary); background: var(--v5-plate); }
 .wordmark { display: block; height: 18px; width: auto; aspect-ratio: 11738 / 1008; }
-.desktopNav { flex: 1 1 auto; display: flex; align-items: center; padding: 0 20px; }
+.desktopNav { flex: 1 1 auto; display: flex; align-items: stretch; background: var(--v5-plate); }
+.desktopNav > nav { display: flex; }
+.desktopNav .navList { flex-wrap: nowrap; align-items: stretch; gap: 2px; counter-reset: nav; }
+.desktopNav .navList li { display: flex; }
+.desktopNav .navList a {
+  gap: 10px; padding: 0 18px; background: var(--v5-plate-2); color: var(--v5-muted-2);
+  font-family: var(--os-font-mono); font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
+}
+.desktopNav .navList a::before { counter-increment: nav; content: counter(nav, decimal-leading-zero); color: var(--v5-muted); }
+.desktopNav .navList a:hover { background: var(--v5-band); color: var(--color-primary); }
+.desktopNav .navList a[aria-current] { background: var(--color-primary); color: #000; text-decoration: none; }
+.desktopNav .navList a[aria-current]::before { color: #000; }
 .navList { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 26px; list-style: none; }
 .navList a { display: flex; align-items: center; min-height: 44px; font-size: .875rem; font-weight: 500; color: var(--v5-muted-2); }
 .navList a:hover, .navList a[aria-current] { color: var(--color-primary); }
 .navList a[aria-current] { text-decoration: underline; text-decoration-color: var(--v5-red); text-decoration-thickness: 2px; text-underline-offset: .45rem; }
-.tools { display: flex; align-items: stretch; margin-left: auto; }
+.tools { display: flex; align-items: stretch; gap: 2px; margin-left: auto; }
 .desktopOnly { display: flex; align-items: stretch; }
+.desktopOnly .languages { gap: 2px; }
+.desktopOnly .languages button { background: var(--v5-plate-2); }
+.desktopOnly .languages button:hover { background: var(--v5-band); color: var(--color-primary); }
+.desktopOnly .languages button[aria-pressed='true'] { background: var(--color-primary); color: #000; }
 .languages { display: flex; align-items: stretch; }
 .languages button {
   display: flex; align-items: center; min-width: 44px; padding: 0 12px;
@@ -52,21 +68,13 @@
    The delayed animation is the failsafe for no-JS or a stalled script — the page always shows within 2.6s.
    The reveal is a transition, not an animation: if the failsafe already showed the page, a late reveal has nothing
    to change and does not fade the page out and in again. Hiding has no transition, so a new path never fades out. */
-.main[data-revealed='false'] > .content, .footer[data-revealed='false'] { opacity: 0; animation: gate-failsafe 0s linear 2.6s forwards; }
+.main[data-revealed='false'] > .content { opacity: 0; animation: gate-failsafe 0s linear 2.6s forwards; }
 @keyframes gate-failsafe { to { opacity: 1; } }
 @media (prefers-reduced-motion: no-preference) {
-  .main[data-revealed='true'] > .content:not(.pendingContent), .footer[data-revealed='true']:not(.pendingContent) { transition: opacity 360ms cubic-bezier(.23, 1, .32, 1); }
+  .main[data-revealed='true'] > .content:not(.pendingContent) { transition: opacity 360ms cubic-bezier(.23, 1, .32, 1); }
 }
 @keyframes pending-hide { from { visibility: visible; } to { visibility: hidden; } }
 
-/* footer plate */
-.footer { display: flex; flex-wrap: wrap; align-items: stretch; min-height: 48px; background: var(--v5-inset); }
-.footer > a, .copyright {
-  display: flex; align-items: center; min-height: 48px; padding: 0 18px;
-  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
-}
-.copyright { flex: 1; padding-left: 20px; color: var(--v5-muted); }
-.footer > a:hover { background: var(--v5-band); }
 
 .skipLink { position: fixed; left: 1rem; top: 1rem; z-index: 100; padding: 1rem; background: black; transform: translateY(-200%); }
 .skipLink:focus { transform: none; }
@@ -114,13 +122,11 @@
   .document { gap: 8px; }
   .brand { flex: 1; padding: 0 16px; }
   .wordmark { height: 14px; }
-  .footer > a, .copyright { padding: 0 16px; }
-  .copyright { flex-basis: 100%; }
 }
 @media (hover: hover) and (pointer: fine) {
   .shell, .shell :is(a, button, label, input[type='radio'], input[type='checkbox']) { cursor: crosshair; }
   .shell :is(button, input):disabled { cursor: not-allowed; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .booking, .footer > a, .navList a { transition: background-color var(--os-dur-fast) linear, color var(--os-dur-fast) linear; }
+  .booking, .navList a, .languages button { transition: background-color var(--os-dur-fast) linear, color var(--os-dur-fast) linear; }
 }
