@@ -25,7 +25,7 @@ function TrackRow({ track }: { track: Track }) {
   const lines = tracklistLines(track.tracklist);
   return (
     <article className={styles.row}>
-      <TrackCover track={track} className={styles.cover} />
+      <TrackCover track={track} className={styles.cover} showType={false} />
       <div className={styles.body}>
         <h3 className={styles.title}>{track.title}</h3>
         <p className={`${v5.mono} ${styles.meta}`}>{[track.type, track.platform, track.year].filter(Boolean).join(' · ')}</p>

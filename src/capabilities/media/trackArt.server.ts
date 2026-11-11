@@ -14,13 +14,14 @@ function isAllowedArtUrl(value: unknown): value is string {
   if (typeof value !== 'string') return false;
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && (url.hostname.endsWith('.sndcdn.com') || url.hostname === 'i.ytimg.com');
+    return url.protocol === 'https:' && (url.hostname.endsWith('.sndcdn.com') || url.hostname.endsWith('.bcbits.com') || url.hostname === 'i.ytimg.com');
   } catch { return false; }
 }
 
+// Workers reject redirect: 'error'; manual keeps 3xx responses, which fail the ok check below.
 async function fetchImage(url: string, fetcher: typeof fetch): Promise<TrackArt | null> {
   if (!isAllowedArtUrl(url)) return null;
-  const response = await fetcher(url, { ...EDGE_CACHE, redirect: 'error', signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+  const response = await fetcher(url, { ...EDGE_CACHE, redirect: 'manual', signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   const contentType = (response.headers.get('content-type') ?? '').split(';')[0].trim().toLowerCase();
   if (!response.ok || !IMAGE_TYPES.has(contentType)) return null;
   if (Number(response.headers.get('content-length') ?? 0) > MAX_ART_BYTES) return null;
@@ -36,7 +37,31 @@ async function soundcloudArtUrl(pageUrl: string, fetcher: typeof fetch): Promise
   return isAllowedArtUrl(data?.thumbnail_url) ? data.thumbnail_url : null;
 }
 
-/** Fetches the platform artwork for a track link. Only SoundCloud oEmbed, *.sndcdn.com and i.ytimg.com are contacted. */
+/** Bandcamp has no oEmbed; its og:image sits in the first few KB of the page, so only that head is read. */
+const BANDCAMP_HEAD_BYTES = 64 * 1024;
+const OG_IMAGE = /<meta\s+property="og:image"\s+content="([^"]+)"/i;
+
+async function bandcampArtUrl(pageUrl: string, fetcher: typeof fetch): Promise<string | null> {
+  const response = await fetcher(pageUrl, { ...EDGE_CACHE, redirect: 'manual', signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
+  if (!response.ok || !response.body) return null;
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let head = '';
+  try {
+    while (head.length < BANDCAMP_HEAD_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      head += decoder.decode(value, { stream: true });
+      const match = OG_IMAGE.exec(head);
+      if (match) return isAllowedArtUrl(match[1]) ? match[1] : null;
+    }
+    return null;
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+}
+
+/** Fetches the platform artwork for a track link. Only SoundCloud oEmbed, the linked *.bandcamp.com page, *.sndcdn.com, *.bcbits.com and i.ytimg.com are contacted. */
 export async function fetchTrackArt(source: TrackArtSource, fetcher: typeof fetch = fetch): Promise<TrackArt | null> {
   try {
     if (source.provider === 'youtube') {
@@ -47,7 +72,7 @@ export async function fetchTrackArt(source: TrackArtSource, fetcher: typeof fetc
       }
       return null;
     }
-    const artUrl = await soundcloudArtUrl(source.url, fetcher);
+    const artUrl = source.provider === 'bandcamp' ? await bandcampArtUrl(source.url, fetcher) : await soundcloudArtUrl(source.url, fetcher);
     return artUrl ? await fetchImage(artUrl, fetcher) : null;
   } catch {
     return null;
