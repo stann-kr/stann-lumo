@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import LumoWordmark from "../base/LumoWordmark";
 import {
   CONTACT_EMAIL, PRESS_CONTACT, PRESS_FACTS, PRESS_KIT_COPY, PRESS_LOGO_FILES, PRESS_MIXES, PRESS_PDFS, PRESS_PHOTOS,
-  PRESS_RELEASES, PRESS_STAGES, PRESS_VIDEOS,
+  PRESS_RELEASES, PRESS_STAGES, PRESS_VIDEO_PATH, PRESS_VIDEOS, pressVideoPoster,
 } from "@/capabilities/presskit/pressKit";
 import styles from "./PressKitPageClient.module.css";
 
@@ -15,16 +15,17 @@ const UI = {
   ko: {
     stages: "플레이한 무대", photosNote: "원본 해상도로 저장", copyBio: "바이오 복사", copyAddress: "주소 복사", emailBooking: "섭외 문의 메일 →",
     copied: "복사했습니다.", copyFailed: "복사하지 못했습니다. 직접 선택해 복사해 주세요.", dark: "어두운 배경", light: "밝은 배경", newTab: " (새 창)",
-    bioLength: "바이오 길이", download: "내려받기",
+    bioLength: "바이오 길이", download: "내려받기", clip: "영상",
   },
   en: {
     stages: "Selected stages", photosNote: "Saved at full resolution", copyBio: "Copy bio", copyAddress: "Copy address", emailBooking: "Email booking →",
     copied: "Copied.", copyFailed: "Copy failed. Please select the text and copy it.", dark: "Dark backgrounds", light: "Light backgrounds", newTab: " (opens in a new tab)",
-    bioLength: "Biography length", download: "Download",
+    bioLength: "Biography length", download: "Download", clip: "clip",
   },
 } as const;
 
 const fileName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
+const VIDEO_TOTAL = PRESS_VIDEOS.reduce((sum, venue) => sum + venue.clips.length, 0);
 
 export default function PressKitPageClient() {
   const { language } = useLanguage();
@@ -156,6 +157,35 @@ export default function PressKitPageClient() {
         </ul>
       </section>
 
+      <section className={styles.plate} aria-labelledby="press-video">
+        <div className={styles.band}><h2 id="press-video" className={styles.label}>Performance video</h2><span className={`${styles.label} ${styles.muted}`}>{VIDEO_TOTAL} · MP4</span></div>
+        {PRESS_VIDEOS.map((venue) => (
+          <div key={venue.venue} className={styles.venue}>
+            <h3 className={styles.venueHead}><strong>{venue.venue}</strong><span className={`${styles.mono} ${styles.muted} ${styles.small}`}>{venue.clips.length}</span></h3>
+            <ul className={styles.clips}>
+              {venue.clips.map((item, index) => {
+                const number = String(index + 1).padStart(2, "0");
+                return (
+                  <li key={item.file}>
+                    <figure className={styles.ph}>
+                      <div className={styles.screen}>
+                        <img src={pressVideoPoster(item.file)} alt={`${venue.venue} ${ui.clip} ${number}`} loading="lazy" width={640} height={360} />
+                        <span className={`${styles.mono} ${styles.duration}`}>{item.duration}</span>
+                      </div>
+                      <figcaption className={styles.meta}>
+                        <span className={`${styles.mono} ${styles.muted} ${styles.small}`}>{number}</span>
+                        <a className={styles.key} href={`${PRESS_VIDEO_PATH}/${item.file}`} download aria-label={`${ui.download} ${venue.venue} ${ui.clip} ${number} (${item.size})`}>↓ {item.size}</a>
+                      </figcaption>
+                    </figure>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+        <div className={styles.pad}><p className={`${styles.prose} ${styles.small}`}>{copy.videoNote}</p></div>
+      </section>
+
       <div className={styles.two}>
         <section className={styles.plate} aria-labelledby="press-logo">
           <div className={styles.band}><h2 id="press-logo" className={styles.label}>Logo</h2><span className={`${styles.label} ${styles.muted}`}>SVG · PDF · EPS · PNG</span></div>
@@ -174,22 +204,14 @@ export default function PressKitPageClient() {
           </div>
           <div className={styles.pad}><p className={`${styles.prose} ${styles.small}`}>{copy.logoNote}</p></div>
         </section>
-        <section className={`${styles.plate} ${styles.column}`} aria-labelledby="press-video">
-          <div className={styles.band}><h2 id="press-video" className={styles.label}>Performance video</h2><span className={`${styles.label} ${styles.muted}`}>MP4</span></div>
-          <ul className={styles.rows}>
-            {PRESS_VIDEOS.map((video) => <li key={video.venue} className={`${styles.row} ${styles.video}`}><strong>{video.venue}</strong><span className={styles.count}>{video.count}</span></li>)}
-          </ul>
-          <div className={`${styles.pad} ${styles.pushDown}`}><p className={`${styles.prose} ${styles.small}`}>{copy.videoNote}</p></div>
+        <section className={`${styles.plate} ${styles.column}`} aria-labelledby="press-terminal">
+          <div className={styles.band}><h2 id="press-terminal" className={styles.label}>TERMINAL</h2><span className={`${styles.label} ${styles.muted}`}>Since 2026 · Faust Seoul</span></div>
+          <div className={`${styles.pad} ${styles.terminal}`}>
+            <p className={styles.prose}>{copy.terminal}</p>
+            <a className={styles.key} href="https://terminal.stann.kr/" target="_blank" rel="noopener noreferrer">{external("terminal.stann.kr ↗")}</a>
+          </div>
         </section>
       </div>
-
-      <section className={styles.plate} aria-labelledby="press-terminal">
-        <div className={styles.band}><h2 id="press-terminal" className={styles.label}>TERMINAL</h2><span className={`${styles.label} ${styles.muted}`}>Since 2026 · Faust Seoul</span></div>
-        <div className={`${styles.pad} ${styles.terminal}`}>
-          <p className={styles.prose}>{copy.terminal}</p>
-          <a className={styles.key} href="https://terminal.stann.kr/" target="_blank" rel="noopener noreferrer">{external("terminal.stann.kr ↗")}</a>
-        </div>
-      </section>
 
       <section id="press-contact" className={styles.contact} aria-labelledby="press-contact-title">
         <div className={styles.column}>
