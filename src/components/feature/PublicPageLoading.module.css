@@ -19,6 +19,7 @@
 }
 /* The gate never outlives the shell's 2.6s CSS failsafe, even without JS. */
 .gate { animation: pending-show 0s linear 220ms both, gate-hide 0s linear 2.6s forwards; }
+.gate.held { animation: pending-show 0s linear 220ms both; }
 @keyframes pending-show { from { visibility: hidden; } to { visibility: visible; } }
 @keyframes gate-hide { to { visibility: hidden; } }
 .indicator { display: grid; justify-items: center; gap: 14px; }

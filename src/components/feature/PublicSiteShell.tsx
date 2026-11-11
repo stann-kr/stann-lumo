@@ -29,7 +29,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
   const motionInputRef = useRef<MotionInput>('pointer');
   useShellMotion(shellRef, pathname, mobileMenuOpen, motionInputRef);
   const mainRef = useRef<HTMLElement | null>(null);
-  const revealed = useRevealGate(mainRef, pathname);
+  const { revealed, held: revealHeld } = useRevealGate(mainRef, pathname);
   const brandRef = useRef<HTMLAnchorElement | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileDialogRef = useRef<HTMLDivElement | null>(null);
@@ -225,10 +225,10 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
             </button>
           </div>
         </header>
-        <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed}>
+        <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed} data-gate={revealHeld ? 'script' : undefined}>
           <div inert={isNavigating || undefined} className={`${styles.content} ${isNavigating ? styles.pendingContent : ''}`}>{children}</div>
         </main>
-        {isNavigating ? <PublicPageLoading overlay /> : !revealed && <PublicPageLoading overlay gate />}
+        {isNavigating ? <PublicPageLoading overlay /> : !revealed && <PublicPageLoading overlay gate held={revealHeld} />}
       </div>
       {mobileMenuOpen && (
         <div className={styles.menuLayer}>

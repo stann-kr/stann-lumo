@@ -351,13 +351,13 @@ export const getArchiveCount = cache(async (): Promise<number> => {
   return count?.total ?? 0;
 });
 
-export async function getArchivePage(browse: Pick<ArchiveBrowseState, 'sort' | 'seed'>, offset: number): Promise<PublicPage<GalleryPhoto>> {
+export async function getArchivePage(browse: Pick<ArchiveBrowseState, 'sort' | 'seed'>, offset: number, limit = PUBLIC_BATCH_SIZE): Promise<PublicPage<GalleryPhoto>> {
   const db = getPublicDB();
   // Only ordering keys are read for the seeded shuffle; full records are fetched for this batch alone.
   const index = await rows<Pick<GalleryPhoto, 'id' | 'sortOrder' | 'createdAt' | 'eventDate'>>(db,
     `SELECT g.id, g.sort_order AS sortOrder, g.created_at AS createdAt, p.date AS eventDate FROM gallery_photos g
      LEFT JOIN performances p ON p.id = g.linked_event_id ORDER BY g.sort_order ASC, g.created_at DESC, g.id`);
-  const selected = sortArchivePhotos(index, browse.sort, browse.seed).slice(offset, offset + PUBLIC_BATCH_SIZE);
+  const selected = sortArchivePhotos(index, browse.sort, browse.seed).slice(offset, offset + limit);
   const records = selected.length ? await rows<GalleryPhotoRow>(db,
     `SELECT g.*, p.date AS event_date FROM gallery_photos g LEFT JOIN performances p ON p.id = g.linked_event_id
      WHERE g.id IN (${selected.map(() => '?').join(',')})`, ...selected.map(item => item.id)) : [];

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import EventsPageClient from '@/components/public/EventsPageClient';
 import { createPublicMetadata } from '@/capabilities/site/publicMetadata';
-import { getEventsProjection, getRequestLocale } from '@/capabilities/content/publicContent.server';
+import { getEventsPage, getEventsProjection, getRequestLocale } from '@/capabilities/content/publicContent.server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const projection = await getEventsProjection(await getRequestLocale());
@@ -10,5 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function EventsPage() {
   const projection = await getEventsProjection(await getRequestLocale());
-  return <EventsPageClient eventsMeta={projection.pageMeta.events} schedule={projection.schedule} />;
+  const { today } = projection.schedule;
+  const [upcoming, past] = await Promise.all([getEventsPage('upcoming', today, 0), getEventsPage('past', today, 0)]);
+  return <EventsPageClient eventsMeta={projection.pageMeta.events} schedule={projection.schedule} initial={{ upcoming, past }} />;
 }
