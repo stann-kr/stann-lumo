@@ -210,7 +210,7 @@ export default function PressKitPageClient() {
               </div>
             ))}
           </div>
-          <div className={styles.pad}><p className={`${styles.prose} ${styles.small}`}>{copy.logoNote}</p></div>
+          <div className={styles.pad}><p className={`${styles.prose} ${styles.small} ${styles.logoNote}`}>{copy.logoNote}</p></div>
         </section>
         <section className={`${styles.plate} ${styles.column}`} aria-labelledby="press-terminal">
           <div className={styles.band}><h2 id="press-terminal" className={styles.label}>TERMINAL</h2><span className={`${styles.label} ${styles.muted}`}>Since 2026 · Faust Seoul</span></div>

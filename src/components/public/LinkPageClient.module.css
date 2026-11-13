@@ -6,7 +6,8 @@
 .name { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 24px 20px; }
 .name h3 { font-weight: 900; font-size: clamp(2rem, 3.9vw, 3.5rem); line-height: .9; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
 .side .name h3 { font-size: clamp(1.75rem, 2.8vw, 2.5rem); }
-.name p { font-size: 14px; color: var(--v5-muted); overflow-wrap: anywhere; }
+/* Canvas leaves the address line at the font's normal height; the inherited body line-height made each row ~4px taller. */
+.name p { font-size: 14px; line-height: normal; color: var(--v5-muted); overflow-wrap: anywhere; }
 .arrow { display: flex; align-items: center; justify-content: center; background: var(--v5-band); font-size: 1.75rem; }
 .row:hover { background: var(--v5-band) !important; }
 .row:hover .arrow { background: var(--v5-red); color: #000; }

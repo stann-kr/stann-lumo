@@ -14,7 +14,8 @@
 .facts > div { padding: 8px 14px; background: var(--v5-inset); }
 .facts dt { color: var(--v5-muted); }
 .facts dd { font-size: .9375rem; white-space: nowrap; }
-.listen { grid-area: key; align-self: stretch; min-height: 112px; background: var(--v5-plate-2); font-size: 14px; }
+/* The canvas key has no side padding, so "SOUNDCLOUD ↗" stays on one line in the 150px column; keep only a thin inset. */
+.listen { grid-area: key; align-self: stretch; min-height: 112px; padding-inline: 8px; background: var(--v5-plate-2); font-size: 14px; }
 /* Canvas Music board: the platform key sits one tone above its row. */
 .rows > li:nth-child(even) .listen { background: var(--v5-band); }
 .rows > li .listen:hover { background: #333; }
@@ -35,7 +36,8 @@
 .footerKey { background: var(--v5-plate-2); font-size: 14px; letter-spacing: normal; }
 
 @media (max-width: 999px) {
-  .row { grid-template-columns: 96px minmax(0, 1fr) 120px; grid-template-areas: 'cover body key' 'cover facts key' 'list list list'; row-gap: 0; }
+  /* Same 150px key column as the desktop board, so platform names stay on one line on tablets too. */
+  .row { grid-template-columns: 96px minmax(0, 1fr) 150px; grid-template-areas: 'cover body key' 'cover facts key' 'list list list'; row-gap: 0; }
   .cover { width: 96px; }
   .body { padding-bottom: 10px; }
   .facts { align-self: start; margin-bottom: 14px; }

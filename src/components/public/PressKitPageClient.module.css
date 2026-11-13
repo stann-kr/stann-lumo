@@ -56,6 +56,8 @@ a.row:hover { background: var(--v5-band) !important; }
 .bio p:last-child { margin-bottom: 0; }
 .lead { font-size: 1.125rem; font-weight: 500; }
 .prose { max-width: 62ch; color: var(--v5-muted-2); line-height: 1.6; text-wrap: pretty; }
+/* Canvas Presskit board: the logo usage note wraps narrower than other prose. */
+.logoNote { max-width: 44ch; }
 
 /* stages */
 .stage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 150px; }
