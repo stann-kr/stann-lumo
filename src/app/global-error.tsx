@@ -9,7 +9,7 @@ import Link from 'next/link';
  */
 const css = `
 body { margin: 0; min-height: 100svh; padding: 10px; box-sizing: border-box; background: #000; color: #fff;
-  font-family: Inter, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif; }
+  font-family: Inter, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif; }
 .fallback { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; min-height: 60svh; padding: 28px 24px; background: #141414; }
 .code { display: flex; align-items: center; gap: 8px; margin: 0; font: 11px/1.4 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .14em; color: #ff4d6a; }
 .code::before { content: ''; width: 8px; height: 8px; background: #ff0033; }

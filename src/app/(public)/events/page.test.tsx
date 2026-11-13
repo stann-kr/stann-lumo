@@ -1,10 +1,11 @@
-import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, within, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import EventsPageClient from '@/components/public/EventsPageClient';
 import EventDetailPageClient from '@/components/public/EventDetailPageClient';
 import type { Performance } from '@/capabilities/events/events';
 import { performanceSchedule, performanceToday } from '@/capabilities/events/events';
 import type { GalleryPhoto } from '@/capabilities/media/media';
+import { stubViewport } from '@/test/viewport';
 
 vi.mock('next/link', () => ({ default: ({ ...props }: React.ComponentProps<'a'> & { prefetch?: boolean }) => {
   delete props.prefetch;
@@ -26,12 +27,15 @@ function renderEvents(records: Performance[]) {
   }));
   return render(<EventsPageClient eventsMeta={meta} schedule={{ today: performanceToday(), upcoming: schedule.upcoming.length, past: schedule.past.length }} />);
 }
+let viewport: ReturnType<typeof stubViewport>;
+/** Scrolls to the end of one section; its next page loads with no key. */
 async function loadRegion(region: HTMLElement, count: number) {
-  fireEvent.click(within(region).getByRole('button', { name: 'list_load_more' }));
+  viewport.reachListEnd(region);
   await waitFor(() => expect(within(region).getAllByRole('link')).toHaveLength(count));
 }
 
 describe('public events', () => {
+  beforeEach(() => { viewport = stubViewport(); });
   afterEach(() => vi.unstubAllGlobals());
   it('uses the Seoul calendar and orders upcoming dates forward and past dates backward', () => {
     expect(performanceToday(new Date('2026-09-08T15:01:00Z'))).toBe('2026-09-09');
@@ -73,8 +77,9 @@ describe('public events', () => {
     await loadRegion(pastRegion, 8);
     expect(within(pastRegion).getAllByRole('link')[0]).toBe(first);
     await loadRegion(pastRegion, 11);
-    expect(within(pastRegion).getAllByRole('link')[8]).toHaveFocus();
-    expect(screen.queryByRole('button', { name: 'list_load_more' })).not.toBeInTheDocument();
+    expect(document.body).toHaveFocus();
+    expect(within(pastRegion).getByText('list_complete_count')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^list_/ })).not.toBeInTheDocument();
   });
 
   it('keeps essential event facts and the real external URL with or without a poster', () => {

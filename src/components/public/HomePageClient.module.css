@@ -4,11 +4,14 @@
 .mono { font-family: var(--os-font-mono); }
 .muted { color: var(--v5-muted); }
 .display { font-weight: 900; font-size: clamp(1.75rem, 3.2vw, 2.75rem); line-height: 1; letter-spacing: -.045em; text-transform: uppercase; }
+/* Where the Main and Mobile boards word the same key differently. */
+.narrowOnly { display: none; }
 
 /* hero row */
 .heroRow { display: flex; flex-wrap: wrap; gap: var(--v5-gap); }
 .hero {
-  flex: 999 1 640px; min-width: 0; min-height: clamp(460px, 52vw, 700px); display: flex; flex-direction: column; justify-content: space-between;
+  /* The canvas plate adds its 24px block padding to the 700px height (content-box): 748px at 1440. */
+  flex: 999 1 640px; min-width: 0; min-height: calc(clamp(460px, 52vw, 700px) + 48px); display: flex; flex-direction: column; justify-content: space-between;
   position: relative; isolation: isolate; padding: 24px 28px; background: var(--v5-plate-2);
 }
 .heroImage { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
@@ -18,15 +21,16 @@
 
 .mix { flex: 1 1 440px; min-width: 0; display: flex; flex-direction: column; background: var(--v5-plate); }
 .band { display: flex; justify-content: space-between; gap: 12px; padding: 8px 20px; background: var(--v5-band); }
+.band > * { line-height: normal; }
 .mixHead { padding: 20px 20px 16px; }
-.mixTitle { font-weight: 900; font-size: clamp(1.75rem, 2.4vw, 2.25rem); line-height: .95; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere;
+.mixTitle { font-weight: 900; font-size: clamp(1.75rem, 2.5vw, 2.25rem); line-height: .95; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .mixType { margin-top: 8px; font-size: .875rem; color: var(--v5-muted-2); }
 /* recent mixes deck: the loaded mix is the current item, so it carries the red lamp */
 .deck { display: flex; flex-direction: column; margin-top: var(--v5-gap); list-style: none; }
 .deckRow {
-  display: grid; grid-template-columns: 22px 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; min-height: 56px;
-  padding: 8px 20px 8px 16px; border-left: 4px solid transparent; background: var(--v5-plate-2); text-align: left;
+  display: grid; grid-template-columns: 28px 40px minmax(0, 1fr) 48px; align-items: center; gap: 12px; width: 100%; min-height: 56px;
+  padding: 8px 20px 8px 17px; border-left: 3px solid transparent; background: var(--v5-plate-2); font-size: 14px; text-align: left;
 }
 .deck li:nth-child(even) .deckRow { background: var(--v5-plate); }
 .deckRow:hover { background: var(--v5-band) !important; }
@@ -34,25 +38,28 @@
 .deckIndex { font-size: 12px; color: var(--v5-muted); }
 .deckRow[aria-pressed='true'] .deckIndex { color: var(--v5-link); }
 .deckCover { width: 40px; padding: 0; }
-.deckTitle { font-size: .875rem; font-weight: 500; overflow-wrap: anywhere; }
-.deckMeta { font-size: 12px; color: var(--v5-muted); white-space: nowrap; }
+.deckTitle { overflow-wrap: anywhere; }
+.deckMeta { font-size: 12px; color: var(--v5-muted); white-space: nowrap; text-align: right; }
+.firstTrack { display: none; }
 .keyGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--v5-key-gap); margin-top: auto; padding-top: var(--v5-gap); }
 .plateKey { display: block; padding: 14px 20px; background: var(--v5-plate-2); font-size: .875rem; font-weight: 500; }
 .plateKey:hover, .card:hover, .dateRow:hover { background: var(--v5-band); }
 
 /* next gig row */
 .next {
-  display: grid; grid-template-columns: 140px 180px minmax(0, 1fr) minmax(0, 240px) 160px; align-items: center; gap: 20px;
+  display: grid; grid-template-columns: 140px 160px minmax(0, 1fr) minmax(0, 240px) 160px; align-items: center; gap: 20px;
   min-height: 72px; padding-left: 20px; background: var(--v5-plate);
 }
 .lamp { display: flex; align-items: center; gap: 8px; color: var(--v5-link); }
 .dot { width: 8px; height: 8px; flex: none; background: var(--v5-red); }
 .nextTitle { font-size: 1.25rem; font-weight: 700; overflow-wrap: anywhere; }
 .nextVenue { font-size: .875rem; color: var(--v5-muted-2); }
+.nextLine { display: none; }
 .rowKey, .rowKeyMuted {
   align-self: stretch; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px;
-  background: var(--v5-band); font-weight: 700; font-size: .8125rem; letter-spacing: .06em; text-align: center;
+  background: var(--v5-band); font-weight: 700; font-size: .8125rem; text-align: center;
 }
+.nextKey { font-size: .875rem; letter-spacing: .08em; }
 .rowKeyMuted { background: none; font-family: var(--os-font-mono); font-weight: 400; font-size: 11px; letter-spacing: .14em; color: var(--v5-muted); }
 .signal { background: var(--v5-red); color: #000; }
 .signal:hover { background: var(--v5-red-hover); }
@@ -75,7 +82,8 @@
 .dateRow { display: grid; grid-template-columns: 130px 110px minmax(0, 1fr) 120px; align-items: center; gap: 16px; min-height: 56px; padding-left: 20px; background: var(--v5-plate-2); }
 .dateRow[data-alt='true'] { background: var(--v5-plate); }
 .dateRow .mono { font-size: .9375rem; }
-.dateRow .label { color: var(--v5-muted-2); overflow-wrap: anywhere; }
+.dateRow .label { overflow-wrap: anywhere; }
+.compactDates { display: none; list-style: none; }
 .dateTitle { font-size: .9375rem; overflow-wrap: anywhere; }
 .dateTitle:hover { text-decoration: underline; }
 .emptyDates { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: 12px; padding-left: 20px; background: var(--v5-plate-2); }
@@ -84,7 +92,9 @@
 
 .booking { flex: 2 1 400px; min-width: 0; display: flex; flex-direction: column; background: var(--v5-bone); color: #000; }
 .bookingHead { padding: 22px 20px 16px; }
-.bookingHead p { margin-top: 8px; font-size: .9375rem; color: var(--v5-bone-muted); }
+.bookingLead { margin-top: 8px; font-size: .9375rem; color: var(--v5-bone-muted); }
+.bookingMail { display: none; }
+.bookingMail a:hover { text-decoration: underline; }
 .bookingFacts > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 12px 20px; font-size: .875rem; }
 .bookingFacts > div:nth-child(odd) { background: var(--v5-bone-2); }
 .bookingFacts dt { color: var(--v5-bone-muted); }
@@ -113,28 +123,48 @@
 }
 @media (max-width: 640px) {
   .home { gap: 8px; }
-  .hero { min-height: 460px; padding: 16px; }
+  .wideOnly { display: none; }
+  .narrowOnly { display: inline; }
+  /* Mobile board: 460px plus 16px block padding (content-box). */
+  .hero { min-height: 492px; padding: 16px; }
   .heroTitle { font-size: clamp(4rem, 23.5vw, 5.75rem); }
   .band, .mixHead, .plateKey { padding-inline: 16px; }
-  /* Mobile board: one key row under the deck. */
-  .keyGrid { grid-template-columns: minmax(0, 1fr); }
+  .mixTitle { font-size: 26px; }
+  /* Mobile board: no deck; the first track (when there is a tracklist) and one key follow the player directly. */
+  .deck { display: none; }
+  .firstTrack { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; padding: 11px 16px; background: var(--v5-plate); font-size: 14px; overflow-wrap: anywhere; }
+  .keyGrid { grid-template-columns: minmax(0, 1fr); padding-top: 0; }
   .platformKey { display: none; }
-  .deckRow { padding-right: 16px; padding-left: 12px; }
-  .next { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lamp key' 'title key' 'date key' 'venue key'; padding-left: 16px; }
-  .plateHead { padding: 16px; }
+  .next { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'lamp key' 'title key' 'line key'; gap: 0 16px; padding: 12px 0 12px 16px; }
+  .next > time, .next > .nextVenue { display: none; }
+  .next > .nextTitle { margin-top: 4px; font-size: 17px; }
+  .next > .nextLine { display: block; grid-area: line; font-size: 12px; color: var(--v5-muted); }
+  .next > .rowKey { margin-block: -12px; font-size: .8125rem; letter-spacing: normal; }
+  .plateHead { gap: 10px; padding: 16px; }
+  .plateHead a { font-size: .8125rem; }
   .display { font-size: 1.75rem; }
-  .dateRow { grid-template-columns: 92px minmax(0, 1fr) auto; grid-template-areas: 'date title key' 'city title key'; gap: 2px 12px; padding-left: 16px; min-height: 56px; }
-  .dateRow > time { grid-area: date; font-size: .8125rem; }
-  .dateRow > .label { grid-area: city; }
-  .dateRow > .dateTitle { grid-area: title; font-size: .875rem; }
-  .dateRow > :last-child { grid-area: key; }
+  .cardBody { gap: 0; padding: 10px 12px; }
+  .cardBody strong { font-size: 15px; }
+  .cardBody .mono { font-size: 11px; }
+  /* Mobile board: short rows (MM-DD venue, city · INFO) after the next date. */
+  .dateList { display: none; }
+  .compactDates { display: block; }
+  .compactRow { display: flex; justify-content: space-between; padding: 12px 16px; background: var(--v5-plate-2); font-size: 14px; }
+  .compactDates [data-alt='true'] .compactRow { background: var(--v5-plate); }
+  .compactRow:hover { background: var(--v5-band); }
+  .compactPlace { flex: 1; min-width: 0; padding: 0 12px; overflow-wrap: anywhere; }
+  .dates[data-compact-empty='true'] { display: none; }
   .emptyDates { padding-left: 16px; }
   .subhead { padding-inline: 16px; }
   .booking { order: -1; }
-  .bookingHead, .bookingFacts > div { padding-inline: 16px; }
-  .inkKey, .redKey { padding: 14px 16px; font-size: .8125rem; }
+  .booking .display { font-size: 32px; }
+  .bookingHead { padding: 16px; }
+  .bookingLead, .bookingFacts { display: none; }
+  .bookingMail { display: block; margin-top: 6px; font-size: 13px; }
+  .bookingKeys { padding-top: 0; }
+  .inkKey, .redKey { padding: 14px 16px; font-size: .8125rem; letter-spacing: normal; }
   .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .plateKey, .card, .dateRow, .rowKey, .inkKey, .redKey, .deckRow, .strip a { transition: background-color var(--os-dur-fast) linear, border-color var(--os-dur-fast) linear; }
+  .plateKey, .card, .dateRow, .compactRow, .rowKey, .inkKey, .redKey, .deckRow, .strip a { transition: background-color var(--os-dur-fast) linear, border-color var(--os-dur-fast) linear; }
 }

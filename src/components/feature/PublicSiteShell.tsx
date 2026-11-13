@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, useTransition, type KeyboardEvent, type ReactNode } from "react";
+import { Suspense, use, useCallback, useEffect, useRef, useState, useTransition, type KeyboardEvent, type ReactNode } from "react";
 import Link, { PublicNavigationContext } from './PublicLink';
 import PublicPageLoading from './PublicPageLoading';
 import { usePathname, useRouter } from "next/navigation";
@@ -15,9 +15,17 @@ import { useRevealGate } from './useRevealGate';
 interface PublicSiteShellProps {
   children: ReactNode;
   artistName?: string;
+  /** Whether a date is still ahead; lights the mobile menu's NEXT lamp once it resolves. */
+  nextDate?: Promise<boolean>;
 }
 
-const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellProps) => {
+/** Canvas MobileMenu: the Events item carries the red NEXT lamp while a date is ahead. */
+function NextDateLamp({ signal, label }: { signal: Promise<boolean>; label: string }) {
+  if (!use(signal)) return null;
+  return <><span className={styles.nextLamp} aria-hidden="true">Next</span><span className="sr-only">{label}</span></>;
+}
+
+const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicSiteShellProps) => {
   const [mobileMenuPath, setMobileMenuPath] = useState<string | null>(null);
   const [isNavigating, startNavigation] = useTransition();
   const router = useRouter();
@@ -151,7 +159,6 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     { label: "Music", path: "/music" },
     { label: "Events", path: "/events" },
     { label: "Archive", path: "/archive" },
-    { label: "About", path: "/about" },
     { label: "Press kit", path: "/press-kit" },
   ];
   const secondaryItems = [
@@ -159,6 +166,8 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     { label: "Links", path: "/link" },
   ];
   const isCurrent = (path: string) => pathname === path || pathname.startsWith(path + "/");
+  // The press kit is a page for promoters with its own header (canvas Presskit board): the site menu stays out of it.
+  const ownHeader = pathname === "/press-kit";
 
   const handleMobileDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
@@ -183,16 +192,17 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     }
   };
 
-  // No footer: on the paged lists it was only reachable after every page had loaded. Desktop carries Links as a sixth key;
+  // No footer: on the paged lists it was only reachable after every page had loaded. Desktop carries Links as a fifth key;
   // the mobile menu lists Contact and Links below the main items. Social profiles live on /link.
   const desktopItems = [...navItems, { label: "Links", path: "/link" }];
-  const navigation = (label: string, items = navItems) => (
+  const navigation = (label: string, items = navItems, eventsLamp?: ReactNode) => (
     <nav aria-label={label}>
       <ul className={styles.navList}>
         {items.map((item) => (
           <li key={item.path}>
             <Link href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>
               {item.label}
+              {item.path === "/events" && eventsLamp}
             </Link>
           </li>
         ))}
@@ -210,9 +220,9 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     <PublicNavigationContext value={navigate}>
     <PublicMotionInputContext value={motionInputRef}>
     <div ref={shellRef} className={styles.shell}>
-      <div inert={mobileMenuOpen || undefined} className={styles.document}>
+      <div inert={mobileMenuOpen || undefined} className={styles.document} data-chrome={ownHeader ? "press" : undefined}>
         <a href="#main-content" className={styles.skipLink}>{skipLinkLabel}</a>
-        <header className={styles.header}>
+        {!ownHeader && <header className={styles.header}>
           <Link ref={brandRef} href="/" className={styles.brand} aria-label={artistName}><LumoWordmark className={styles.wordmark} title={artistName} /></Link>
           <div className={styles.desktopNav}>{navigation(mainNavigationLabel, desktopItems)}</div>
           <div className={styles.tools}>
@@ -224,7 +234,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
               Menu
             </button>
           </div>
-        </header>
+        </header>}
         <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed} data-gate={revealHeld ? 'script' : undefined}>
           <div inert={isNavigating || undefined} className={`${styles.content} ${isNavigating ? styles.pendingContent : ''}`}>{children}</div>
         </main>
@@ -241,7 +251,9 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
               <span className={styles.brand} aria-hidden="true"><LumoWordmark className={styles.wordmark} title={artistName} /></span>
               <button type="button" className={styles.closeButton} onClick={() => closeMobileMenu()} aria-label={t("nav_close_menu")}>Close</button>
             </div>
-            {navigation(mobileNavigationLabel)}
+            {navigation(mobileNavigationLabel, navItems, nextDate && (
+              <Suspense fallback={null}><NextDateLamp signal={nextDate} label={language === "ko" ? ", 다음 공연 있음" : ", next date ahead"} /></Suspense>
+            ))}
             <ul className={styles.secondaryList}>
               {secondaryItems.map((item) => <li key={item.path}><Link href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>{item.label}</Link></li>)}
             </ul>

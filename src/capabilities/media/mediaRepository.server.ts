@@ -40,17 +40,18 @@ function mapGalleryPhoto(row: GalleryPhotoRow): GalleryPhoto {
 }
 
 /**
- * Gallery columns for public reads, with the event link taken from the joined performance: media whose event was
- * deleted reads as unlinked instead of pointing at a missing event page. Use with `FROM ${LINKED_GALLERY_SOURCE}`.
+ * Gallery columns with the event link taken from the joined performance: media whose event was deleted reads as
+ * unlinked instead of pointing at a missing event. The stored link is left alone, so an event that comes back under
+ * the same id (a restored RA event) is linked again. Use with `FROM ${LINKED_GALLERY_SOURCE}`.
  */
 export const LINKED_GALLERY_COLUMNS = `g.id, g.filename, g.mime_type, g.size_bytes, g.alt_text, g.caption, g.sort_order,
   g.created_at, g.media_type, g.focal_x, g.focal_y, g.video_youtube_id, g.video_thumbnail_url, p.id AS linked_event_id`;
 export const LINKED_GALLERY_SOURCE = 'gallery_photos g LEFT JOIN performances p ON p.id = g.linked_event_id';
 
-/** Every stored row as saved, including links to events that no longer exist; for the admin editor. */
+/** Every item for the admin editor, with a link to a deleted event listed as unlinked as on the public pages. */
 export async function fetchGalleryPhotos(db: D1Database): Promise<GalleryPhoto[]> {
   const result = await db.prepare(
-    'SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at DESC',
+    `SELECT ${LINKED_GALLERY_COLUMNS} FROM ${LINKED_GALLERY_SOURCE} ORDER BY g.sort_order ASC, g.created_at DESC`,
   ).all<GalleryPhotoRow>();
   return result.results.map(mapGalleryPhoto);
 }
@@ -66,13 +67,19 @@ export async function fetchGalleryPhotoById(
   return row ? mapGalleryPhoto(row) : null;
 }
 
+/**
+ * Saves the admin list: its order, text and focus. A photo without `linkedEventId` keeps its stored link, since the
+ * list shows a link to a deleted event as unlinked and the editor sends a link only when the admin changes it;
+ * an empty string removes the link.
+ */
 export async function updateGalleryPhotos(
   db: D1Database,
   photos: GalleryPhoto[],
 ): Promise<void> {
   await db.batch(photos.map((photo, index) => db.prepare(
     `UPDATE gallery_photos
-     SET alt_text = ?, caption = ?, sort_order = ?, focal_x = ?, focal_y = ?, linked_event_id = ?
+     SET alt_text = ?, caption = ?, sort_order = ?, focal_x = ?, focal_y = ?,
+       linked_event_id = NULLIF(COALESCE(?, linked_event_id), '')
      WHERE id = ?`,
   ).bind(
     photo.altText ?? '',

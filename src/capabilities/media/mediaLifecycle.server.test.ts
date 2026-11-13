@@ -11,7 +11,8 @@ import {
   replaceEventPoster,
   uploadGalleryFiles,
 } from './mediaLifecycle.server';
-import { fetchGalleryPhotos } from './mediaRepository.server';
+import type { GalleryPhoto } from './media';
+import { fetchGalleryPhotos, updateGalleryPhotos } from './mediaRepository.server';
 
 interface StatementRecord {
   sql: string;
@@ -151,5 +152,59 @@ describe('media lifecycle server capability', () => {
       },
     ]);
     expect(r2.delete).toHaveBeenCalledWith('gallery/photo-1');
+  });
+});
+
+describe('admin archive list and save', () => {
+  const storedLink = (sqlite: ReturnType<typeof createSqliteD1>['sqlite'], id: string) =>
+    sqlite.prepare('SELECT linked_event_id FROM gallery_photos WHERE id = ?').get(id);
+
+  it('lists media whose event was deleted as unlinked, leaving the stored link in place', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    try {
+      sqlite.exec(`
+        INSERT INTO performances (id, date, venue, title) VALUES ('kept', '2021-04-10', 'Venue', 'Kept');
+        INSERT INTO gallery_photos (id, filename, sort_order, linked_event_id) VALUES ('linked', 'linked.jpg', 0, 'kept');
+        INSERT INTO gallery_photos (id, filename, sort_order, linked_event_id) VALUES ('orphan', 'orphan.jpg', 1, 'ra-7');
+      `);
+
+      const [linked, orphan] = await fetchGalleryPhotos(db);
+
+      expect(linked).toMatchObject({ id: 'linked', linkedEventId: 'kept' });
+      expect(orphan).toMatchObject({ id: 'orphan', filename: 'orphan.jpg' });
+      expect(orphan?.linkedEventId).toBeUndefined();
+      expect(storedLink(sqlite, 'orphan')).toEqual({ linked_event_id: 'ra-7' });
+    } finally {
+      close();
+    }
+  });
+
+  it('keeps a stored link that a save leaves out, so a restored RA event is linked again, and changes it only when sent', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    try {
+      sqlite.exec(`
+        INSERT INTO performances (id, date, venue, title) VALUES ('kept', '2021-04-10', 'Venue', 'Kept');
+        INSERT INTO gallery_photos (id, filename, sort_order, linked_event_id) VALUES ('orphan', 'orphan.jpg', 0, 'ra-7');
+      `);
+      // The editor lists the item without a link and sends one only when the admin changes it.
+      const listed: GalleryPhoto = {
+        id: 'orphan', filename: 'orphan.jpg', mimeType: 'image/jpeg', sizeBytes: 0, altText: '', caption: '',
+        sortOrder: 0, createdAt: '', mediaType: 'image', focalX: 50, focalY: 50,
+      };
+
+      await updateGalleryPhotos(db, [{ ...listed, caption: 'New caption', focalX: 20 }]);
+      expect(storedLink(sqlite, 'orphan')).toEqual({ linked_event_id: 'ra-7' });
+
+      // A restored RA event comes back under the same id.
+      sqlite.exec("INSERT INTO performances (id, date, venue, title) VALUES ('ra-7', '2022-09-17', 'Faust', 'Night')");
+      expect((await fetchGalleryPhotos(db))[0]).toMatchObject({ caption: 'New caption', focalX: 20, linkedEventId: 'ra-7' });
+
+      await updateGalleryPhotos(db, [{ ...listed, linkedEventId: 'kept' }]);
+      expect(storedLink(sqlite, 'orphan')).toEqual({ linked_event_id: 'kept' });
+      await updateGalleryPhotos(db, [{ ...listed, linkedEventId: '' }]);
+      expect(storedLink(sqlite, 'orphan')).toEqual({ linked_event_id: null });
+    } finally {
+      close();
+    }
   });
 });

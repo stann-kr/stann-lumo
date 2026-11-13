@@ -1,5 +1,5 @@
 /* v5 press kit plates — canvas Presskit/PresskitMobile boards. Red only for signals (Booking, latest live). Bone plate for contact. */
-.page { display: flex; flex-direction: column; gap: var(--v5-gap); font-size: .9375rem; }
+.page { display: flex; flex-direction: column; gap: 10px; max-width: 1440px; width: 100%; margin-inline: auto; font-size: .9375rem; }
 .label { font-family: var(--os-font-mono); font-size: 11px; font-weight: 400; letter-spacing: .14em; line-height: 1.4; text-transform: uppercase; }
 .mono { font-family: var(--os-font-mono); font-variant-numeric: tabular-nums; }
 .muted { color: var(--v5-muted); }
@@ -28,8 +28,14 @@ a.row:hover { background: var(--v5-band) !important; }
 .ink:hover { background: #222; }
 .inset { background: var(--v5-inset); }
 
-.topBar { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: var(--v5-key-gap); background: var(--v5-plate); }
-.topBar h1 { display: flex; align-items: center; min-height: 44px; padding: 0 20px; color: var(--v5-muted); }
+/* header: the kit's own bar in place of the site menu (the shell leaves its header out on this route); the wordmark goes home */
+.hdr { display: flex; align-items: stretch; min-height: 64px; background: var(--v5-plate); }
+.brand { display: flex; flex: 1; align-items: center; gap: 16px; min-width: 0; padding: 0 20px; }
+.home { display: flex; align-items: center; min-height: 44px; flex: none; }
+.wordmark { display: block; width: 233px; max-width: 60vw; height: auto; aspect-ratio: 11738 / 1008; }
+.hdr .keys { align-items: stretch; }
+.hdr .key { min-height: auto; }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 16px 20px; background: var(--v5-inset); }
 
 /* hero */
 .hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--v5-gap); }
@@ -50,6 +56,8 @@ a.row:hover { background: var(--v5-band) !important; }
 .bio p:last-child { margin-bottom: 0; }
 .lead { font-size: 1.125rem; font-weight: 500; }
 .prose { max-width: 62ch; color: var(--v5-muted-2); line-height: 1.6; text-wrap: pretty; }
+/* Canvas Presskit board: the logo usage note wraps narrower than other prose. */
+.logoNote { max-width: 44ch; }
 
 /* stages */
 .stage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 150px; }
@@ -109,17 +117,17 @@ a.row:hover { background: var(--v5-band) !important; }
 .toast:empty { display: none; }
 
 @media (max-width: 980px) {
+  .hdr { flex-wrap: wrap; }
+  .brand { flex-basis: 100%; min-height: 56px; }
+  .hdr .keys { flex: 1; }
+  .hdr .key { flex: 1; min-height: 44px; }
   .hero, .two, .contact { grid-template-columns: minmax(0, 1fr); }
   .photos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .clips { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .photo img { aspect-ratio: 4 / 5; }
 }
 @media (max-width: 640px) {
-  .page { gap: 8px; }
   .band, .row, .pad, .name, .lede { padding-inline: 16px; }
-  .topBar h1 { padding: 0 16px; flex-basis: 100%; }
-  .topBar .keys { flex: 1; }
-  .topBar .key { flex: 1; }
   .glance .row { grid-template-columns: 110px minmax(0, 1fr); }
   .stage { grid-template-columns: minmax(0, 1fr) auto; }
   .stage .city { grid-column: 1; grid-row: 2; margin-top: -8px; font-size: .8125rem; color: var(--v5-muted); }

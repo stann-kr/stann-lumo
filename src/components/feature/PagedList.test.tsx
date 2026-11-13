@@ -37,11 +37,14 @@ describe('requested public pages', () => {
     expect(screen.getAllByRole('link')).toHaveLength(4);
     expect(screen.getByRole('list')).toHaveAttribute('aria-busy', 'false');
     expect(loadPage).toHaveBeenCalledTimes(1);
-    const first = screen.getAllByRole('link')[0];
+    const first = screen.getAllByRole('link')[0]!;
+    first.focus();
     act(() => observers.at(-1)!.intersect());
     await act(async () => resolve(page(4)));
     expect(screen.getAllByRole('link')).toHaveLength(8);
     expect(screen.getAllByRole('link')[0]).toBe(first);
+    expect(first).toHaveFocus();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByText('Skeleton')).not.toBeInTheDocument();
   });
 
@@ -55,20 +58,32 @@ describe('requested public pages', () => {
     expect(loadPage).toHaveBeenCalledExactlyOnceWith(4, expect.any(AbortSignal));
   });
 
-  it('preserves content on failure, waits for retry and restores manual keyboard focus', async () => {
-    const loadPage = vi.fn().mockResolvedValueOnce(page()).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(page(4));
+  it('preserves content on failure and offers a retry key that keeps focus while loading, then focuses the first new item', async () => {
+    let resolveRetry!: (value: ReturnType<typeof page>) => void;
+    const loadPage = vi.fn()
+      .mockResolvedValueOnce(page())
+      .mockRejectedValueOnce(new Error('offline'))
+      .mockImplementationOnce(() => new Promise(done => { resolveRetry = done; }));
     render(<PagedList {...props} loadPage={loadPage} />);
-    fireEvent.click(screen.getByRole('button'));
+    act(() => observers.at(-1)!.intersect());
     await waitFor(() => expect(screen.getAllByRole('link')).toHaveLength(4));
-    expect(screen.getAllByRole('link')[0]).toHaveFocus();
-    fireEvent.click(screen.getByRole('button'));
+    act(() => observers.at(-1)!.intersect());
     await screen.findByText('list_load_error');
     expect(screen.getAllByRole('link')).toHaveLength(4);
     act(() => observers.at(-1)!.intersect());
     expect(loadPage).toHaveBeenCalledTimes(2);
-    fireEvent.click(screen.getByRole('button', { name: 'list_retry' }));
-    await waitFor(() => expect(screen.getAllByRole('link')).toHaveLength(8));
+    const retry = screen.getByRole('button', { name: 'list_retry' });
+    retry.focus();
+    fireEvent.click(retry);
+    expect(screen.getByRole('status')).toHaveTextContent('list_loading');
+    expect(retry).toHaveAttribute('aria-disabled', 'true');
+    expect(retry).toHaveFocus();
+    fireEvent.click(retry);
+    expect(loadPage).toHaveBeenCalledTimes(3);
+    await act(async () => resolveRetry(page(4)));
+    expect(screen.getAllByRole('link')).toHaveLength(8);
     expect(screen.getAllByRole('link')[4]).toHaveFocus();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   it('aborts an obsolete sort request and never appends its late response', async () => {
@@ -86,17 +101,29 @@ describe('requested public pages', () => {
 
   it('does not load while hidden, inert, or while a following control has keyboard focus', () => {
     const loadPage = vi.fn();
-    const view = render(<div inert><PagedList {...props} loadPage={loadPage} /></div>);
+    const view = render(<div inert><PagedList {...props} loadPage={loadPage} /><button type="button">After</button></div>);
     act(() => observers[0]!.intersect());
     expect(loadPage).not.toHaveBeenCalled();
-    view.rerender(<div><PagedList {...props} loadPage={loadPage} /></div>);
+    view.rerender(<div><PagedList {...props} loadPage={loadPage} /><button type="button">After</button></div>);
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
     act(() => observers.at(-1)!.intersect());
     expect(loadPage).not.toHaveBeenCalled();
     vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
-    screen.getByRole('button').focus();
+    screen.getByRole('button', { name: 'After' }).focus();
     act(() => observers.at(-1)!.intersect());
     expect(loadPage).not.toHaveBeenCalled();
+  });
+
+  it('resumes once focus leaves the control after the list, without a key', async () => {
+    const loadPage = vi.fn().mockResolvedValue(page());
+    render(<><PagedList {...props} loadPage={loadPage} /><button type="button">After</button></>);
+    const after = screen.getByRole('button', { name: 'After' });
+    after.focus();
+    act(() => observers.at(-1)!.intersect());
+    expect(loadPage).not.toHaveBeenCalled();
+    after.blur();
+    await waitFor(() => expect(screen.getAllByRole('link')).toHaveLength(4));
+    expect(loadPage).toHaveBeenCalledTimes(1);
   });
 
   it('resumes a visible loading section when the navigation layer stops being inert', async () => {

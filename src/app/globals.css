@@ -1,5 +1,5 @@
 @import "../styles/stann-os.css";
-/* Web fonts (Inter, JetBrains Mono) load from the root layout <head>. */
+/* Web fonts (Inter, JetBrains Mono, Noto Sans KR for Hangul) load from the root layout <head>. */
 
 @tailwind base;
 @tailwind components;
@@ -95,7 +95,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-y: scroll;

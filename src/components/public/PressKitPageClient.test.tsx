@@ -3,15 +3,23 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PressKitPageClient from './PressKitPageClient';
 
-const mocks = vi.hoisted(() => ({ language: 'en' as 'en' | 'ko' }));
-vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: mocks.language, setLanguage: vi.fn() }) }));
+const mocks = vi.hoisted(() => ({ language: 'en' as 'en' | 'ko', setLanguage: vi.fn() }));
+vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: mocks.language, setLanguage: mocks.setLanguage }) }));
 
 describe('PressKitPageClient', () => {
-  beforeEach(() => { mocks.language = 'en'; });
+  beforeEach(() => { mocks.language = 'en'; mocks.setLanguage.mockClear(); });
 
   it('serves the official kit files from same-origin downloads', () => {
     render(<PressKitPageClient />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Press kit');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Stann\s*Lumo$/);
+    expect(screen.getByRole('link', { name: 'STANN LUMO' })).toHaveAttribute('href', '/');
+    const zip = screen.getByRole('link', { name: /Download all/ });
+    expect(zip).toHaveAttribute('href', '/press/download/stann-lumo-press-kit.zip');
+    expect(zip).toHaveAttribute('download');
+    expect(zip).toHaveTextContent('ZIP 7.0MB');
+    const bio = within(screen.getByRole('region', { name: 'Biography' }));
+    expect(bio.getByRole('link', { name: /^KO \.txt/ })).toHaveAttribute('href', '/press/download/stann-lumo-bio-ko.txt');
+    expect(bio.getByRole('link', { name: /^EN \.txt/ })).toHaveAttribute('href', '/press/download/stann-lumo-bio-en.txt');
     const photos = within(screen.getByRole('region', { name: 'Press photos' }));
     expect(photos.getAllByRole('link').map((link) => [link.getAttribute('href'), link.hasAttribute('download')])).toEqual([
       ['/press/download/stann-lumo-photo-front.jpg', true],
@@ -46,5 +54,8 @@ describe('PressKitPageClient', () => {
     expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^Stann Lumo는 서울 기반의/));
     expect(screen.getByRole('status')).toHaveTextContent('복사했습니다.');
     expect(screen.getAllByText('국내 페스티벌')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: '언어를 한국어로 전환' })).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: 'Switch language to English' }));
+    expect(mocks.setLanguage).toHaveBeenCalledWith('en');
   });
 });

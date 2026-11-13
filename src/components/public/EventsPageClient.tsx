@@ -29,17 +29,24 @@ function daysUntil(date: string, today: string): number {
 
 function EventRow({ event, today, featured = false, past = false, eager = false }: { event: Performance; today: string; featured?: boolean; past?: boolean; eager?: boolean }) {
   const location = performanceLocation(event);
+  const cancelled = event.status === 'Cancelled';
   // Every RA listing starts as 'Announced'; show only cancellations and still-open TBA dates.
-  const showStatus = event.status === 'Cancelled' || (!past && event.status === 'TBA');
+  const showStatus = cancelled || event.status === 'TBA';
   const days = past ? 0 : Math.max(0, daysUntil(event.date, today));
   return (
     <Link href={`/events/${event.id}`} prefetch={false} className={styles.row} data-featured={featured} data-past={past}>
       <div className={styles.date}><time className={v5.mono} dateTime={performanceDate(event.date)}>{performanceDate(event.date)}</time>{event.time && <span className={v5.mono}>{event.time}</span>}</div>
-      <h3 className={styles.title}>{event.title}</h3>
+      {/* Canvas Events board: past rows have no status column, so a cancellation sits under its struck-through title. */}
+      <div className={styles.heading}>
+        <h3 className={styles.title} data-cancelled={past && cancelled}>{event.title}</h3>
+        {past && cancelled && <span className={`${v5.label} ${v5.muted}`}>Cancelled</span>}
+      </div>
       <div className={styles.venue}>{event.venue}{location && <span className={v5.label}>{location}</span>}</div>
-      <span className={`${v5.label} ${styles.status}`} data-cancelled={event.status === 'Cancelled'}>
-        {showStatus ? event.status : past ? '' : <>{featured && <span className={v5.lamp} aria-hidden="true" />}D-{String(days).padStart(2, '0')}</>}
-      </span>
+      {!past && (
+        <span className={`${v5.label} ${styles.status}`} data-cancelled={cancelled}>
+          {showStatus ? event.status : <>{featured && <span className={v5.lamp} aria-hidden="true" />}D-{String(days).padStart(2, '0')}</>}
+        </span>
+      )}
       {event.posterImageId ? <LoadingImage src={getPublicImageUrl(event.posterImageId, 640)} alt="" className={styles.poster} quiet loading={eager ? 'eager' : 'lazy'} />
         : <span className={styles.arrow} aria-hidden="true">→</span>}
     </Link>

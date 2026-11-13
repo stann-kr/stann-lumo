@@ -30,14 +30,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         {/* Marks a running script before the bundle arrives, so the reveal gate's CSS failsafe can wait for hydration
             instead of showing image placeholders on slow connections (PublicSiteShell.module.css). */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js=''" }} />
-        {/* One font request discovered with the document, instead of CSS @imports found only after the app stylesheet loads. */}
+        {/* One font request discovered with the document, instead of CSS @imports found only after the app stylesheet loads.
+            Noto Sans KR is the variable font in unicode-range slices: a page downloads only the slices its Korean text uses. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         {/* The pages-router rule does not see that the App Router root layout already covers every route. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400..900&display=swap"
         />
       </head>
       <body>

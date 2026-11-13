@@ -9,8 +9,9 @@
 .stack { display: flex; flex-direction: column; gap: var(--v5-gap); }
 .plate { min-width: 0; background: var(--v5-plate); }
 .inset { min-width: 0; background: var(--v5-inset); }
-.band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 36px; padding: 8px 20px; background: var(--v5-band); }
-.band :where(h2, h3) { font: inherit; }
+.band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 36px; padding: 10px 20px; background: var(--v5-band); }
+/* Band sub-heads read larger than labels (canvas: mono 15px, .14em, about 40px tall); spans and paragraphs stay 11px labels. */
+.band :where(h2, h3) { font-family: var(--os-font-mono); font-size: 15px; font-weight: 400; line-height: 1.4; letter-spacing: .14em; text-transform: uppercase; }
 .pad { padding: 20px; }
 
 .rows { display: flex; flex-direction: column; list-style: none; }

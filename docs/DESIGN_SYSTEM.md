@@ -10,14 +10,14 @@
 | 판 / 교차 행 | `--v5-plate` `#141414` / `--v5-plate-2` `#1c1c1c` |
 | 띠(소제목·키 바탕) | `--v5-band` `#262626` |
 | 미디어 바탕 | `--v5-inset` `#0c0c0c` |
-| 신호 | `--v5-red` `#ff0033`, hover `--v5-red-hover`; 재생·현재 항목·다음 공연·TICKETS·BOOKING/문의에만 쓴다 |
+| 신호 | `--v5-red` `#ff0033`, hover `--v5-red-hover`; 재생·현재 항목·다음 공연·영상 표시·TICKETS·BOOKING/문의에만 쓴다 |
 | 본문 링크 | `--v5-link` `#ff4d6a` |
 | 섭외 판 | `--v5-bone` `#e8e6df`, `--v5-bone-2`, `--v5-bone-muted` |
 | 보조 글자 | `--v5-muted` `#a3a3a3`, `--v5-muted-2` `#c4c4c4` |
 | 판 간격 / 키 간격 | `--v5-gap` 10px(640px 이하 8px) / `--v5-key-gap` 2px |
 
 - 판은 테두리선 대신 간격으로 나누고 모서리를 둥글게 하지 않는다. 그림자와 그라데이션 장식은 쓰지 않는다. 믹스 화면 제목의 가독성용 검정 그라데이션만 예외다.
-- 글꼴: 제목·본문은 Inter이고 한글은 Apple SD Gothic Neo, Malgun Gothic으로 대체한다. 라벨·날짜·수치는 JetBrains Mono(`--os-font-mono`)를 쓴다. 라벨은 11px, 자간 .14em, 대문자다. 한국어 페이지는 `--mono-word-spacing`으로 단어 간격을 줄인다. 표제는 900 굵기, 대문자, 자간 -.045em이다.
+- 글꼴: 제목·본문은 Inter이고 한글은 Noto Sans KR이다. Noto Sans KR은 가변 글꼴을 글자 범위별 조각으로 받아, 페이지가 실제로 쓰는 한글 조각만 내려받는다. 웹폰트가 오기 전이나 실패하면 Apple SD Gothic Neo, Malgun Gothic으로 대체한다. 라벨·날짜·수치는 JetBrains Mono(`--os-font-mono`)를 쓴다. 라벨은 11px, 자간 .14em, 대문자다. 내지의 띠 소제목(h2)은 같은 mono 글꼴의 15px이다. 한국어 페이지는 `--mono-word-spacing`으로 단어 간격을 줄인다. 표제는 900 굵기, 대문자, 자간 -.045em이다.
 - 토큰은 `src/app/globals.css`가 소유한다. STANN OS 공통 토큰은 `src/styles/stann-os.css` 사본이고, `scripts/check-token-sync.mjs`가 빌드 전에 원본과의 동기화를 검사한다. 관리자 화면은 `src/styles/designV2.module.css`와 `--color-*` 변수를 쓴다.
 
 ## 공통 부품
@@ -33,23 +33,35 @@
 
 ## 화면 배치
 
-- **헤더**(`PublicSiteShell`): 워드마크, 주 탐색 키, KO/EN 전환, 붉은 Booking 키로 이뤄진다.
-  - 주 탐색: Music·Events·Archive·About·Press kit. 데스크톱은 Links를 여섯째 키로 둔다.
-  - 1199px 이하에서는 Menu 대화상자로 접는다. 메뉴는 Contact와 Links를 주 항목 아래에 둔다.
+- **헤더**(`PublicSiteShell`): 워드마크, 주 탐색 키(mono 11px, 400 굵기), KO/EN 전환, 붉은 Booking 키로 이뤄진다.
+  - 주 탐색: Music·Events·Archive·Press kit. 데스크톱은 Links를 다섯째 키로 둔다. About은 2026-11에 프레스킷으로 합쳐 `/about`이 `/press-kit`로 영구 이동(308)한다.
+  - 1199px 이하에서는 Menu 대화상자로 접는다. 메뉴는 Contact와 Links를 주 항목 아래에 두고, 맨 아래 줄을 KO·EN·BOOKING 1:1:2로 나눈다.
+  - 취소되지 않은 예정 공연이 있으면 메뉴의 Events 항목에 붉은 NEXT 램프를 단다. 서버는 남은 날짜가 있는지만 읽어 헤더를 기다리게 하지 않고 흘려보내며, 읽기에 실패하면 램프만 끈다.
   - 푸터는 두지 않는다. 연속 로딩 목록에서는 모든 페이지를 불러온 뒤에야 닿기 때문이다.
 - **홈**(`HomePageClient`)은 캔버스 Main·Mobile 보드를 따른다.
-  - 첫 줄: 사진 위 아티스트 이름 판과 믹스 판. 믹스 판은 `MixPlayer`의 고정 16:9 화면, 최근 믹스 목록, SoundCloud ↗·All mixes → 키로 이뤄진다. 재생 중인 믹스에 붉은 표시를 둔다. 모바일은 All mixes 키 하나만 남긴다.
-  - 다음 공연 줄: 붉은 램프와 TICKETS 키를 단다.
+  - 첫 줄: 사진 위 아티스트 이름 판과 믹스 판. 믹스 판은 두 언어 모두 LATEST MIX 띠, `MixPlayer`의 고정 16:9 화면, 최근 믹스 목록, SoundCloud ↗·All mixes → 키로 이뤄진다. 재생 중인 믹스에 붉은 표시를 둔다.
+    - 모바일은 최근 믹스 목록을 접고 All mixes 키 하나만 남긴다. 최신 믹스에 트랙리스트가 있으면 화면 아래에 첫 곡 한 줄을 두고, 키 문구를 트랙리스트 · 모든 믹스 →로 바꾼다. 전체 트랙리스트는 음악 화면에만 둔다.
+  - 다음 공연 줄: 붉은 램프와 TICKETS 키를 단다. 모바일은 날짜·장소 칸 대신 제목 아래 mono 한 줄(MM-DD 시각 · 장소)을 둔다.
   - 믹스 카드: 4열이며 1199px 이하에서 2열이다.
   - 일정·섭외: 섭외는 bone 판이고 모바일에서 일정보다 먼저 온다.
+    - 모바일 섭외 판은 소개 문구와 정보 행 대신 메일 주소 한 줄과 PRESS KIT →·문의 → 키만 남긴다.
+    - 모바일 일정 판은 다음 공연 줄에 이미 있는 날짜를 빼고 MM-DD·장소·Info 한 줄 행으로 줄인다. 예정 공연이 없으면 지난 공연을 같은 행으로 보여 주고, 다음 공연 하나뿐이면 판을 접는다.
   - 아카이브 줄: 같은 크기의 4:5 칸 네 개다(모바일 2열). 포스터와 사진은 inset 바탕에 원본 비율 그대로 담고 자르지 않는다.
 - **내지**: `PageLayout`의 제목 판과 수치 칸 뒤에 각 화면의 판을 쌓는다. 화면별 배치·반응형 규칙은 `src/components/public/*PageClient.module.css`가 소유한다.
+  - 목록(음악·공연·아카이브)은 끝에 가까워지면 다음 묶음을 저절로 불러오고 더 보기 키를 두지 않는다. 끝 띠에는 개수와 상태만 mono 11px로 적고, 요청이 실패했을 때만 다시 시도 키를 단다. 목록 뒤 컨트롤에 포커스가 있는 동안은 불러오지 않고 포커스가 옮겨지면 이어 간다.
+  - 음악: 플랫폼 키는 14px 대문자이고, 바탕은 놓인 행보다 한 단계 밝다.
   - 공연: 예정 공연은 서울 날짜 기준 가까운 순서, 지난 공연은 최신 순서로 보여 준다. 포스터 썸네일은 행 높이를 바꾸지 않는다.
-  - 아카이브: 4열 그리드이고 1199px 이하 3열, 767px 이하 2열, 359px 이하 1열이다. 원본을 자르지 않는다.
+    - 예정 공연 행은 날짜·제목·장소·D-day·화살표 다섯 칸이다. 지난 공연은 inset 판에 한 단계 흐린 글자로 상태 칸 없이 네 칸을 쓰고, 취소된 공연은 제목에 취소선을 긋고 그 아래 Cancelled 라벨을 단다.
+  - 아카이브: 4열 그리드이고 1199px 이하 3열, 767px 이하 2열, 359px 이하 1열이다. 원본을 자르지 않는다. 영상 타일은 왼쪽 위에 붉은 VIDEO 라벨을 단다.
     - 정렬·페이지·Random seed는 URL에 남는다.
     - 상세의 이전·다음은 목록 정렬을 따른다.
     - 목록 복귀는 원래 항목과 스크롤 위치를 복원한다.
-  - 소개: 사진 판과 이름·인용·기본 정보 판을 나란히 둔다. 바이오그래피는 문단을 나누고 981px 이상에서 2단으로 흐른다.
+  - 연락처: bone 판은 Booking · Press 띠(오른쪽 Mail ↗)와 mono 700 큰 주소로 이뤄지고, 주소가 하나면 판 전체가 메일 링크다. BOOKING INFO는 검은 2px 이음매로 나뉜 세 칸이다.
+  - 링크: 행마다 큰 이름 아래에 주소를 mono로 두고 오른쪽에 96px 화살표 칸을 둔다. 사이드 프로젝트는 inset 판이고, 페이지 끝은 폭 전체의 붉은 CONTACT & BOOKING 막대다.
+- **프레스킷**(`PressKitPageClient`)은 캔버스 Presskit·PresskitMobile 보드를 따른다. 공연 관계자용 페이지라 사이트 헤더 대신 전용 헤더(64px)를 쓴다.
+  - 전용 헤더: 홈으로 가는 워드마크, PRESS KIT 표지, KO/EN, 전체 다운로드 ZIP 키, 붉은 Booking 키. 이름(Stann Lumo)이 h1이다.
+  - 좌우 여백은 모든 폭에서 16px이고, 맨 아래에 STANN LUMO — PRESS KIT · 2026 푸터를 둔다.
+  - 바이오 txt 두 개와 전체 ZIP은 `npm run press:build`가 `pressKit.ts`의 바이오와 `public/press/download`의 파일로 만든다. 바이오나 파일을 바꾸면 다시 만들고, `npm run test:scripts`가 낡은 파일과 틀린 크기 표기를 잡는다.
 - **대체 화면**: 없는 경로와 오류 화면은 `PublicFallback.module.css`의 판(코드 램프, 큰 제목, 돌아가기 키)을 쓴다. 루트 레이아웃까지 실패하면 `src/app/global-error.tsx`가 같은 판을 실제 토큰 값으로 다시 그린다.
 - **이미지**: `LoadingImage`(`src/capabilities/media`)는 화면에 가까워질 때 요청한다. 불러오는 동안과 실패 상태를 틀 안에 표시하고 `contain`으로 그린다.
 

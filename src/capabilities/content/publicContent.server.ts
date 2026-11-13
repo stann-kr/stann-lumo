@@ -7,7 +7,6 @@ import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
 import type {
   ArtistInfoItem,
   ContactItem,
-  DynamicSection,
   HomePreviews,
   HomeEventPreview,
   LinkPlatform,
@@ -21,9 +20,9 @@ import { LINKED_GALLERY_COLUMNS, LINKED_GALLERY_SOURCE } from '@/capabilities/me
 import { performanceToday } from '@/capabilities/events/events';
 import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
-import { SITE_ABOUT_SECTIONS, SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
+import { SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
 import { SITE_NAME } from '@/constants/site';
-import { trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
+import { trackMediaFields, tracklistLines, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
 export type PublicLocale = 'en' | 'ko';
 
@@ -200,6 +199,22 @@ export const getPublicShellProjection = cache(async (locale: PublicLocale): Prom
   return projection;
 });
 
+/**
+ * Whether a date is still ahead (Seoul calendar day, cancelled dates left out like the home NEXT row), for the mobile
+ * menu's NEXT lamp. The shell streams it without waiting, so it never rejects: a failed read only leaves the lamp off.
+ */
+export async function hasUpcomingDate(): Promise<boolean> {
+  try {
+    const row = await getPublicDB()
+      .prepare(`SELECT 1 AS found FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? LIMIT 1`)
+      .bind(performanceToday()).first<{ found: number }>();
+    return row !== null;
+  } catch (error) {
+    console.error('Next date lamp unavailable:', error);
+    return false;
+  }
+}
+
 interface HomePerformanceRow {
   id: string; title: string; date: string; venue: string; status: string; poster_image_id: string | null;
   time: string | null; location: string | null; ra_event_link: string | null; ra_has_tickets: number | string | null;
@@ -231,7 +246,7 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
 
   const today = performanceToday();
   const [trackRows, eventRows, pastRows, photoRows] = await Promise.all([
-    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, m.recorded_on AS recorded_on, m.cover_image_id AS cover_image_id
+    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, ${TRACK_MEDIA_COLUMNS}
       FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order LIMIT 8`, locale),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 3`, today),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE SUBSTR(REPLACE(date, '.', '-'), 1, 10) < ? ORDER BY REPLACE(date, '.', '-') DESC, sort_order LIMIT 3`, today),
@@ -240,27 +255,16 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
   const projection = {
     artistInfo: SITE_ARTIST_INFO,
     previews: {
-      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, recorded_on, cover_image_id }) => ({
-        id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }),
-      })),
+      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, tracklist, recorded_on, cover_image_id }) => {
+        const [firstTrack] = tracklistLines(tracklist ?? undefined);
+        return { id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }), ...(firstTrack && { firstTrack }) };
+      }),
       events: eventRows.map(mapHomeEvent),
       pastEvents: pastRows.map(mapHomeEvent),
       photos: photoRows.map(({ id, caption, alt_text }) => ({ id, caption, altText: alt_text })),
       platforms: SITE_LINK_PLATFORMS.slice(0, 4).map(({ platform }) => platform),
     },
   };
-  assertPublicPayloadSafe(projection);
-  return projection;
-});
-
-export interface AboutProjection {
-  artistInfo: ArtistInfoItem[];
-  aboutSections: DynamicSection[];
-}
-
-export const getAboutProjection = cache(async (locale: PublicLocale): Promise<AboutProjection> => {
-  void locale;
-  const projection = { artistInfo: SITE_ARTIST_INFO, aboutSections: SITE_ABOUT_SECTIONS };
   assertPublicPayloadSafe(projection);
   return projection;
 });

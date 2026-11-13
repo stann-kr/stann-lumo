@@ -12,6 +12,10 @@ export interface GalleryPhoto {
   focalY: number;
   videoYoutubeId?: string;
   videoThumbnailUrl?: string;
+  /**
+   * The event this item belongs to; reads leave it out when that event no longer exists. In the admin save,
+   * leaving it out keeps the stored link and an empty string removes it.
+   */
   linkedEventId?: string;
   eventDate?: string;
 }

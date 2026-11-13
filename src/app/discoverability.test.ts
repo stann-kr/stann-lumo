@@ -38,6 +38,9 @@ describe('sitemap.xml', () => {
   it('still lists the fixed pages when the database is unavailable', async () => {
     vi.mocked(getSitemapEventIds).mockRejectedValue(new Error('test-only database failure'));
 
-    await expect(sitemap()).resolves.toHaveLength(8);
+    const urls = (await sitemap()).map(({ url }) => url);
+
+    // /about permanently redirects to /press-kit, so the sitemap lists only the pages that answer themselves.
+    expect(urls).toEqual(['/', '/music', '/events', '/archive', '/contact', '/link', '/press-kit'].map((path) => `https://lumo.stann.kr${path}`));
   });
 });

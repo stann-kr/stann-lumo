@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db';
 import { getDB } from '@/lib/db';
 import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
-import { getAboutProjection, getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection } from './publicContent.server';
+import { getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection, hasUpcomingDate } from './publicContent.server';
 import { sortArchivePhotos } from '@/capabilities/media/archiveBrowsing';
 import { performanceLocation, performanceToday } from '@/capabilities/events/events';
 import { GET as archiveGET } from '@/app/api/archive/route';
@@ -130,19 +130,43 @@ describe('public server content projections', () => {
     expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
   });
 
-  it('serves About, Contact and Link from code without touching the database', async () => {
+  it('serves Contact and Link from code without touching the database', async () => {
     vi.mocked(getDB).mockReturnValue(null);
-    const about = await getAboutProjection('ko');
     const contact = await getContactProjection('en');
     const link = await getLinkProjection('ko');
-    expect(about.aboutSections[0]).toMatchObject({ title: 'BIOGRAPHY', type: 'philosophy-items' });
     expect(contact.contactInfo).toEqual([{ label: 'Email', value: 'contact@stann.kr', icon: 'ri-mail-line' }]);
     expect(contact.eventsInfo.setDurations).toHaveLength(2);
     expect(link.linkPlatforms.map((item) => item.platform)).toEqual(['Instagram', 'SoundCloud']);
     expect(link.terminalInfo.url).toBe('https://terminal.stann.kr');
     expect((await getPublicShellProjection('en')).artistName).toBe('STANN LUMO');
     expect(getDB).not.toHaveBeenCalled();
-    for (const projection of [about, contact, link]) expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
+    for (const projection of [contact, link]) expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
+  });
+
+  it('lights the menu NEXT lamp only for a date still ahead that is not cancelled, and stays off when the read fails', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    const today = performanceToday().replaceAll('-', '.');
+    const insert = sqlite.prepare('INSERT INTO performances (id, date, venue, title, status) VALUES (?, ?, ?, ?, ?)');
+    try {
+      insert.run('past', '2020.01.01', 'Venue', 'Past', 'Announced');
+      expect(await hasUpcomingDate()).toBe(false);
+      insert.run('cancelled', today, 'Venue', 'Cancelled', 'Cancelled');
+      expect(await hasUpcomingDate()).toBe(false);
+      insert.run('tonight', `${today} 23:00`, 'Venue', 'Tonight', 'Announced');
+      expect(await hasUpcomingDate()).toBe(true);
+    } finally {
+      close();
+    }
+
+    vi.mocked(getDB).mockReturnValue(null);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      expect(await hasUpcomingDate()).toBe(false);
+      expect(log).toHaveBeenCalledOnce();
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it('returns null for a missing archive id without exposing a client fetch fallback', async () => {
@@ -241,10 +265,10 @@ describe('public server content projections', () => {
       expect(previews.pastEvents.map((event) => event.id)).toEqual(['event-0']);
       expect(previews.photos.map((photo) => photo.id)).toEqual(['photo-0', 'photo-1', 'photo-2', 'photo-3']);
       expect(previews.tracks[0]).toEqual({ id: 'track-0', title: 'Track 0', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00' });
-      // Mix media reaches the home card (cover, recording date) but the tracklist stays on /music.
+      // Mix media reaches the home card (cover, recording date, first track for the mobile mix plate); the full tracklist stays on /music.
       sqlite.prepare("INSERT INTO track_media (track_id, tracklist, recorded_on, cover_image_id) VALUES ('track-1', 'A\nB', '2026-10-31', 'cover-1')").run();
       const withMedia = await getHomeProjection('en');
-      expect(withMedia.previews.tracks[1]).toEqual({ id: 'track-1', title: 'Track 1', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00', recordedOn: '2026-10-31', coverImageId: 'cover-1' });
+      expect(withMedia.previews.tracks[1]).toEqual({ id: 'track-1', title: 'Track 1', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00', recordedOn: '2026-10-31', coverImageId: 'cover-1', firstTrack: 'A' });
       expect(previews.photos[0]).toEqual({ id: 'photo-0', caption: 'Photo 0', altText: '' });
       // Only names reach the home; URLs stay on the Link page.
       expect(previews.platforms).toEqual(['Instagram', 'SoundCloud']);
