@@ -91,7 +91,7 @@ Cloudflare resources:
 | `.dev.vars` | local wrapper가 관리자 비밀번호만 일회성 Worker 환경으로 투영 | 파일명·키 이름만 가능 |
 | `DB` | Cloudflare D1 binding | binding 이름만 가능 |
 | `MEDIA` | Cloudflare R2 binding | binding 이름만 가능 |
-| `LOGIN_RATE_LIMITER` | 관리자 로그인 시도 제한(Workers Rate Limiting, 접속 주소당 분당 5회, Cloudflare 위치별 근사치). 넘으면 `/api/auth/login`이 429 | binding 이름만 가능 |
+| `LOGIN_RATE_LIMITER` | 관리자 로그인 시도 제한(Workers Rate Limiting, 설정은 접속 주소당 분당 5회). Cloudflare 위치별 근사치라 몰린 시도를 늦추는 용도이고 정확한 상한은 아니다. 막히면 `/api/auth/login`이 429와 `Retry-After: 60` | binding 이름만 가능 |
 | Cloudflare token/account | 배포 인증 | 실값 금지 |
 
 ## 배포와 운영
