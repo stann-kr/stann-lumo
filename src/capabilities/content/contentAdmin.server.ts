@@ -6,7 +6,16 @@ import type {
   PageMeta,
   Track,
 } from './content';
-import { normalizeTrackMediaInput, trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
+import { fetchTrackLists } from './contentBundle.server';
+import {
+  normalizeRecordedOn,
+  normalizeTrackMediaInput,
+  normalizeTracklist,
+  trackMediaFields,
+  TRACK_MEDIA_COLUMNS,
+  TRACK_MEDIA_JOIN,
+  type TrackMediaColumns,
+} from './trackMedia';
 
 type TrackRow = Track & TrackMediaColumns;
 
@@ -94,6 +103,48 @@ export async function replaceTracks(
   ]);
 
   return { removedCoverIds: orphanCovers.results.map((row) => row.cover_image_id) };
+}
+
+export type ReplaceTracksFromBaseResult =
+  | { kind: 'conflict' }
+  | { kind: 'success'; removedCoverIds: string[]; tracks: Record<ContentLocale, Track[]> };
+
+/**
+ * The part of a track a list save writes, in a form both sides can be compared in: the id, the language's own text and
+ * the shared mix text as it is stored. The cover is left out because only the cover routes change it.
+ */
+function savedTrackFields(track: unknown): string[] {
+  const value: Partial<Record<keyof Track, unknown>> = track && typeof track === 'object' ? track : {};
+  const text = (field: unknown) => (typeof field === 'string' ? field : '');
+  return [
+    text(value.id), text(value.title), text(value.type), text(value.duration), text(value.year), text(value.platform), text(value.link),
+    normalizeTracklist(value.tracklist), normalizeRecordedOn(value.recordedOn),
+  ];
+}
+
+/**
+ * Replaces one language's list only when `base`, the list the editor started from, still matches the list the admin
+ * page would load now (`/api/content/[lang]`, where Korean without rows of its own shows the English rows). Otherwise
+ * nothing is written, so a stale tab cannot drop tracks added elsewhere or delete their covers.
+ * On success both languages' lists are returned as they are after the save: a Korean list that falls back to English
+ * changes with an English save.
+ *
+ * The comparison and the write are separate D1 calls, not one transaction, so a save that lands between them is not
+ * detected. That window is accepted: only admin saves write tracks, and no scheduled job does (unlike RA sync for
+ * performances), so it takes two people saving the same language within one round trip.
+ */
+export async function replaceTracksFromBase(
+  db: D1Database,
+  lang: ContentLocale,
+  base: readonly unknown[],
+  items: Track[],
+): Promise<ReplaceTracksFromBaseResult> {
+  const current = (await fetchTrackLists(db))[lang];
+  if (JSON.stringify(current.map(savedTrackFields)) !== JSON.stringify(base.map(savedTrackFields))) {
+    return { kind: 'conflict' };
+  }
+  const { removedCoverIds } = await replaceTracks(db, lang, items);
+  return { kind: 'success', removedCoverIds, tracks: await fetchTrackLists(db) };
 }
 
 function buildPageMeta(rows: PageMetaRow[]): PageMeta {

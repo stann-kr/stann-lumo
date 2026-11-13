@@ -17,8 +17,17 @@ export function fetchTracks(lang: ContentLocale) {
   return apiGet<Track[]>(`/api/admin/tracks?lang=${lang}`);
 }
 
-export function updateTracks(lang: ContentLocale, items: Track[]) {
-  return apiPut<void>('/api/admin/tracks', { lang, items });
+/** Both languages' lists after a list save; a Korean list without rows of its own shows the English rows. */
+export interface SavedTrackLists {
+  tracks: Record<ContentLocale, Track[]>;
+}
+
+/**
+ * Replaces one language's list. `base` is the list the edit started from: when the stored list no longer matches it,
+ * nothing is written and the response fails with code CONFLICT.
+ */
+export function updateTracks(lang: ContentLocale, items: Track[], base: Track[]) {
+  return apiPut<SavedTrackLists>('/api/admin/tracks', { lang, items, base });
 }
 
 /** Uploads or replaces a saved track's cover; it is stored immediately, outside the list save. */

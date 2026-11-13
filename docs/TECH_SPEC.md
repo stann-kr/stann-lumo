@@ -18,14 +18,15 @@ Cloudflare
 
 | 영역 | 파일/경로 | 확인 내용 |
 |---|---|---|
-| Public routes | `src/app/(public)/` | home, music, events, archive, press-kit, contact, link (`/about`은 `next.config.ts` redirect로 `/press-kit`에 308) |
+| Public routes | `src/app/(public)/` | home, music, events, archive, press-kit, contact, link는 `(pages)` 그룹에서 loading 화면을 받는다. 공연·Archive 상세(`events/[id]`, `archive/[id]`)는 그 밖에 두어 없는 id가 실제 404 상태로 끝난다. `/about`은 `next.config.ts` redirect로 `/press-kit`에 308 |
 | Admin routes | `src/app/admin/(dashboard)/` | home, about, contact, link, music, events, archive, theme |
 | Public shell | `src/components/feature/PublicSiteShell.tsx` | navigation, language, focus, signal links |
 | 3D scene | `src/components/feature/Scene3D.tsx` | 보관된 모듈; 공개 shell에서는 미사용 |
 | Admin content | `src/contexts/ContentContext.tsx` | 편집용 콘텐츠 bootstrap과 상태 |
 | Terminal capability | `src/capabilities/terminal/` | 설정 contract, D1 persistence, API client |
 | Language | `src/contexts/LanguageContext.tsx` | language state |
-| Deploy | `wrangler.json` | Cloudflare route, D1, R2 binding |
+| Deploy | `wrangler.json` | Cloudflare route, D1, R2, Images, rate limit binding |
+| 보안 헤더 | `next.config.ts` | 모든 응답에 CSP·`X-Frame-Options`·`Permissions-Policy` 등. iframe은 SoundCloud·YouTube 플레이어만 허용 |
 
 ## 런타임과 프레임워크
 
@@ -71,6 +72,8 @@ Cloudflare resources:
 
 공개 `GET /api/content/[lang]`은 화면 표시용 콘텐츠만 반환한다. 관리자 전용 외부 이벤트 연동 설정은 별도의 인증 API에서 관리하며 공개 응답과 브라우저 저장소에 포함하지 않는다. 공개 콘텐츠 응답은 현재 `Cache-Control: no-store, max-age=0`을 사용한다.
 
+관리자 음악 목록 저장 `PUT /api/admin/tracks`는 `{ lang, items, base }`를 받는다. `base`는 편집을 시작한 목록이다. 서버는 지금 `/api/content/[lang]`이 내려줄 목록(KO 행이 없으면 EN 행)과 커버를 뺀 저장 필드를 비교해, 다르면 아무것도 쓰지 않고 409 `CONFLICT`를 반환한다. 그래서 오래된 탭의 저장이 다른 탭에서 추가한 트랙과 커버를 지우지 않는다. 성공하면 두 언어의 저장 후 목록을 반환한다. 비교와 쓰기는 한 트랜잭션이 아니어서 그 사이에 끼어든 저장은 잡지 못한다.
+
 ## 인증과 권한
 
 - public route는 방문자에게 공개된다.
@@ -88,6 +91,7 @@ Cloudflare resources:
 | `.dev.vars` | local wrapper가 관리자 비밀번호만 일회성 Worker 환경으로 투영 | 파일명·키 이름만 가능 |
 | `DB` | Cloudflare D1 binding | binding 이름만 가능 |
 | `MEDIA` | Cloudflare R2 binding | binding 이름만 가능 |
+| `LOGIN_RATE_LIMITER` | 관리자 로그인 시도 제한(Workers Rate Limiting, 설정은 접속 주소당 분당 5회). Cloudflare 위치별 근사치라 몰린 시도를 늦추는 용도이고 정확한 상한은 아니다. 막히면 `/api/auth/login`이 429와 `Retry-After: 60` | binding 이름만 가능 |
 | Cloudflare token/account | 배포 인증 | 실값 금지 |
 
 ## 배포와 운영

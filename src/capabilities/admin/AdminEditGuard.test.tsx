@@ -55,4 +55,28 @@ describe('AdminEditGuardProvider', () => {
     expect(screen.getByText('LEFT')).toBeInTheDocument();
     expect(screen.getByText('CLEAN')).toBeInTheDocument();
   });
+
+  it('keeps the page behind the exit dialog out of reach until the dialog closes', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <AdminEditGuardProvider>
+        <GuardHarness />
+      </AdminEditGuardProvider>,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'EDIT' }));
+    await waitFor(() => expect(screen.getByText('DIRTY')).toBeInTheDocument());
+    const leaveButton = screen.getByRole('button', { name: 'LEAVE' });
+    await user.click(leaveButton);
+
+    const dialog = await screen.findByRole('dialog', { name: '저장하지 않은 변경 사항' });
+    expect(container).toHaveAttribute('inert');
+    expect(container).not.toContainElement(dialog);
+    expect(dialog.closest('[inert]')).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: '계속 편집하기' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(container).not.toHaveAttribute('inert');
+    await waitFor(() => expect(leaveButton).toHaveFocus());
+  });
 });

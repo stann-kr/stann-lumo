@@ -39,6 +39,32 @@ describe('DeleteConfirmModal', () => {
     await waitFor(() => expect(opener).toHaveFocus());
   });
 
+  it('keeps the page behind the open dialog out of reach and restores only what it changed on close', async () => {
+    const user = userEvent.setup();
+    const alreadyInert = document.createElement('aside');
+    alreadyInert.setAttribute('inert', '');
+    document.body.appendChild(alreadyInert);
+    try {
+      const { container } = render(<DeleteHarness />);
+      const opener = screen.getByRole('button', { name: 'OPEN DELETE' });
+      await user.click(opener);
+
+      const dialog = await screen.findByRole('dialog', { name: '항목 삭제' });
+      expect(container).toHaveAttribute('inert');
+      expect(container).not.toContainElement(dialog);
+      expect(dialog.closest('[inert]')).toBeNull();
+      await waitFor(() => expect(screen.getByRole('button', { name: '취소' })).toHaveFocus());
+
+      await user.keyboard('{Escape}');
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(container).not.toHaveAttribute('inert');
+      expect(alreadyInert).toHaveAttribute('inert');
+      await waitFor(() => expect(opener).toHaveFocus());
+    } finally {
+      alreadyInert.remove();
+    }
+  });
+
   it('moves focus to the given fallback when the opener was removed with the item', async () => {
     const user = userEvent.setup();
     function RemovingHarness() {
