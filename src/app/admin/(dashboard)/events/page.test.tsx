@@ -6,6 +6,7 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
+import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   AdminEditGuardProvider,
@@ -318,8 +319,9 @@ describe("AdminEventsPage performance snapshots", () => {
     fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await waitFor(() => {
       expect(mocks.updatePerformances).toHaveBeenCalledTimes(1);
-      expect(mocks.updatePageMeta).toHaveBeenCalledTimes(1);
     });
+    // Page settings were not edited, so they are not rewritten.
+    expect(mocks.updatePageMeta).not.toHaveBeenCalled();
     expect(mocks.updateRaApiConfig).not.toHaveBeenCalled();
     expect(mocks.showNotification).toHaveBeenCalledTimes(1);
   });
@@ -499,4 +501,88 @@ describe("AdminEventsPage performance snapshots", () => {
     expect(screen.getByLabelText("Original 포스터 업로드")).toBeEnabled();
   });
 
+  it("discards every draft when the user switches language without saving, and guards the next edit", async () => {
+    const left = vi.fn();
+    function Shell({ onLanguage }: { onLanguage: () => void }) {
+      const { requestExit } = useAdminEditGuard();
+      return <>
+        <button type="button" onClick={() => requestExit(onLanguage)}>SWITCH LANGUAGE</button>
+        <button type="button" onClick={() => requestExit(left)}>LEAVE PAGE</button>
+      </>;
+    }
+    function Harness() {
+      const [, rerender] = useState(0);
+      return <AdminEditGuardProvider>
+        <AdminEventsPage />
+        <DirtyState />
+        <Shell onLanguage={() => { mocks.currentEditLanguage = "ko"; rerender((count) => count + 1); }} />
+      </AdminEditGuardProvider>;
+    }
+    render(<Harness />);
+    fireEvent.click(screen.getByText("공연 페이지 문구"));
+    fireEvent.change(await screen.findByLabelText("페이지 제목"), { target: { value: "Draft EN title" } });
+    fireEvent.click(await screen.findByRole("button", { name: "상세 편집 Original" }));
+    fireEvent.change(screen.getByLabelText("공연 제목"), { target: { value: "Draft event" } });
+    await waitFor(() => expect(screen.getByTestId("dirty-state")).toHaveTextContent("true"));
+
+    fireEvent.click(screen.getByRole("button", { name: "SWITCH LANGUAGE" }));
+    fireEvent.click(screen.getByRole("button", { name: "저장하지 않고 이동" }));
+    await waitFor(() => expect(screen.getByLabelText("페이지 제목")).toHaveValue("EVENTS KO"));
+    expect(screen.getByLabelText("공연 제목")).toHaveValue("Original");
+    expect(screen.queryByText(/저장하지 않은 이전 언어의 페이지 설정/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "변경 사항 저장" })).toBeEnabled();
+    expect(screen.getByTestId("dirty-state")).toHaveTextContent("false");
+
+    fireEvent.change(screen.getByLabelText("공연 제목"), { target: { value: "Edited in KO" } });
+    await waitFor(() => expect(screen.getByTestId("dirty-state")).toHaveTextContent("true"));
+    fireEvent.click(screen.getByRole("button", { name: "LEAVE PAGE" }));
+    expect(left).not.toHaveBeenCalled();
+  });
+
+  it("locks editing and saving when the event list fails to load and offers a retry", async () => {
+    mocks.fetchPerformancesSnapshot.mockResolvedValueOnce({ success: false, error: { code: "HTTP_ERROR", message: "x" } });
+    renderPage();
+    await screen.findByText(/이벤트 목록을 불러오지 못했습니다/);
+    expect(screen.getByRole("button", { name: "변경 사항 저장" })).toBeDisabled();
+    expect(screen.getByLabelText("페이지 제목")).toBeDisabled();
+    expect(screen.queryByText(/등록된 공연이 없습니다/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "이벤트 목록 다시 불러오기" }));
+    expect(await screen.findByRole("button", { name: "상세 편집 Original" })).toBeInTheDocument();
+    expect(screen.queryByText(/이벤트 목록을 불러오지 못했습니다/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "변경 사항 저장" })).toBeEnabled();
+    expect(screen.getByLabelText("페이지 제목")).toBeEnabled();
+  });
+
+  it("returns focus to the delete button on cancel and to the event list after the event is removed", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByRole("button", { name: "상세 편집 Original" }));
+    const remove = await screen.findByRole("button", { name: "이벤트 Original 삭제" });
+    remove.focus();
+    fireEvent.click(remove);
+    await waitFor(() => expect(screen.getByRole("button", { name: "취소" })).toHaveFocus());
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    await waitFor(() => expect(remove).toHaveFocus());
+
+    fireEvent.click(remove);
+    await waitFor(() => expect(screen.getByRole("button", { name: "취소" })).toHaveFocus());
+    fireEvent.click(within(screen.getByRole("dialog", { name: "항목 삭제" })).getByRole("button", { name: "삭제" }));
+    await waitFor(() => expect(screen.getByRole("region", { name: "공연 목록" })).toHaveFocus());
+    expect(screen.queryByRole("button", { name: "상세 편집 Original" })).not.toBeInTheDocument();
+  });
+
+  it("dates a new event by the Seoul calendar day", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-13T20:00:00Z"));
+    try {
+      renderPage();
+      await screen.findByRole("button", { name: "상세 편집 Original" });
+      fireEvent.click(screen.getByRole("button", { name: /공연 추가/ }));
+      const added = screen.getByRole("article", { name: "New Performance" });
+      if (!within(added).queryByLabelText("날짜")) fireEvent.click(within(added).getByRole("button", { name: "상세 편집 New Performance" }));
+      expect(within(added).getByLabelText("날짜")).toHaveValue("2026-11-14");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useId, useRef, type KeyboardEvent, type RefObject } from 'react';
 import styles from './AdminDialog.module.css';
 
 interface DeleteConfirmModalProps {
@@ -6,7 +6,12 @@ interface DeleteConfirmModalProps {
   itemName: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Receives focus when the opener is gone or cannot take focus after the dialog closes (e.g. the item was deleted). */
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }
+
+/** Reads the target when the dialog has closed, so a list rendered after the deletion is used. */
+const focusFallback = (target?: RefObject<HTMLElement | null>) => target?.current?.focus({ preventScroll: true });
 
 /**
  * 어드민 삭제 확인 모달 컴포넌트
@@ -17,7 +22,8 @@ const DeleteConfirmModal = ({
   show,
   itemName,
   onConfirm,
-  onCancel
+  onCancel,
+  returnFocusRef,
 }: DeleteConfirmModalProps) => {
   const titleId = useId();
   const descriptionId = useId();
@@ -39,10 +45,14 @@ const DeleteConfirmModal = ({
       const trigger = previousFocusRef.current;
       previousFocusRef.current = null;
       window.requestAnimationFrame(() => {
-        if (trigger?.isConnected) trigger.focus();
+        if (trigger && trigger !== document.body && trigger.isConnected) {
+          trigger.focus();
+          if (document.activeElement === trigger) return;
+        }
+        focusFallback(returnFocusRef);
       });
     };
-  }, [show]);
+  }, [show, returnFocusRef]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {

@@ -4,7 +4,7 @@ import { AdminEditGuardProvider, useAdminEditGuard } from '@/capabilities/admin/
 import AdminMusicPage from './music/page';
 
 const mocks = vi.hoisted(() => ({
-  tracks: vi.fn(), meta: vi.fn(), cover: vi.fn(), removeCover: vi.fn(), updateContent: vi.fn(),
+  tracks: vi.fn(), meta: vi.fn(), cover: vi.fn(), removeCover: vi.fn(), updateContent: vi.fn(), updateTrackMedia: vi.fn(),
 }));
 const content = {
   tracks: [
@@ -30,7 +30,7 @@ const content = {
   },
 };
 const allContent = { en: content, ko: content };
-vi.mock('@/contexts/ContentContext', () => ({ useContent: () => ({ allContent, currentEditLanguage: 'en', isLoading: false, updateContent: mocks.updateContent }) }));
+vi.mock('@/contexts/ContentContext', () => ({ useContent: () => ({ allContent, currentEditLanguage: 'en', isLoading: false, updateContent: mocks.updateContent, updateTrackMedia: mocks.updateTrackMedia }) }));
 vi.mock('@/capabilities/content/contentAdmin.client', () => ({
   updateTracks: mocks.tracks, updatePageMeta: mocks.meta, uploadTrackCover: mocks.cover, deleteTrackCover: mocks.removeCover,
 }));
@@ -56,7 +56,8 @@ describe('Content editing workflows', () => {
     expect(screen.getByLabelText('음악 제목')).toHaveValue('Renamed mix');
     save();
     await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[0], { ...content.tracks[1], title: 'Renamed mix' }]));
-    expect(mocks.meta).toHaveBeenCalledWith('en', content.pageMeta);
+    // Unchanged page settings are not rewritten (they replace every page's text for the language).
+    expect(mocks.meta).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByTestId('dirty')).toHaveTextContent('false'));
   });
 
@@ -77,7 +78,7 @@ describe('Content editing workflows', () => {
     expect(upload).toBeEnabled();
     fireEvent.change(upload, { target: { files: [new File(['x'], 'c.webp', { type: 'image/webp' })] } });
     await waitFor(() => expect(mocks.cover).toHaveBeenCalledWith('second', expect.any(File)));
-    await waitFor(() => expect(mocks.updateContent).toHaveBeenCalledWith({ tracks: [content.tracks[0], { ...content.tracks[1], coverImageId: 'cover-new' }] }));
+    await waitFor(() => expect(mocks.updateTrackMedia).toHaveBeenCalledWith([{ id: 'second', coverImageId: 'cover-new' }]));
     expect(screen.getByTestId('dirty')).toHaveTextContent('false');
 
     fireEvent.change(screen.getByLabelText('트랙리스트 (한 줄에 한 곡)'), { target: { value: 'A — One\nB — Two' } });

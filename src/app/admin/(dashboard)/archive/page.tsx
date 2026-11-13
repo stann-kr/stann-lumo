@@ -9,7 +9,7 @@ import SaveErrorMessage from '@/components/base/SaveErrorMessage';
 import DeleteConfirmModal from '@/components/base/DeleteConfirmModal';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useDeleteConfirm } from '@/capabilities/admin/useDeleteConfirm';
-import { useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
+import { useAdminEditGuard, useDiscardOnConfirmedExit } from '@/capabilities/admin/AdminEditGuard';
 import collection from '@/capabilities/admin/AdminCollection.module.css';
 import styles from '@/capabilities/media/MediaEditor.module.css';
 import { createBorderFaint } from '@/utils/colorMix';
@@ -134,10 +134,16 @@ const AdminGalleryPage = () => {
   const hasDraft = hasPhotoEdits || Boolean(youtubeUrl.trim()) || Boolean(youtubeLinkedEventId);
   useEffect(() => { setDirty(hasDraft); }, [hasDraft, setDirty]);
   useEffect(() => () => setDirty(false), [setDirty]);
+  useDiscardOnConfirmedExit(() => {
+    setPhotos(savedPhotos);
+    setYoutubeUrl('');
+    setYoutubeLinkedEventId('');
+  });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLElement>(null);
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
-  const { isOpen: isDeleteModalOpen, pendingIndex: deleteIndex, openConfirm, closeConfirm, confirmDelete } = useDeleteConfirm();
+  const { isOpen: isDeleteModalOpen, pendingIndex: deleteIndex, openConfirm, closeConfirm } = useDeleteConfirm();
 
   // ─── 초기 데이터 로드 ────────────────────────────────────────────────────
   const fetchData = async () => {
@@ -260,10 +266,11 @@ const AdminGalleryPage = () => {
       const result = await addYouTubeGalleryVideo(youtubeUrl, youtubeLinkedEventId || undefined);
       const addedPhoto = result.data;
       if (result.success && addedPhoto) {
-        setPhotos((prev) => [...prev, addedPhoto]);
+        // The server stores a new video ahead of the current first item, like an upload.
+        setPhotos((prev) => [addedPhoto, ...prev]);
         setYoutubeUrl('');
         setYoutubeLinkedEventId('');
-        setSavedPhotos((prev) => [...prev, addedPhoto]);
+        setSavedPhotos((prev) => [addedPhoto, ...prev]);
         showNotification();
       } else {
         setYoutubeError(result.error?.message ?? 'YouTube 추가 실패. 다시 시도해 주세요.');
@@ -314,7 +321,7 @@ const AdminGalleryPage = () => {
     {loadError && <div role="alert"><p>{loadError}</p><button type="button" className={styles.uploadAction} onClick={() => void fetchData()}>다시 불러오기</button></div>}
     <fieldset disabled={controlsDisabled} className="space-y-6">
       <input ref={fileInputRef} type="file" multiple aria-label="미디어 파일 선택"
-        accept={GALLERY_UPLOAD_TYPES.join(',')}
+        accept={GALLERY_UPLOAD_TYPES.join(',')} tabIndex={-1}
         className="sr-only" disabled={controlsDisabled || hasPhotoEdits} onChange={(event) => void handleUpload(event.target.files)} />
       <button type="button" className={styles.dropzone} disabled={controlsDisabled || hasPhotoEdits}
         onDrop={handleDrop} onDragOver={(event) => event.preventDefault()} onClick={() => fileInputRef.current?.click()}>
@@ -332,7 +339,7 @@ const AdminGalleryPage = () => {
           {youtubeError && <p role="alert">{youtubeError}</p>}
         </div>
       </details>
-      <section aria-label="미디어 목록">
+      <section ref={listRef} tabIndex={-1} aria-label="미디어 목록">
         <div className={collection.toolbar}>
           <FormInput label="미디어 검색" type="search" value={search} onChange={setSearch} placeholder="파일명, 설명, 공연명" />
           <div className={collection.filters} role="group" aria-label="미디어 필터">
@@ -343,8 +350,6 @@ const AdminGalleryPage = () => {
         <p role="status" className={collection.count}>{isLoading ? '미디어를 불러오는 중입니다.' : `${visiblePhotos.length}개 표시 / 전체 ${photos.length}개`}</p>
         <div className={collection.list}>
           {visiblePhotos.map(({ photo, index }) => <AdminCard key={photo.id}>
-            {isDeleteModalOpen && deleteIndex === index ? <DeleteConfirmModal show itemName={photo.filename}
-              onConfirm={() => confirmDelete(() => void handleDeletePhoto(index))} onCancel={closeConfirm} /> : <>
               <div className={styles.row}>
                 <div className={styles.thumbnail}>
                   {photo.mediaType === 'image' ? <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt="" quiet /> :
@@ -376,9 +381,11 @@ const AdminGalleryPage = () => {
                 </div>
                 {(search || filter !== 'all') && <p className={collection.notice}>순서는 검색과 필터를 초기화한 전체 목록에서 변경할 수 있습니다.</p>}
               </div>}
-            </>}
           </AdminCard>)}
         </div>
+        {/* The dialog stays open until the server answers, then focus returns to the opener or, once the item is gone, to the list. */}
+        {isDeleteModalOpen && deleteIndex !== null && photos[deleteIndex] && <DeleteConfirmModal show itemName={photos[deleteIndex].filename}
+          returnFocusRef={listRef} onConfirm={() => { void handleDeletePhoto(deleteIndex).finally(closeConfirm); }} onCancel={closeConfirm} />}
         {!isLoading && !loadError && visiblePhotos.length === 0 && <div className={collection.empty}>
           <p>{photos.length ? '조건에 맞는 미디어가 없습니다.' : '아직 등록된 미디어가 없습니다.'}</p>
           {photos.length > 0 && <button type="button" onClick={() => { setSearch(''); setFilter('all'); }}>필터 초기화</button>}

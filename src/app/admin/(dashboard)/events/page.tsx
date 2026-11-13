@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useContent } from "@/contexts/ContentContext";
 import AdminCard from "@/components/base/AdminCard";
@@ -13,10 +13,10 @@ import SuccessMessage from "@/components/base/SuccessMessage";
 import { useDeleteConfirm } from "@/capabilities/admin/useDeleteConfirm";
 import { useListEditor } from "@/capabilities/admin/useListEditor";
 import { useSaveNotification } from "@/capabilities/admin/useSaveNotification";
-import { useAdminEditGuard } from "@/capabilities/admin/AdminEditGuard";
+import { useAdminEditGuard, useDiscardOnConfirmedExit } from "@/capabilities/admin/AdminEditGuard";
 import { updatePageMeta as apiUpdatePageMeta } from "@/capabilities/content/contentAdmin.client";
 import type { PageMeta } from "@/capabilities/content/content";
-import type { Performance } from "@/capabilities/events/events";
+import { performanceToday, type Performance } from "@/capabilities/events/events";
 import type {
   RAApiConfigUpdate,
   RAApiConfigView,
@@ -85,6 +85,7 @@ export default function AdminEventsPage() {
   const [isPageMetaDirty, setIsPageMetaDirty] = useState(false);
   const [pageMetaLanguage, setPageMetaLanguage] = useState(currentEditLanguage);
   const [config, setConfig] = useState<RAApiConfigView>(EMPTY_CONFIG);
+  const [savedConfig, setSavedConfig] = useState<RAApiConfigView>(EMPTY_CONFIG);
   const [replacementKey, setReplacementKey] = useState("");
   const [clearKey, setClearKey] = useState(false);
   const [isConfigDirty, setIsConfigDirty] = useState(false);
@@ -103,6 +104,7 @@ export default function AdminEventsPage() {
   const { isVisible: showSuccess, showNotification } = useSaveNotification();
   const { setDirty } = useAdminEditGuard();
   const deleteConfirm = useDeleteConfirm();
+  const listRef = useRef<HTMLElement>(null);
   const isPosterBusy = Object.values(posterBusy).some(Boolean);
   const hasEventEdits = useMemo(
     () => JSON.stringify(performances) !== JSON.stringify(savedItems),
@@ -115,6 +117,16 @@ export default function AdminEventsPage() {
   }, [hasUnsavedChanges, setDirty]);
 
   useEffect(() => () => setDirty(false), [setDirty]);
+  useDiscardOnConfirmedExit(() => {
+    setItems(savedItems);
+    setPageMeta(allContent[currentEditLanguage].pageMeta);
+    setIsPageMetaDirty(false);
+    setPageMetaLanguage(currentEditLanguage);
+    setConfig(savedConfig);
+    setReplacementKey("");
+    setClearKey(false);
+    setIsConfigDirty(false);
+  });
 
   const applySnapshot = useCallback(
     (items: Performance[], nextRevision: number) => {
@@ -135,9 +147,7 @@ export default function AdminEventsPage() {
       applySnapshot(response.data.items, response.data.revision);
       return true;
     } catch {
-      setSaveError(
-        "이벤트 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.",
-      );
+      setSaveError("이벤트 목록을 불러오지 못했습니다. 다시 시도해 주세요.");
       return false;
     } finally {
       setIsEventsLoading(false);
@@ -183,8 +193,10 @@ export default function AdminEventsPage() {
     void fetchRaApiConfig()
       .then((response) => {
         if (!active) return;
-        if (response.success && response.data) setConfig(response.data);
-        else setConfigFailed(true);
+        if (response.success && response.data) {
+          setConfig(response.data);
+          setSavedConfig(response.data);
+        } else setConfigFailed(true);
       })
       .catch(() => {
         if (active) setConfigFailed(true);
@@ -225,7 +237,7 @@ export default function AdminEventsPage() {
     setItems([
       {
         id: crypto.randomUUID(),
-        date: new Date().toISOString().slice(0, 10),
+        date: performanceToday(),
         venue: "New Venue",
         title: "New Performance",
         location: "Seoul",
@@ -246,9 +258,12 @@ export default function AdminEventsPage() {
     setSaveError("");
     setHasConflict(false);
     try {
+      // Page settings replace every page's text for this language, so send them only when edited here.
       const [eventResult, metaResult] = await Promise.all([
         updatePerformances(performances, revision),
-        apiUpdatePageMeta(currentEditLanguage, pageMeta),
+        isPageMetaDirty
+          ? apiUpdatePageMeta(currentEditLanguage, pageMeta)
+          : Promise.resolve({ success: true }),
       ]);
       if (!eventResult.success || !eventResult.data) {
         if (eventResult.error?.code === "CONFLICT") {
@@ -278,6 +293,7 @@ export default function AdminEventsPage() {
         configOkay = Boolean(result.success && result.data);
         if (result.success && result.data) {
           setConfig(result.data);
+          setSavedConfig(result.data);
           setReplacementKey("");
           setClearKey(false);
           setIsConfigDirty(false);
@@ -406,8 +422,10 @@ export default function AdminEventsPage() {
     }
   };
 
+  // Without a loaded list there is no revision to save against, so editing stays locked until a retry succeeds.
+  const isListUnavailable = !isEventsLoading && revision === null;
   const controlsDisabled =
-    isSaving || isPosterBusy || isFetching || isEventsLoading;
+    isSaving || isPosterBusy || isFetching || isEventsLoading || isListUnavailable;
   const canSync =
     !controlsDisabled &&
     !isConfigLoading &&
@@ -426,7 +444,7 @@ export default function AdminEventsPage() {
   const hasLocaleDraft =
     isPageMetaDirty && pageMetaLanguage !== currentEditLanguage;
 
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const today = performanceToday();
   const visibleEvents = performances.map((item, index) => ({ item, index })).filter(({ item }) => {
     // Search the saved text so an active editor stays visible while its title changes.
     const searchable = savedItems.find((saved) => saved.id === item.id) ?? item;
@@ -446,6 +464,7 @@ export default function AdminEventsPage() {
         isSaveDisabled={
           isConfigLoading ||
           isEventsLoading ||
+          isListUnavailable ||
           isPosterBusy ||
           isFetching ||
           hasConflict ||
@@ -466,6 +485,18 @@ export default function AdminEventsPage() {
       />
       <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
       <SaveErrorMessage message={saveError} />
+      {isListUnavailable && (
+        <button
+          type="button"
+          onClick={() => {
+            setSaveError("");
+            void loadEvents();
+          }}
+          className="min-h-11 px-4 border border-[var(--color-secondary)]/40 text-sm text-[var(--color-secondary)] hover:bg-[var(--color-secondary)]/10"
+        >
+          이벤트 목록 다시 불러오기
+        </button>
+      )}
       {hasLocaleDraft && (
         <p role="alert" className="text-sm text-red-400 tracking-wider">
           저장하지 않은 이전 언어의 페이지 설정이 있습니다. 해당 언어로 돌아가
@@ -485,7 +516,7 @@ export default function AdminEventsPage() {
         disabled={controlsDisabled}
         className="space-y-8 disabled:opacity-60"
       >
-        <section aria-label="공연 목록">
+        <section ref={listRef} tabIndex={-1} aria-label="공연 목록">
           <div className={collection.toolbar}>
             <FormInput label="공연 검색" type="search" value={search} onChange={setSearch} placeholder="공연명, 장소, 지역, 날짜" />
             <div className={collection.filters} role="group" aria-label="공연 필터">
@@ -497,15 +528,17 @@ export default function AdminEventsPage() {
           {hasEventEdits && <p id="event-poster-draft-help" className={collection.notice}>공연 변경 사항을 먼저 저장하면 포스터를 업로드할 수 있습니다.</p>}
           {posterSuccess && <p role="status" className={collection.notice}>{posterSuccess}</p>}
           <div className={collection.list}>
-            {visibleEvents.map(({ item, index }) => deleteConfirm.isOpen && deleteConfirm.pendingIndex === index ? (
-              <AdminCard key={item.id}><DeleteConfirmModal show itemName={item.title}
-                onConfirm={() => deleteConfirm.confirmDelete(deleteItem)} onCancel={deleteConfirm.closeConfirm} /></AdminCard>
-            ) : <EventEditor key={item.id} event={item} isNew={!savedItems.some((saved) => saved.id === item.id)}
+            {visibleEvents.map(({ item, index }) => <EventEditor key={item.id} event={item} isNew={!savedItems.some((saved) => saved.id === item.id)}
                 posterBusy={Boolean(posterBusy[item.id])} posterError={posterError[item.id]} hasEventEdits={hasEventEdits}
                 onChange={(field, value) => updateField(index, field, value)}
                 onPosterChange={(file) => void changePoster(item.id, file)} onDelete={() => deleteConfirm.openConfirm(index)} />)}
           </div>
-          {!isEventsLoading && visibleEvents.length === 0 && <div className={collection.empty}>
+          {/* Rendered beside the list so the opener stays in place; once the event is removed, focus moves to the list. */}
+          {deleteConfirm.isOpen && deleteConfirm.pendingIndex !== null && performances[deleteConfirm.pendingIndex] && (
+            <DeleteConfirmModal show itemName={performances[deleteConfirm.pendingIndex].title} returnFocusRef={listRef}
+              onConfirm={() => deleteConfirm.confirmDelete(deleteItem)} onCancel={deleteConfirm.closeConfirm} />
+          )}
+          {!isEventsLoading && !isListUnavailable && visibleEvents.length === 0 && <div className={collection.empty}>
             <p>{performances.length === 0 ? "등록된 공연이 없습니다. RA 동기화 또는 공연 추가로 시작하세요." : "조건에 맞는 공연이 없습니다."}</p>
             {performances.length > 0 && <button type="button" onClick={() => { setSearch(""); setFilter("all"); }}>필터 초기화</button>}
           </div>}

@@ -61,6 +61,22 @@ describe('track media (tracklist, recording date, cover)', () => {
     } finally { close(); }
   });
 
+  it('keeps shared mix text that a save in another language leaves out, and clears it only when sent empty', async () => {
+    const { db, close } = createSqliteD1();
+    try {
+      await replaceTracks(db, 'en', [{ ...base, tracklist: 'A — One', recordedOn: '2026-10-31' }]);
+      // The Korean list is saved from a copy that does not carry the shared fields.
+      await replaceTracks(db, 'ko', [{ ...base, title: '포스트 클로징' }]);
+      expect((await fetchTracks(db, 'en'))[0]).toMatchObject({ tracklist: 'A — One', recordedOn: '2026-10-31' });
+      expect((await fetchTracks(db, 'ko'))[0]).toMatchObject({ title: '포스트 클로징', tracklist: 'A — One', recordedOn: '2026-10-31' });
+
+      await replaceTracks(db, 'ko', [{ ...base, title: '포스트 클로징', tracklist: '', recordedOn: '' }]);
+      const [en] = await fetchTracks(db, 'en');
+      expect(en).not.toHaveProperty('tracklist');
+      expect(en).not.toHaveProperty('recordedOn');
+    } finally { close(); }
+  });
+
   it('rejects malformed mix input before writing anything', async () => {
     const { db, sqlite, close } = createSqliteD1();
     try {

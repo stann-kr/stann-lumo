@@ -4,7 +4,7 @@ import { AdminEditGuardProvider, useAdminEditGuard } from '@/capabilities/admin/
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import AdminGalleryPage from './page';
 
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), update: vi.fn(), upload: vi.fn(), remove: vi.fn(), addYoutube: vi.fn() }));
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), update: vi.fn(), upload: vi.fn(), remove: vi.fn(), addYoutube: vi.fn(), left: vi.fn() }));
 vi.mock('@/capabilities/media/mediaAdmin.client', () => ({
   fetchGalleryPhotos: mocks.fetch, updateGalleryPhotos: mocks.update, uploadGalleryFiles: mocks.upload,
   deleteGalleryPhoto: mocks.remove, addYouTubeGalleryVideo: mocks.addYoutube,
@@ -13,7 +13,15 @@ vi.mock('@/capabilities/events/eventsAdmin.client', () => ({ fetchPerformances: 
 
 const photo = (id: string): GalleryPhoto => ({ id, filename: `${id}.jpg`, caption: id, altText: '', mimeType: 'image/jpeg', sizeBytes: 100,
   sortOrder: 0, createdAt: '', mediaType: 'image', focalX: 50, focalY: 50 });
-function GuardState() { const { isDirty } = useAdminEditGuard(); return <output data-testid="dirty">{String(isDirty)}</output>; }
+function GuardState() {
+  const { isDirty, requestExit } = useAdminEditGuard();
+  return <>
+    <output data-testid="dirty">{String(isDirty)}</output>
+    {/* A language switch keeps this page mounted; a sidebar link leaves it. */}
+    <button type="button" onClick={() => requestExit(() => {})}>SWITCH LANGUAGE</button>
+    <button type="button" onClick={() => requestExit(mocks.left)}>LEAVE PAGE</button>
+  </>;
+}
 const renderPage = () => render(<AdminEditGuardProvider><AdminGalleryPage /><GuardState /></AdminEditGuardProvider>);
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -101,5 +109,69 @@ describe('Archive editor', () => {
     fireEvent.click(screen.getByRole('button', { name: '영상 추가' }));
     await screen.findByText('3개 표시 / 전체 3개');
     await waitFor(() => expect(screen.getByTestId('dirty')).toHaveTextContent('false'));
+  });
+
+  it('really discards the draft when the user leaves without saving but the page stays open', async () => {
+    renderPage();
+    await screen.findByText('2개 표시 / 전체 2개');
+    fireEvent.click(screen.getByRole('button', { name: '편집 target.jpg' }));
+    fireEvent.change(screen.getByLabelText('캡션'), { target: { value: 'Draft 1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'SWITCH LANGUAGE' }));
+    fireEvent.click(screen.getByRole('button', { name: '저장하지 않고 이동' }));
+    await waitFor(() => expect(screen.getByLabelText('캡션')).toHaveValue('target'));
+    expect(screen.getByTestId('dirty')).toHaveTextContent('false');
+
+    // A new edit is guarded again.
+    fireEvent.change(screen.getByLabelText('캡션'), { target: { value: 'Draft 2' } });
+    await waitFor(() => expect(screen.getByTestId('dirty')).toHaveTextContent('true'));
+    fireEvent.click(screen.getByRole('button', { name: 'LEAVE PAGE' }));
+    expect(mocks.left).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: '저장하지 않은 변경 사항' })).toBeInTheDocument();
+  });
+
+  it('shows an added YouTube video first, where the server stores it, and saves that order', async () => {
+    mocks.addYoutube.mockResolvedValue({ success: true, data: { ...photo('youtube'), filename: 'youtube_abcdefghijk', caption: '', mediaType: 'video_youtube' } });
+    renderPage();
+    await screen.findByText('2개 표시 / 전체 2개');
+    fireEvent.click(screen.getByText('YouTube 영상 추가'));
+    fireEvent.change(screen.getByLabelText('YouTube URL'), { target: { value: 'https://youtu.be/abcdefghijk' } });
+    fireEvent.click(screen.getByRole('button', { name: '영상 추가' }));
+    await screen.findByText('3개 표시 / 전체 3개');
+    expect(screen.getAllByRole('button', { name: /^편집 / }).map((button) => button.getAttribute('aria-label')))
+      .toEqual(['편집 youtube_abcdefghijk', '편집 first.jpg', '편집 target.jpg']);
+    fireEvent.click(screen.getByRole('button', { name: '편집 first.jpg' }));
+    fireEvent.change(screen.getByLabelText('캡션'), { target: { value: 'x' } });
+    fireEvent.click(screen.getByRole('button', { name: '변경 사항 저장' }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalled());
+    expect(mocks.update.mock.calls[0][0].map((item: GalleryPhoto) => item.id)).toEqual(['youtube', 'first', 'target']);
+  });
+
+  it('returns focus to the delete button on cancel and to the media list once the item is deleted', async () => {
+    const pending = deferred<{ success: true }>();
+    mocks.remove.mockReturnValue(pending.promise);
+    renderPage();
+    await screen.findByText('2개 표시 / 전체 2개');
+    fireEvent.click(screen.getByRole('button', { name: '편집 target.jpg' }));
+    const remove = screen.getByRole('button', { name: '미디어 target.jpg 삭제' });
+    remove.focus();
+    fireEvent.click(remove);
+    await waitFor(() => expect(screen.getByRole('button', { name: '취소' })).toHaveFocus());
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+    await waitFor(() => expect(remove).toHaveFocus());
+
+    fireEvent.click(remove);
+    await waitFor(() => expect(screen.getByRole('button', { name: '취소' })).toHaveFocus());
+    fireEvent.click(screen.getByRole('button', { name: '삭제' }));
+    // The dialog waits for the server, then focus lands on the list instead of the removed item.
+    expect(screen.getByRole('dialog', { name: '항목 삭제' })).toBeInTheDocument();
+    await act(async () => { pending.resolve({ success: true }); await pending.promise; });
+    await screen.findByText('1개 표시 / 전체 1개');
+    await waitFor(() => expect(screen.getByRole('region', { name: '미디어 목록' })).toHaveFocus());
+  });
+
+  it('keeps the hidden file input out of the tab order behind the visible upload controls', async () => {
+    renderPage();
+    await screen.findByText('2개 표시 / 전체 2개');
+    expect(screen.getByLabelText('미디어 파일 선택')).toHaveAttribute('tabindex', '-1');
   });
 });

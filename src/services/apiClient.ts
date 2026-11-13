@@ -18,6 +18,19 @@ export interface ApiResponse<T> {
   error?: ApiError;
 }
 
+/** Reads the reason from a failed response's `{ error: { message } }` envelope, if the server sent one. */
+async function readErrorMessage(res: Response): Promise<string | undefined> {
+  try {
+    const body: unknown = await res.json();
+    const error = body && typeof body === 'object' ? (body as { error?: unknown }).error : undefined;
+    if (typeof error === 'string' && error.trim()) return error;
+    const message = error && typeof error === 'object' ? (error as { message?: unknown }).message : undefined;
+    return typeof message === 'string' && message.trim() ? message : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /**
  * fetch 래퍼 — JSON 파싱 및 에러 핸들링
  * @param url    요청 URL
@@ -52,7 +65,7 @@ export async function apiRequest<T>(
     notifyAdminUnauthorized(url, res.status);
     return {
       success: false,
-      error: { code: 'HTTP_ERROR', message: `Request failed with status ${res.status}` },
+      error: { code: 'HTTP_ERROR', message: (await readErrorMessage(res)) ?? `Request failed with status ${res.status}` },
     };
   }
 
