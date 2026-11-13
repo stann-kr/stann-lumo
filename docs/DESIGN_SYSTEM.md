@@ -17,7 +17,7 @@
 | 판 간격 / 키 간격 | `--v5-gap` 10px(640px 이하 8px) / `--v5-key-gap` 2px |
 
 - 판은 테두리선 대신 간격으로 나누고 모서리를 둥글게 하지 않는다. 그림자와 그라데이션 장식은 쓰지 않는다. 믹스 화면 제목의 가독성용 검정 그라데이션만 예외다.
-- 글꼴: 제목·본문은 Inter이고 한글은 Apple SD Gothic Neo, Malgun Gothic으로 대체한다. 라벨·날짜·수치는 JetBrains Mono(`--os-font-mono`)를 쓴다. 라벨은 11px, 자간 .14em, 대문자다. 한국어 페이지는 `--mono-word-spacing`으로 단어 간격을 줄인다. 표제는 900 굵기, 대문자, 자간 -.045em이다.
+- 글꼴: 제목·본문은 Inter이고 한글은 Noto Sans KR이다. Noto Sans KR은 가변 글꼴을 글자 범위별 조각으로 받아, 페이지가 실제로 쓰는 한글 조각만 내려받는다. 웹폰트가 오기 전이나 실패하면 Apple SD Gothic Neo, Malgun Gothic으로 대체한다. 라벨·날짜·수치는 JetBrains Mono(`--os-font-mono`)를 쓴다. 라벨은 11px, 자간 .14em, 대문자다. 내지의 띠 소제목(h2)은 같은 mono 글꼴의 15px이다. 한국어 페이지는 `--mono-word-spacing`으로 단어 간격을 줄인다. 표제는 900 굵기, 대문자, 자간 -.045em이다.
 - 토큰은 `src/app/globals.css`가 소유한다. STANN OS 공통 토큰은 `src/styles/stann-os.css` 사본이고, `scripts/check-token-sync.mjs`가 빌드 전에 원본과의 동기화를 검사한다. 관리자 화면은 `src/styles/designV2.module.css`와 `--color-*` 변수를 쓴다.
 
 ## 공통 부품
@@ -33,7 +33,7 @@
 
 ## 화면 배치
 
-- **헤더**(`PublicSiteShell`): 워드마크, 주 탐색 키, KO/EN 전환, 붉은 Booking 키로 이뤄진다.
+- **헤더**(`PublicSiteShell`): 워드마크, 주 탐색 키(mono 11px, 400 굵기), KO/EN 전환, 붉은 Booking 키로 이뤄진다.
   - 주 탐색: Music·Events·Archive·About·Press kit. 데스크톱은 Links를 여섯째 키로 둔다.
   - 1199px 이하에서는 Menu 대화상자로 접는다. 메뉴는 Contact와 Links를 주 항목 아래에 둔다.
   - 푸터는 두지 않는다. 연속 로딩 목록에서는 모든 페이지를 불러온 뒤에야 닿기 때문이다.

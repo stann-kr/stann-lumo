@@ -30,7 +30,7 @@
 .desktopNav .navList li { display: flex; }
 .desktopNav .navList a {
   gap: 10px; padding: 0 18px; background: var(--v5-plate-2); color: var(--v5-muted-2);
-  font-family: var(--os-font-mono); font-size: 11px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase;
+  font-family: var(--os-font-mono); font-size: 11px; font-weight: 400; letter-spacing: .14em; text-transform: uppercase;
 }
 .desktopNav .navList a::before { counter-increment: nav; content: counter(nav, decimal-leading-zero); color: var(--v5-muted); }
 .desktopNav .navList a:hover { background: var(--v5-band); color: var(--color-primary); }
