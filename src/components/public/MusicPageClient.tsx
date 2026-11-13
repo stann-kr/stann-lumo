@@ -78,8 +78,8 @@ export default function MusicPageClient({ musicMeta, tracks }: MusicPageClientPr
       <footer className={styles.footer}>
         <Link href="/contact" className={styles.licensing}>{t('music_licensing')}</Link>
         <div className={v5.keys}>
-          <a className={v5.key} href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{isKorean ? '뮤직 허브' : 'Music hub'} ↗<span className="sr-only">{newTabLabel}</span></a>
-          <a className={v5.key} href="https://terminal.stann.kr" target="_blank" rel="noopener noreferrer">{isKorean ? '터미널' : 'Terminal'} ↗<span className="sr-only">{newTabLabel}</span></a>
+          <a className={`${v5.key} ${styles.footerKey}`} href="https://stann.kr/lumo" target="_blank" rel="noopener noreferrer">{isKorean ? '뮤직 허브' : 'Music hub'} ↗<span className="sr-only">{newTabLabel}</span></a>
+          <a className={`${v5.key} ${styles.footerKey}`} href="https://terminal.stann.kr" target="_blank" rel="noopener noreferrer">{isKorean ? '터미널' : 'Terminal'} ↗<span className="sr-only">{newTabLabel}</span></a>
         </div>
       </footer>
     </PageLayout>

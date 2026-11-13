@@ -1,19 +1,28 @@
-.direct { background: var(--v5-bone); color: #000; }
+.direct { position: relative; background: var(--v5-bone); color: #000; }
 .direct :focus-visible { outline-color: #000; }
-.band { display: flex; align-items: center; min-height: 36px; padding: 8px 20px; background: var(--v5-bone-2); }
-.contact { padding: 20px 20px 28px; }
-.contact + .contact { border-top: 2px solid var(--v5-bone-2); }
-.contact h3 { margin-bottom: 14px; color: var(--v5-bone-muted); }
-.address { display: inline-block; font-family: var(--os-font-mono); font-size: clamp(1.75rem, 5vw, 4.5rem); line-height: 1.05; letter-spacing: -.03em; word-break: break-all; }
+/* A 2px black seam under the band, as on the canvas plate. */
+.band { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; box-shadow: inset 0 -2px #000; }
+.band h2 { font-size: 13px; }
+.address {
+  display: block; padding: 44px 24px 48px; font-family: var(--os-font-mono); font-size: clamp(1.75rem, 6.1vw, 5.5rem); font-weight: 700;
+  line-height: 1; letter-spacing: -.03em; word-break: break-all;
+}
 .address:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .15em; }
+/* One address: the whole plate, band included, opens the mail app. */
+.direct[data-single='true'] .address::after { content: ''; position: absolute; inset: 0; }
+.contact { padding: 20px 24px 28px; }
+.contact + .contact, .address + .contact, .contact + .address { border-top: 2px solid #000; }
+.contact h3 { margin-bottom: 14px; color: var(--v5-bone-muted); }
 .value { font-size: 1.25rem; overflow-wrap: anywhere; }
-.booking { display: flex; flex-direction: column; }
-.bookingBand { background: var(--v5-plate); }
-.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--v5-gap); margin-top: 2px; }
-.detailTitle { padding: 14px 20px; color: var(--v5-muted); }
-.detailRow { display: flex; align-items: center; min-height: 52px; padding: 10px 20px; font-size: 1rem; font-weight: 500; overflow-wrap: anywhere; }
-.mail { font-family: var(--os-font-mono); color: var(--v5-link); }
+/* BOOKING INFO: three cells on the black field (2px seams), alternating plate tones. */
+.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 2px; background: var(--v5-field); }
+.details > div { padding: 22px 20px; background: var(--v5-plate-2); }
+.details > div:nth-child(even) { background: var(--v5-plate); }
+.details dd { font-size: 17px; line-height: 1.6; overflow-wrap: anywhere; }
+.details dt + dd { margin-top: 12px; }
+.mail { color: var(--v5-link); }
 .mail:hover { text-decoration: underline; }
 @media (max-width: 640px) {
-  .band, .contact, .detailTitle, .detailRow { padding-inline: 16px; }
+  .band, .address, .contact, .details > div { padding-inline: 16px; }
+  .address { padding-block: 28px 32px; }
 }
