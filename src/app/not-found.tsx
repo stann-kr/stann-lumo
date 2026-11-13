@@ -1,6 +1,6 @@
 import PublicSiteShell from '@/components/feature/PublicSiteShell';
 import PublicNotFound from '@/components/public/PublicNotFound';
-import { getPublicShellProjection, getRequestLocale } from '@/capabilities/content/publicContent.server';
+import { getPublicShellProjection, getRequestLocale, hasUpcomingDate } from '@/capabilities/content/publicContent.server';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +12,7 @@ export default async function NotFoundPage() {
   const locale = await getRequestLocale();
   const shell = await getPublicShellProjection(locale).catch(() => ({ artistName: undefined }));
   return (
-    <PublicSiteShell artistName={shell.artistName}>
+    <PublicSiteShell artistName={shell.artistName} nextDate={hasUpcomingDate()}>
       <PublicNotFound isKorean={locale === 'ko'} />
     </PublicSiteShell>
   );

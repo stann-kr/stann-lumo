@@ -159,6 +159,23 @@ describe('PublicSiteShell public navigation', () => {
     expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument();
   });
 
+  it('lights the NEXT lamp on the mobile menu Events item only while a date is ahead', async () => {
+    const openMenu = async (nextDate: Promise<boolean>) => {
+      const view = render(<PublicSiteShell nextDate={nextDate}><h1>Archive</h1></PublicSiteShell>);
+      // The lamp suspends on the streamed signal; an awaited act lets it resume.
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Open menu' })); });
+      return { ...view, dialog: screen.getByRole('dialog', { name: 'Mobile navigation' }) };
+    };
+
+    const lit = await openMenu(Promise.resolve(true));
+    expect(within(lit.dialog).getByRole('link', { name: 'Events, next date ahead' })).toHaveAttribute('href', '/events');
+    expect(screen.getByRole('navigation', { name: 'Primary navigation', hidden: true })).not.toHaveTextContent('Next');
+    lit.unmount();
+
+    const quiet = await openMenu(Promise.resolve(false));
+    expect(within(quiet.dialog).getByRole('link', { name: 'Events' })).toHaveTextContent(/^Events$/);
+  });
+
   it('traps mobile navigation focus and restores the trigger after closing it', async () => {
     const user = userEvent.setup();
     render(<PublicSiteShell><h1>Archive</h1></PublicSiteShell>);

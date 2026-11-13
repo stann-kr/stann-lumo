@@ -199,6 +199,22 @@ export const getPublicShellProjection = cache(async (locale: PublicLocale): Prom
   return projection;
 });
 
+/**
+ * Whether a date is still ahead (Seoul calendar day, cancelled dates left out like the home NEXT row), for the mobile
+ * menu's NEXT lamp. The shell streams it without waiting, so it never rejects: a failed read only leaves the lamp off.
+ */
+export async function hasUpcomingDate(): Promise<boolean> {
+  try {
+    const row = await getPublicDB()
+      .prepare(`SELECT 1 AS found FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? LIMIT 1`)
+      .bind(performanceToday()).first<{ found: number }>();
+    return row !== null;
+  } catch (error) {
+    console.error('Next date lamp unavailable:', error);
+    return false;
+  }
+}
+
 interface HomePerformanceRow {
   id: string; title: string; date: string; venue: string; status: string; poster_image_id: string | null;
   time: string | null; location: string | null; ra_event_link: string | null; ra_has_tickets: number | string | null;

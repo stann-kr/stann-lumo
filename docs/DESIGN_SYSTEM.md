@@ -35,7 +35,8 @@
 
 - **헤더**(`PublicSiteShell`): 워드마크, 주 탐색 키(mono 11px, 400 굵기), KO/EN 전환, 붉은 Booking 키로 이뤄진다.
   - 주 탐색: Music·Events·Archive·Press kit. 데스크톱은 Links를 다섯째 키로 둔다. About은 2026-11에 프레스킷으로 합쳐 `/about`이 `/press-kit`로 영구 이동(308)한다.
-  - 1199px 이하에서는 Menu 대화상자로 접는다. 메뉴는 Contact와 Links를 주 항목 아래에 둔다.
+  - 1199px 이하에서는 Menu 대화상자로 접는다. 메뉴는 Contact와 Links를 주 항목 아래에 두고, 맨 아래 줄을 KO·EN·BOOKING 1:1:2로 나눈다.
+  - 취소되지 않은 예정 공연이 있으면 메뉴의 Events 항목에 붉은 NEXT 램프를 단다. 서버는 남은 날짜가 있는지만 읽어 헤더를 기다리게 하지 않고 흘려보내며, 읽기에 실패하면 램프만 끈다.
   - 푸터는 두지 않는다. 연속 로딩 목록에서는 모든 페이지를 불러온 뒤에야 닿기 때문이다.
 - **홈**(`HomePageClient`)은 캔버스 Main·Mobile 보드를 따른다.
   - 첫 줄: 사진 위 아티스트 이름 판과 믹스 판. 믹스 판은 두 언어 모두 LATEST MIX 띠, `MixPlayer`의 고정 16:9 화면, 최근 믹스 목록, SoundCloud ↗·All mixes → 키로 이뤄진다. 재생 중인 믹스에 붉은 표시를 둔다.

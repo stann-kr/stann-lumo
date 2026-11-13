@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db';
 import { getDB } from '@/lib/db';
 import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
-import { getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection } from './publicContent.server';
+import { getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection, hasUpcomingDate } from './publicContent.server';
 import { sortArchivePhotos } from '@/capabilities/media/archiveBrowsing';
 import { performanceLocation, performanceToday } from '@/capabilities/events/events';
 import { GET as archiveGET } from '@/app/api/archive/route';
@@ -141,6 +141,32 @@ describe('public server content projections', () => {
     expect((await getPublicShellProjection('en')).artistName).toBe('STANN LUMO');
     expect(getDB).not.toHaveBeenCalled();
     for (const projection of [contact, link]) expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
+  });
+
+  it('lights the menu NEXT lamp only for a date still ahead that is not cancelled, and stays off when the read fails', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    const today = performanceToday().replaceAll('-', '.');
+    const insert = sqlite.prepare('INSERT INTO performances (id, date, venue, title, status) VALUES (?, ?, ?, ?, ?)');
+    try {
+      insert.run('past', '2020.01.01', 'Venue', 'Past', 'Announced');
+      expect(await hasUpcomingDate()).toBe(false);
+      insert.run('cancelled', today, 'Venue', 'Cancelled', 'Cancelled');
+      expect(await hasUpcomingDate()).toBe(false);
+      insert.run('tonight', `${today} 23:00`, 'Venue', 'Tonight', 'Announced');
+      expect(await hasUpcomingDate()).toBe(true);
+    } finally {
+      close();
+    }
+
+    vi.mocked(getDB).mockReturnValue(null);
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      expect(await hasUpcomingDate()).toBe(false);
+      expect(log).toHaveBeenCalledOnce();
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it('returns null for a missing archive id without exposing a client fetch fallback', async () => {

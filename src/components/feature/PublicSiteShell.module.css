@@ -106,21 +106,28 @@
 }
 .dialog .navList { display: flex; flex-direction: column; align-items: stretch; gap: 2px; }
 .dialog .navList a {
-  display: block; padding: 18px 16px; background: var(--v5-plate); color: var(--color-primary);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 16px; background: var(--v5-plate); color: var(--color-primary);
   font-weight: 900; font-size: 2.5rem; line-height: .9; letter-spacing: -.045em; text-transform: uppercase; text-decoration: none;
 }
 .dialog .navList li:nth-child(even) a { background: var(--v5-plate-2); }
 .dialog .navList a[aria-current] { color: var(--v5-link); }
+/* NEXT lamp on the Events item: an 8px red square and a mono label in the link red. */
+.nextLamp {
+  display: flex; align-items: center; gap: 8px; flex: none; color: var(--v5-link);
+  font-family: var(--os-font-mono); font-size: 11px; font-weight: 700; letter-spacing: .14em;
+}
+.nextLamp::before { content: ''; width: 8px; height: 8px; background: var(--v5-red); }
 .secondaryList { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; list-style: none; }
 .secondaryList a {
   display: block; padding: 16px; background: var(--v5-band);
-  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  font-family: var(--os-font-mono); font-size: 11px; line-height: normal; letter-spacing: .14em; text-transform: uppercase;
 }
+/* KO, EN and BOOKING share one row 1 : 1 : 2, like the canvas. */
 .dialogControls { display: flex; gap: 2px; margin-top: auto; }
-.dialogControls .languages { flex: 1; gap: 2px; }
-.dialogControls .languages button { flex: 1; justify-content: center; min-height: 52px; background: var(--v5-band); color: var(--color-primary); }
+.dialogControls .languages { display: contents; }
+.dialogControls .languages button { flex: 1; justify-content: center; min-height: 48px; padding: 0 16px; background: var(--v5-band); color: var(--color-primary); }
 .dialogControls .languages button[aria-pressed='true'] { background: var(--color-primary); color: #000; }
-.dialogControls .booking { flex: 1; }
+.dialogControls .booking { flex: 2; padding: 0 16px; }
 
 @media (max-width: 1199px) {
   .desktopNav, .desktopOnly { display: none; }
