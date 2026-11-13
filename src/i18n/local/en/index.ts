@@ -49,8 +49,6 @@ export default {
   home_terminal_enter: 'ENTER',
   
   // About page
-  about_title: 'ABOUT',
-  about_work_links: 'Recordings and performances',
   about_label_name: 'NAME',
   about_label_genre: 'GENRE',
   about_label_location: 'LOCATION',
@@ -217,7 +215,6 @@ export default {
   gallery_total: '{{total}} items',
   list_visible_count: '{{count}} of {{total}} items',
   list_complete_count: 'All {{total}} items shown',
-  list_load_more: 'Load more',
   list_loading: 'Loading…',
   list_load_error: 'Unable to load more items.',
   list_retry: 'Try again',

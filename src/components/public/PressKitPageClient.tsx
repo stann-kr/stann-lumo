@@ -1,26 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LumoWordmark from "../base/LumoWordmark";
 import {
-  CONTACT_EMAIL, PRESS_CONTACT, PRESS_FACTS, PRESS_KIT_COPY, PRESS_LOGO_FILES, PRESS_MIXES, PRESS_PDFS, PRESS_PHOTOS,
-  PRESS_RELEASES, PRESS_STAGES, PRESS_VIDEO_PATH, PRESS_VIDEOS, pressVideoPoster,
+  CONTACT_EMAIL, PRESS_BIO_TXT, PRESS_CONTACT, PRESS_FACTS, PRESS_KIT_COPY, PRESS_LOGO_FILES, PRESS_MIXES, PRESS_PDFS, PRESS_PHOTOS,
+  PRESS_RELEASES, PRESS_STAGES, PRESS_VIDEO_PATH, PRESS_VIDEOS, PRESS_ZIP, pressVideoPoster,
 } from "@/capabilities/presskit/pressKit";
 import styles from "./PressKitPageClient.module.css";
 
-/* v5 press kit — canvas boards Presskit (1440) and PresskitMobile (390): https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ */
+/* v5 press kit — canvas boards Presskit (1440) and PresskitMobile (390): https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ
+   The page draws its own header (the site shell leaves its menu out here): promoters get language, the full pack and booking. */
 
 const UI = {
   ko: {
     stages: "플레이한 무대", photosNote: "원본 해상도로 저장", copyBio: "바이오 복사", copyAddress: "주소 복사", emailBooking: "섭외 문의 메일 →",
     copied: "복사했습니다.", copyFailed: "복사하지 못했습니다. 직접 선택해 복사해 주세요.", dark: "어두운 배경", light: "밝은 배경", newTab: " (새 창)",
-    bioLength: "바이오 길이", download: "내려받기", clip: "영상",
+    bioLength: "바이오 길이", download: "내려받기", clip: "영상", downloadAll: "전체 다운로드", bioTxt: "바이오 텍스트 파일 내려받기",
   },
   en: {
     stages: "Selected stages", photosNote: "Saved at full resolution", copyBio: "Copy bio", copyAddress: "Copy address", emailBooking: "Email booking →",
     copied: "Copied.", copyFailed: "Copy failed. Please select the text and copy it.", dark: "Dark backgrounds", light: "Light backgrounds", newTab: " (opens in a new tab)",
-    bioLength: "Biography length", download: "Download", clip: "clip",
+    bioLength: "Biography length", download: "Download", clip: "clip", downloadAll: "Download all", bioTxt: "download the biography as text",
   },
 } as const;
 
@@ -28,7 +30,7 @@ const fileName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 const VIDEO_TOTAL = PRESS_VIDEOS.reduce((sum, venue) => sum + venue.clips.length, 0);
 
 export default function PressKitPageClient() {
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
   const locale = language === "ko" ? "ko" : "en";
   const copy = PRESS_KIT_COPY[locale];
   const ui = UI[locale];
@@ -49,14 +51,18 @@ export default function PressKitPageClient() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <h1 className={styles.label}>{copy.title}</h1>
+      <header className={styles.hdr}>
+        <div className={styles.brand}>
+          <Link href="/" className={styles.home} aria-label="STANN LUMO"><LumoWordmark className={styles.wordmark} title="STANN LUMO" /></Link>
+          <span className={`${styles.label} ${styles.muted}`}>Press kit</span>
+        </div>
         <div className={styles.keys}>
-          <a className={styles.key} href={PRESS_PDFS.ko} download>KO PDF</a>
-          <a className={styles.key} href={PRESS_PDFS.en} download>EN PDF</a>
+          <button type="button" className={styles.key} onClick={() => setLanguage("ko")} aria-label="언어를 한국어로 전환" aria-pressed={language === "ko"}>KO</button>
+          <button type="button" className={styles.key} onClick={() => setLanguage("en")} aria-label="Switch language to English" aria-pressed={language === "en"}>EN</button>
+          <a className={styles.key} href={PRESS_ZIP.file} download>{ui.downloadAll} <span className={`${styles.mono} ${styles.muted}`}>ZIP {PRESS_ZIP.size}</span></a>
           <a className={`${styles.key} ${styles.red}`} href="#press-contact">Booking</a>
         </div>
-      </div>
+      </header>
 
       <section className={styles.hero} aria-labelledby="press-name">
         <figure className={styles.photo}>
@@ -65,7 +71,7 @@ export default function PressKitPageClient() {
         </figure>
         <div className={`${styles.plate} ${styles.intro}`}>
           <div className={styles.band}><span className={styles.label}>DJ / Producer — Seoul</span><span className={`${styles.label} ${styles.muted}`}>Resident · Faust Seoul</span></div>
-          <h2 id="press-name" className={styles.name}>{firstName}<br />{lastName}</h2>
+          <h1 id="press-name" className={styles.name}>{firstName}<br />{lastName}</h1>
           <p className={styles.lede}>{copy.shortBio}</p>
           <dl className={`${styles.rows} ${styles.glance}`}>
             <div className={styles.row}><dt className={styles.label}>Based</dt><dd>{PRESS_FACTS.based}</dd></div>
@@ -92,6 +98,8 @@ export default function PressKitPageClient() {
         </div>
         <div className={`${styles.keys} ${styles.inset}`}>
           <button type="button" className={styles.key} onClick={() => writeClipboard(bioText)}>{ui.copyBio}</button>
+          <a className={styles.key} href={PRESS_BIO_TXT.ko} download aria-label={`KO .txt — ${ui.bioTxt}`}>KO .txt</a>
+          <a className={styles.key} href={PRESS_BIO_TXT.en} download aria-label={`EN .txt — ${ui.bioTxt}`}>EN .txt</a>
         </div>
       </section>
 
@@ -202,7 +210,7 @@ export default function PressKitPageClient() {
               </div>
             ))}
           </div>
-          <div className={styles.pad}><p className={`${styles.prose} ${styles.small}`}>{copy.logoNote}</p></div>
+          <div className={styles.pad}><p className={`${styles.prose} ${styles.small} ${styles.logoNote}`}>{copy.logoNote}</p></div>
         </section>
         <section className={`${styles.plate} ${styles.column}`} aria-labelledby="press-terminal">
           <div className={styles.band}><h2 id="press-terminal" className={styles.label}>TERMINAL</h2><span className={`${styles.label} ${styles.muted}`}>Since 2026 · Faust Seoul</span></div>
@@ -241,6 +249,8 @@ export default function PressKitPageClient() {
           </li>
         </ul>
       </section>
+
+      <footer className={styles.foot}><span className={`${styles.label} ${styles.muted}`}>Stann Lumo — Press kit</span><span className={`${styles.label} ${styles.muted}`}>2026</span></footer>
 
       <p className={styles.toast} role="status" aria-live="polite">{notice}</p>
     </div>

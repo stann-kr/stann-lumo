@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useContent } from '@/contexts/ContentContext';
 import AdminCard from '@/components/base/AdminCard';
 import AdminSectionHeader from '@/components/base/AdminSectionHeader';
@@ -27,7 +27,7 @@ const TRACK_TYPES = ['Original', 'Live Set', 'DJ Mix', 'Remix'];
 const PLATFORMS = ['SoundCloud', 'Bandcamp', 'Spotify', 'Mixcloud', 'YouTube'];
 
 export default function AdminMusicPage() {
-  const { allContent, updateContent, currentEditLanguage, isLoading } = useContent();
+  const { allContent, updateContent, updateTrackMedia, currentEditLanguage, isLoading } = useContent();
   const content = allContent[currentEditLanguage];
   const { items: tracks, setItems: setTracks, updateItem: updateTrack, deleteItem: deleteTrack } = useListEditor<Track>(content.tracks);
   const { moveUp, moveDown } = useItemReorder(tracks, setTracks);
@@ -41,9 +41,18 @@ export default function AdminMusicPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [coverBusyId, setCoverBusyId] = useState<string | null>(null);
   const [coverMessage, setCoverMessage] = useState<{ id: string; text: string; error: boolean } | null>(null);
+  // Search, filter and the open editor belong to one edit language. Reset them while rendering a new language rather
+  // than in an effect: a mount-time effect also ran after the first render and closed an editor opened before it.
+  const [listLanguage, setListLanguage] = useState(currentEditLanguage);
+  if (listLanguage !== currentEditLanguage) {
+    setListLanguage(currentEditLanguage);
+    setQuery(''); setType('all'); setExpandedId(null); setDeleteId(null);
+  }
+  const listRef = useRef<HTMLElement>(null);
+  // A cover change replaces the saved list, so nothing else may be edited or saved until it finishes.
+  const isBusy = isSaving || isLoading || coverBusyId !== null;
 
   useEffect(() => { setPageMeta(content.pageMeta); }, [content.pageMeta]);
-  useEffect(() => { setQuery(''); setType('all'); setExpandedId(null); setDeleteId(null); }, [currentEditLanguage]);
   // Covers are stored on upload, so they are not part of the unsaved list snapshot.
   const editableTracks = tracks.map((track) => ({ ...track, coverImageId: undefined }));
   const { isDirty, markSaved } = useUnsavedChanges({ pageMeta, tracks: editableTracks }, `${currentEditLanguage}:${isLoading}`);
@@ -77,36 +86,50 @@ export default function AdminMusicPage() {
       const result = file ? await uploadTrackCover(trackId, file) : await deleteTrackCover(trackId);
       if (!result.success) throw new Error('cover');
       const coverImageId = file && result.data && typeof result.data === 'object' && 'coverImageId' in result.data ? result.data.coverImageId : undefined;
-      const next = content.tracks.map((track) => {
-        if (track.id !== trackId) return track;
-        const next = { ...track, coverImageId };
-        if (!coverImageId) delete next.coverImageId;
-        return next;
-      });
-      updateContent({ tracks: next });
+      // The cover belongs to the track in every language; patch only that field on the latest content.
+      updateTrackMedia([{ id: trackId, coverImageId }]);
       setCoverMessage({ id: trackId, text: file ? '커버를 저장했습니다.' : '커버를 제거했습니다.', error: false });
     } catch {
       setCoverMessage({ id: trackId, text: '커버 변경에 실패했습니다. 다시 시도해 주세요.', error: true });
     } finally { setCoverBusyId(null); }
   };
   const saveChanges = async () => {
-    if (isSaving || isLoading) return;
+    if (isBusy) return;
     setIsSaving(true); setSaveError('');
+    // Mix text is shared by both languages: send it only where it was edited here, so a stale copy cannot overwrite it.
+    const saved = new Map(content.tracks.map((track) => [track.id, track]));
+    const items = tracks.map((track) => {
+      const before = saved.get(track.id);
+      if (!before) return track;
+      const item = { ...track };
+      if ((track.tracklist ?? '') === (before.tracklist ?? '')) delete item.tracklist;
+      if ((track.recordedOn ?? '') === (before.recordedOn ?? '')) delete item.recordedOn;
+      return item;
+    });
+    // Page settings replace every page's text for this language, so send them only when they changed.
+    const metaChanged = JSON.stringify(pageMeta) !== JSON.stringify(content.pageMeta);
     try {
-      await runSave(['음악 목록', '페이지 문구'], [updateTracks(currentEditLanguage, tracks), updatePageMeta(currentEditLanguage, pageMeta)],
-        () => { updateContent({ tracks, pageMeta }); markSaved(); showNotification(); },
+      await runSave(metaChanged ? ['음악 목록', '페이지 문구'] : ['음악 목록'],
+        metaChanged ? [updateTracks(currentEditLanguage, items), updatePageMeta(currentEditLanguage, pageMeta)] : [updateTracks(currentEditLanguage, items)],
+        () => {
+          updateContent({ tracks, pageMeta });
+          updateTrackMedia(items.filter((item) => 'tracklist' in item || 'recordedOn' in item).map(({ id, ...media }) => ({
+            id, ...('tracklist' in media && { tracklist: media.tracklist }), ...('recordedOn' in media && { recordedOn: media.recordedOn }),
+          })));
+          markSaved(); showNotification();
+        },
         (failed) => setSaveError(`${failed.join(', ')} 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.`));
     } finally { setIsSaving(false); }
   };
 
   return <div className="space-y-8">
     <AdminSectionHeader title="음악" description="트랙과 믹스를 찾아 편집하고, 공개 순서를 바꿉니다."
-      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={isLoading}
-      action={<button type="button" className={collection.button} disabled={isSaving || isLoading} onClick={addTrack}>음악 추가</button>} />
+      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={isLoading || coverBusyId !== null}
+      action={<button type="button" className={collection.button} disabled={isBusy} onClick={addTrack}>음악 추가</button>} />
     <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
     <SaveErrorMessage message={saveError} />
-    <fieldset disabled={isSaving || isLoading} className="space-y-8">
-      <section aria-label="음악 목록">
+    <fieldset disabled={isBusy} className="space-y-8">
+      <section ref={listRef} tabIndex={-1} aria-label="음악 목록">
         <div className={collection.toolbar}>
           <FormInput label="음악 검색" type="search" value={query} onChange={setQuery} placeholder="제목, 플랫폼, 연도" />
           <FormSelect label="종류" value={type} onChange={setType}>
@@ -171,7 +194,7 @@ export default function AdminMusicPage() {
           <FormInput label="페이지 부제" value={pageMeta.music.subtitle} onChange={(subtitle) => setPageMeta((prev) => ({ ...prev, music: { ...prev.music, subtitle } }))} />
         </div></AdminCard>
       </details>
-      {deleteId && <DeleteConfirmModal show itemName={tracks.find((track) => track.id === deleteId)?.title || '제목 없는 음악'}
+      {deleteId && <DeleteConfirmModal show itemName={tracks.find((track) => track.id === deleteId)?.title || '제목 없는 음악'} returnFocusRef={listRef}
         onConfirm={() => { const index = tracks.findIndex((track) => track.id === deleteId); if (index >= 0) deleteTrack(index); setDeleteId(null); }}
         onCancel={() => setDeleteId(null)} />}
     </fieldset>

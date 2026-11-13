@@ -1,11 +1,12 @@
 /* v5 archive wall: a sort band of filled keys over a 2px-gap grid of plate tiles. */
-.toolbar { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: 2px 12px; padding-left: 20px; background: var(--v5-band); }
-.total { display: flex; align-items: center; min-height: 44px; color: var(--v5-muted-2); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: 2px 12px; background: var(--v5-band); }
+/* Canvas Archive board: SORT is its own cell (20px each side) at the start of the band. */
+.total { display: flex; align-items: center; min-height: 44px; padding: 0 20px; color: var(--v5-muted-2); }
 .sort { display: flex; gap: 2px; min-width: 0; border: 0; }
 .sortKey { position: relative; display: flex; cursor: pointer; }
 .sortKey > span {
   display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; background: var(--v5-plate-2);
-  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; word-spacing: var(--mono-word-spacing, normal); color: var(--v5-muted-2);
+  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; word-spacing: var(--mono-word-spacing, normal); color: var(--color-primary);
 }
 .sortKey:hover > span { background: #333; color: var(--color-primary); }
 .sortKey > input:checked + span { background: var(--color-primary); color: #000; }
@@ -17,13 +18,15 @@
 .tile { display: flex; flex-direction: column; flex: 1; min-width: 0; scroll-margin-top: 6rem; }
 .media { position: relative; aspect-ratio: 4 / 5; background: var(--v5-inset); overflow: hidden; }
 .media video { width: 100%; height: 100%; object-fit: contain; }
+/* Canvas Archive board: a video tile carries a red VIDEO label at its top-left corner. */
 .media[data-video='true']::after {
-  content: ''; position: absolute; left: 0; bottom: 0; width: 44px; height: 44px; pointer-events: none;
-  background: var(--v5-red) center / 14px 16px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 16'%3E%3Cpath d='M0 0 L14 8 L0 16Z'/%3E%3C/svg%3E");
+  content: 'Video'; position: absolute; top: 10px; left: 10px; padding: 4px 8px; pointer-events: none; background: var(--v5-red); color: #000;
+  font-family: var(--os-font-mono); font-size: 11px; line-height: normal; letter-spacing: .14em; text-transform: uppercase;
 }
 .tile:hover { background: var(--v5-band); }
 .tile:focus-visible { outline-offset: -2px; }
-.caption { padding: 12px 16px 14px; font-size: .875rem; line-height: 1.45; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* Margins, not padding: a clamped box only clips at its padding edge, so bottom padding would show the third line. */
+.caption { margin: 12px 16px 14px; font-size: .875rem; line-height: 1.45; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .date { display: block; margin-top: -8px; padding: 0 16px 14px; font-size: 12px; color: var(--v5-muted); }
 .empty { color: var(--v5-muted-2); }
 .skeleton { background: var(--v5-plate-2); }
@@ -37,13 +40,11 @@
 @media (max-width: 1199px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 767px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) {
-  .toolbar { padding-left: 0; }
   .total { display: none; }
   .sort { flex: 1; }
   .sortKey { flex: 1; }
   .sortKey > span { flex: 1; padding: 0 8px; }
-  .caption { padding-inline: 12px; }
+  .caption { margin-inline: 12px; }
   .date { padding-inline: 12px; }
-  .media[data-video='true']::after { width: 36px; height: 36px; }
 }
 @media (max-width: 359px) { .grid { grid-template-columns: minmax(0, 1fr); } }

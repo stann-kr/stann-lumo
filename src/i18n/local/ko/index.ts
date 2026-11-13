@@ -49,8 +49,6 @@ export default {
   home_terminal_enter: '입장',
   
   // About page
-  about_title: '소개',
-  about_work_links: '음악과 공연',
   about_label_name: '이름',
   about_label_genre: '장르',
   about_label_location: '위치',
@@ -217,7 +215,6 @@ export default {
   gallery_total: '전체 {{total}}개',
   list_visible_count: '{{count}} / {{total}}개',
   list_complete_count: '전체 {{total}}개를 표시했습니다',
-  list_load_more: '더 보기',
   list_loading: '불러오는 중…',
   list_load_error: '항목을 불러오지 못했습니다.',
   list_retry: '다시 시도',

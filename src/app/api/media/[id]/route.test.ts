@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getImages, getR2, type ImagesBinding, type R2Bucket, type R2GetOptions } from '@/lib/db';
 import { GET } from './route';
 
@@ -71,6 +71,7 @@ describe('GET /api/media/[id] with a width', () => {
   const photo = { key: 'gallery/photo', size: bytes.length, httpEtag: '"p1"', httpMetadata: { contentType: 'image/jpeg' } };
   const photos: R2Bucket = {
     ...bucket,
+    async head(key) { return key === photo.key ? photo : null; },
     async get(key) { return key === photo.key ? { ...photo, body: new Response(bytes).body!, arrayBuffer: async () => bytes.buffer, text: async () => '', blob: async () => new Blob([bytes]) } : null; },
   };
   const transform = vi.fn();
@@ -106,5 +107,76 @@ describe('GET /api/media/[id] with a width', () => {
     const fallback = await fetchPhoto('&w=640');
     expect(fallback.headers.get('Content-Type')).toBe('image/jpeg');
     expect(await fallback.text()).toBe('0123456789');
+  });
+});
+
+describe('GET /api/media/[id] resize cache', () => {
+  const key = 'gallery/still';
+  let stored: { bytes: Uint8Array; etag: string; contentType: string } | null = null;
+  const describeStored = () => stored && { key, size: stored.bytes.length, httpEtag: stored.etag, httpMetadata: { contentType: stored.contentType } };
+  const still: R2Bucket = {
+    ...bucket,
+    async head(name) { return name === key ? describeStored() : null; },
+    async get(name) {
+      const object = name === key ? describeStored() : null;
+      if (!object || !stored) return null;
+      const content = stored.bytes;
+      return { ...object, body: new Response(content).body!, arrayBuffer: async () => content.buffer as ArrayBuffer, text: async () => '', blob: async () => new Blob([content]) };
+    },
+  };
+  const transform = vi.fn();
+  const images: ImagesBinding = {
+    input: (stream) => ({
+      transform: (options) => {
+        transform(options);
+        return { output: async () => { const source = await new Response(stream).text(); return { response: () => new Response(`webp:${source}`, { headers: { 'content-type': 'image/webp' } }) }; } };
+      },
+    }),
+  };
+  /** Workers' per-data-centre cache: it keeps whatever was put until it expires, whatever happens in R2. */
+  const edge = new Map<string, Response>();
+  const store = (content: string, etag: string, contentType = 'image/jpeg') => { stored = { bytes: new TextEncoder().encode(content), etag, contentType }; };
+  const fetchStill = () => GET(new NextRequest('https://lumo.test/api/media/still?v=2&w=640'), { params: Promise.resolve({ id: 'still' }) });
+
+  beforeEach(() => {
+    edge.clear();
+    transform.mockClear();
+    vi.stubGlobal('caches', { default: {
+      async match(url: string) { return edge.get(url)?.clone(); },
+      async put(url: string, response: Response) { edge.set(url, response.clone()); },
+    } });
+    vi.mocked(getR2).mockReturnValue(still);
+    vi.mocked(getImages).mockReturnValue(images);
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reuses a cached resize but stops serving it once the object is deleted', async () => {
+    store('first', '"a"');
+    expect(await (await fetchStill()).text()).toBe('webp:first');
+    const cached = await fetchStill();
+    expect(cached.headers.get('Cache-Control')).toBe('public, max-age=31536000, immutable');
+    expect(await cached.text()).toBe('webp:first');
+    expect(transform).toHaveBeenCalledOnce();
+
+    stored = null;
+    expect((await fetchStill()).status).toBe(404);
+  });
+
+  it('never answers a replaced object with the resize of its previous version', async () => {
+    store('first', '"a"');
+    expect(await (await fetchStill()).text()).toBe('webp:first');
+
+    store('second', '"b"');
+    expect(await (await fetchStill()).text()).toBe('webp:second');
+    expect(transform).toHaveBeenCalledTimes(2);
+  });
+
+  it('serves media the transformer cannot scale as uploaded, without a resize attempt', async () => {
+    store('gif', '"g"', 'image/gif');
+    const response = await fetchStill();
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('image/gif');
+    expect(transform).not.toHaveBeenCalled();
+    expect(await response.text()).toBe('gif');
   });
 });

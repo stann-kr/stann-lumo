@@ -4,6 +4,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import ArchivePageClient from '@/components/public/ArchivePageClient';
 import { archiveBrowseState, archiveDetailContext, archiveHref, archiveReturnHref, sortArchivePhotos } from '@/capabilities/media/archiveBrowsing';
+import { stubViewport } from '@/test/viewport';
 
 vi.mock('next/navigation', async () => {
   const { useSyncExternalStore } = await import('react');
@@ -74,8 +75,10 @@ function mockPages(items: GalleryPhoto[]) {
   }));
 }
 const links = () => within(screen.getByRole('list')).queryAllByRole('link');
+let viewport: ReturnType<typeof stubViewport>;
+/** Scrolls to the end of the grid; the next page loads with no key. */
 async function loadMore(count: number) {
-  fireEvent.click(screen.getByRole('button', { name: 'list_load_more' }));
+  viewport.reachListEnd();
   await waitFor(() => expect(links()).toHaveLength(count));
 }
 
@@ -83,6 +86,7 @@ describe('GalleryPage', () => {
   beforeEach(() => {
     window.history.replaceState({ __NA: true }, '', '/archive');
     sessionStorage.clear();
+    viewport = stubViewport();
     mockPages(photos);
     vi.stubGlobal('scrollTo', vi.fn());
     const replace = window.history.replaceState.bind(window.history);
@@ -147,7 +151,7 @@ describe('GalleryPage', () => {
     const original = links()[0];
     await loadMore(8);
     expect(links()[0]).toBe(original);
-    expect(links()[4]).toHaveFocus();
+    expect(document.body).toHaveFocus();
     fireEvent.click(screen.getByRole('radio', { name: 'gallery_sort_random' }));
     expect(links()).toHaveLength(0);
     await loadMore(4);
@@ -156,7 +160,8 @@ describe('GalleryPage', () => {
     await loadMore(9);
     expect(links().slice(0, 4).map(link => link.id)).toEqual(first);
     expect(new Set(links().map(link => link.id)).size).toBe(9);
-    expect(screen.queryByRole('button', { name: 'list_load_more' })).not.toBeInTheDocument();
+    expect(screen.getByText('list_complete_count')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^list_/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: 'gallery_sort_oldest' }));
     await loadMore(4);
     expect(links()[0]).toHaveAttribute('href', '/archive/item-0?sort=oldest');
@@ -217,7 +222,7 @@ describe('GalleryPage', () => {
     await waitFor(() => expect(screen.getByRole('list').querySelectorAll('a[href]')).toHaveLength(53));
     expect(within(screen.getByRole('list')).getAllByRole('link')).toHaveLength(53);
     expect(document.activeElement).toHaveAttribute('id', `archive-item-${first.id}`);
-    expect(screen.queryByRole('button', { name: 'list_load_more' })).not.toBeInTheDocument();
+    expect(screen.getByText('list_complete_count')).toBeInTheDocument();
   });
 
   it('uses the grid order for detail numbering and neighbours, retaining the original return item', () => {

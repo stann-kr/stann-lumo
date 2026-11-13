@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { adminLoginHref, adminReturnPath, getAdminSessionState } from './auth.client';
+import { adminLoginHref, adminReturnPath, getAdminSessionState, requestLogout } from './auth.client';
 
 describe('admin return path', () => {
   it.each([
@@ -36,5 +36,18 @@ describe('getAdminSessionState', () => {
     await expect(getAdminSessionState()).resolves.toBe('unknown');
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
     await expect(getAdminSessionState()).resolves.toBe('unknown');
+  });
+});
+
+describe('requestLogout', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('fails when the server does not confirm the sign-out', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 500 })));
+    await expect(requestLogout()).rejects.toThrow('500');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 403 })));
+    await expect(requestLogout()).rejects.toThrow('403');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true }), { status: 200 })));
+    await expect(requestLogout()).resolves.toBeUndefined();
   });
 });

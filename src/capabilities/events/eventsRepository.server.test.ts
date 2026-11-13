@@ -2,10 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { D1Database } from '@/lib/db';
 import { createSqliteD1 } from '@/test/sqliteD1';
 import {
+  fetchEventDetail,
   fetchPerformancesSnapshot,
   replacePerformancesAtRevision,
 } from './eventsRepository.server';
-import type { Performance } from './events';
+import { performanceLocation, type Performance } from './events';
 
 const manualPerformance: Performance = {
   id: 'manual-1',
@@ -86,6 +87,22 @@ describe('performance revision replacement', () => {
     expect(sqlite.prepare('SELECT edit_token FROM ra_sync_state WHERE id = 1').get()).toEqual({
       edit_token: null,
     });
+  });
+
+  it('gives the public event detail its RA country and only links the poster to an event that exists', async () => {
+    const { db, sqlite } = database();
+    sqlite.exec(`
+      INSERT INTO performances (id, date, venue, title, status, location, ra_country_name, poster_image_id)
+        VALUES ('ra-7', '2022-09-17', 'Faust', 'Night', 'Announced', 'All', 'South Korea', 'poster');
+      INSERT INTO gallery_photos (id, filename, linked_event_id) VALUES ('poster', 'poster.jpg', 'ra-7');
+    `);
+
+    const detail = await fetchEventDetail(db, 'ra-7');
+    expect(performanceLocation(detail!.event)).toBe('South Korea');
+    expect(detail!.posterPhoto).toMatchObject({ id: 'poster', linkedEventId: 'ra-7' });
+
+    sqlite.prepare("UPDATE gallery_photos SET linked_event_id = 'deleted-event' WHERE id = 'poster'").run();
+    expect((await fetchEventDetail(db, 'ra-7'))!.posterPhoto?.linkedEventId).toBeUndefined();
   });
 
   it('rejects a stale admin snapshot without replacing a newly synced event', async () => {

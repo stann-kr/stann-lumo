@@ -50,7 +50,7 @@ export default function ArchiveDetailPageClient({ photo, previous, next, index, 
   }, [handleKeyDown]);
 
   return (
-    <article ref={pageRef} className={styles.page} aria-label={`Archive item: ${itemLabel}`}>
+    <article ref={pageRef} className={styles.page} aria-label={`${isKorean ? '아카이브 항목' : 'Archive item'}: ${itemLabel}`}>
       <header className={styles.header}>
         <Link href={backHref} scroll={false} className={styles.back}>{t('gallery_title')}</Link>
         <h1 className={v5.label}><span className={styles.order}>{t('gallery_sort_' + browse.sort)}</span> <span className={styles.position}>{index + 1} / {total}</span><span className="sr-only"> — {itemLabel}</span></h1>

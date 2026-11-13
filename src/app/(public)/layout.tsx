@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import PublicSiteShell from '@/components/feature/PublicSiteShell';
-import { getPublicShellProjection, getRequestLocale } from '@/capabilities/content/publicContent.server';
+import { getPublicShellProjection, getRequestLocale, hasUpcomingDate } from '@/capabilities/content/publicContent.server';
 
 export const metadata: Metadata = {
   title: {
@@ -16,7 +16,8 @@ export default async function PublicLayout({ children }: { children: ReactNode }
   const shell = await getPublicShellProjection(locale);
 
   return (
-    <PublicSiteShell artistName={shell.artistName}>
+    // The menu's NEXT lamp streams in after the shell (not awaited), so the read never holds the page.
+    <PublicSiteShell artistName={shell.artistName} nextDate={hasUpcomingDate()}>
       {children}
     </PublicSiteShell>
   );

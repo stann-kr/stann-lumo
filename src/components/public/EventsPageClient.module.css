@@ -4,8 +4,11 @@
 .rows > li:nth-child(even) { background: var(--v5-plate); }
 .past .rows > li { background: var(--v5-inset); }
 .past .rows > li:nth-child(even) { background: var(--v5-plate); }
+/* Canvas Events board columns: date, title, venue, status, arrow or poster. Past rows drop the status column. */
+.row, .skeleton { --columns: 140px minmax(0, 1fr) 220px 120px 88px; }
+.row[data-past='true'], .skeleton[data-past='true'] { --columns: 140px minmax(0, 1fr) 220px 88px; }
 .row {
-  display: grid; grid-template-columns: 140px minmax(0, 1fr) minmax(0, 240px) 96px 88px; align-items: center; gap: 20px;
+  display: grid; grid-template-columns: var(--columns); align-items: center; gap: 20px;
   min-height: 72px; padding-left: 20px;
 }
 .row:hover { background: var(--v5-band); }
@@ -13,39 +16,46 @@
 .date { display: flex; flex-direction: column; gap: 2px; }
 .date time { font-size: 1rem; }
 .date span { font-size: 12px; color: var(--v5-muted); }
-.title { font-weight: 800; font-size: clamp(1.125rem, 1.8vw, 1.5rem); line-height: 1.1; letter-spacing: -.03em; text-transform: uppercase; overflow-wrap: anywhere; }
-.venue { font-size: .9375rem; font-weight: 500; overflow-wrap: anywhere; }
+.heading { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.title { font-weight: 900; font-size: clamp(1.125rem, 1.8vw, 1.5rem); line-height: 1; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
+.venue { font-size: .9375rem; overflow-wrap: anywhere; }
 .venue span { display: block; margin-top: 2px; color: var(--v5-muted); }
-.status { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; color: var(--v5-muted-2); overflow-wrap: anywhere; }
+.status { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; color: var(--v5-muted); overflow-wrap: anywhere; }
 .status[data-cancelled='true'] { color: var(--v5-muted); text-decoration: line-through; }
 .poster { align-self: stretch; width: 88px; min-height: 88px; background: var(--v5-inset); }
-.poster > img { object-fit: cover; }
-.arrow { align-self: stretch; display: flex; align-items: center; justify-content: center; background: var(--v5-band); font-weight: 700; }
+/* Out of flow, so a loaded poster fills the slot instead of growing the row to the image's own height. */
+.row .poster > img { position: absolute; inset: 0; object-fit: cover; }
+.arrow { align-self: stretch; display: flex; align-items: center; justify-content: center; background: var(--v5-band); font-size: 1.25rem; }
 .row:hover .arrow { background: var(--color-primary); color: #000; }
 
 .row[data-featured='true'] { min-height: 132px; }
 .row[data-featured='true'] .date time { font-size: 1.25rem; color: var(--v5-link); }
-.row[data-featured='true'] .title { font-size: clamp(1.75rem, 3.2vw, 2.75rem); font-weight: 900; line-height: .95; letter-spacing: -.045em; }
+.row[data-featured='true'] .title { font-size: clamp(1.75rem, 3.2vw, 2.75rem); }
 .row[data-featured='true'] .status { color: var(--v5-link); }
 .row[data-featured='true'] .poster { min-height: 132px; }
 
-.row[data-past='true'] { min-height: 56px; }
-.row[data-past='true'] .date time { font-size: .875rem; color: var(--v5-muted); }
-.row[data-past='true'] .title { font-weight: 700; font-size: 1.0625rem; color: var(--v5-muted-2); }
-.row[data-past='true'] .venue { font-size: .875rem; color: var(--v5-muted-2); }
+/* Past rows sit one step down on the inset plate: one quieter text tone, a plain arrow, a 56px poster at the end. */
+.row[data-past='true'] { min-height: 56px; color: var(--v5-muted-2); }
+.row[data-past='true'] .date time { font-size: .875rem; }
+.row[data-past='true'] .heading { padding-block: 8px; }
+.row[data-past='true'] .title { font-weight: 700; font-size: 1.0625rem; line-height: 1.2; letter-spacing: normal; }
+.row[data-past='true'] .title[data-cancelled='true'] { color: var(--v5-muted); text-decoration: line-through; }
+.row[data-past='true'] .venue { font-size: .875rem; }
 .row[data-past='true'] .poster { min-height: 56px; width: 56px; justify-self: end; }
-.row[data-past='true'] .arrow { background: transparent; color: var(--v5-muted); }
+.row[data-past='true'] .arrow { background: transparent; font-size: 1rem; }
 
 .empty { padding: 18px 20px; color: var(--v5-muted-2); }
 
 /* Placeholders sit in the same columns as the rows they stand for, so loading does not reshuffle the list. */
-.skeleton { display: grid; grid-template-columns: 140px minmax(0, 1fr) minmax(0, 240px) 96px 88px; align-items: center; gap: 20px; min-height: 72px; padding-left: 20px; }
+.skeleton { display: grid; grid-template-columns: var(--columns); align-items: center; gap: 20px; min-height: 72px; padding-left: 20px; }
 .skeleton[data-past='true'] { min-height: 56px; }
 .skeleton span { height: 12px; background: var(--v5-band); }
 .skeleton span:nth-child(1) { width: 96px; }
-.skeleton span:nth-child(2) { width: min(100%, 22rem); height: 20px; }
+.skeleton span:nth-child(2) { width: min(100%, 22rem); height: 18px; }
 .skeleton span:nth-child(3) { width: min(100%, 8rem); }
-.skeleton span:nth-child(4) { grid-column: 5; align-self: stretch; height: auto; }
+/* The last column (arrow) on upcoming rows; past placeholders leave it empty like the canvas. */
+.skeleton span:nth-child(4) { grid-column: -2; align-self: stretch; height: auto; }
+.skeleton[data-past='true'] span:nth-child(4) { background: none; }
 @media (prefers-reduced-motion: no-preference) {
   .skeleton span { animation: loading 1.4s ease-in-out infinite alternate; }
   .row, .arrow { transition: background-color var(--os-dur-fast) linear, color var(--os-dur-fast) linear; }
@@ -55,7 +65,8 @@
 @media (max-width: 999px) {
   .row, .skeleton { grid-template-columns: 112px minmax(0, 1fr) 72px; grid-template-areas: 'date title side' 'date venue side' 'date status side'; gap: 2px 16px; padding-block: 12px; }
   .date { grid-area: date; align-self: start; }
-  .title { grid-area: title; }
+  .heading { grid-area: title; }
+  .row[data-past='true'] .heading { padding-block: 0; }
   .venue { grid-area: venue; }
   .status { grid-area: status; justify-content: flex-start; }
   .poster, .arrow { grid-area: side; margin-block: -12px; width: 72px; }

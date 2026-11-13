@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchGalleryObject, headGalleryObject, resolveByteRange } from '@/capabilities/media/mediaRepository.server';
-import { cachedResize, parseImageWidth, resizeImage } from '@/capabilities/media/imageResize.server';
+import { cachedResize, isResizableImageType, parseImageWidth, resizeImage } from '@/capabilities/media/imageResize.server';
 import type { ImageWidth } from '@/capabilities/media/media';
 import { getImages, getR2, type R2Bucket, type R2Object, type R2ObjectBody } from '@/lib/db';
 
@@ -74,10 +74,17 @@ export async function GET(
 
     // Ranges are for video seeking; a width asks for a resized still, which is produced whole.
     const width = rangeHeader ? null : parseImageWidth(request.nextUrl.searchParams.get('w'));
-    if (width) {
-      const key = new URL(`/api/media/${encodeURIComponent(id)}?w=${width}`, request.url).toString();
-      const image = await cachedResize(key, () => resized(r2, id, width));
-      if (image) return image;
+    if (width && getImages()) {
+      // Cached resizes outlive R2: check the object first so deleted media stops resolving, and key the
+      // resize by ETag so an object replaced under the same id is never answered with the old image.
+      const head = await headGalleryObject(r2, id);
+      if (!head) return notFound();
+      if (isResizableImageType(head.httpMetadata?.contentType)) {
+        const version = encodeURIComponent(head.httpEtag ?? '');
+        const key = new URL(`/api/media/${encodeURIComponent(id)}?w=${width}&etag=${version}`, request.url).toString();
+        const image = await cachedResize(key, () => resized(r2, id, width));
+        if (image) return image;
+      }
     }
 
     const ifNoneMatch = request.headers.get('if-none-match');

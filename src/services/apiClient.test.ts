@@ -18,6 +18,13 @@ describe('apiRequest', () => {
     expect(result).toMatchObject({ success: false, error: { code } });
   });
 
+  it('keeps the reason a failed response gives, and falls back to the status when there is none', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: false, error: { code: 'INVALID_URL', message: 'Invalid YouTube URL' } }), { status: 400 })));
+    await expect(apiRequest('/api/admin/archive/youtube')).resolves.toEqual({ success: false, error: { code: 'HTTP_ERROR', message: 'Invalid YouTube URL' } });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>bad gateway</html>', { status: 502 })));
+    await expect(apiRequest('/api/admin/archive/youtube')).resolves.toEqual({ success: false, error: { code: 'HTTP_ERROR', message: 'Request failed with status 502' } });
+  });
+
   it('treats network errors and failed JSON envelopes as failures', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
     await expect(apiRequest('/api/admin/test')).resolves.toMatchObject({

@@ -11,6 +11,10 @@ export function parseImageWidth(value: string | null): ImageWidth | null {
   return (IMAGE_WIDTHS as readonly number[]).includes(width) ? width as ImageWidth : null;
 }
 
+export function isResizableImageType(contentType: string | undefined): boolean {
+  return RESIZABLE_TYPES.has(contentType ?? '');
+}
+
 /**
  * Scales an image down to `width` as WebP. Returns null when the binding is missing (Node dev), the type is not resizable,
  * or the transformation fails — including the Images free-plan monthly limit — so the caller serves the original instead.
@@ -22,7 +26,7 @@ export async function resizeImage(
   contentType: string,
   width: ImageWidth,
 ): Promise<{ body: ReadableStream<Uint8Array>; contentType: string } | null> {
-  if (!images || !RESIZABLE_TYPES.has(contentType)) return null;
+  if (!images || !isResizableImageType(contentType)) return null;
   try {
     const result = (await images.input(body).transform({ width, fit: 'scale-down' }).output({ format: 'image/webp', quality: 82 })).response();
     if (!result.ok || !result.body) return null;
@@ -41,6 +45,7 @@ function edgeCache(): Cache | null {
 /**
  * Serves a resized image from the edge cache, or produces it once and stores it, so a width is transformed per data centre
  * rather than per visitor. A null answer from `produce` is not cached and lets the caller fall back to the original.
+ * Entries outlive R2 objects, so callers confirm the object exists and put its version in `key` before asking.
  */
 export async function cachedResize(key: string, produce: () => Promise<Response | null>): Promise<Response | null> {
   const cache = edgeCache();

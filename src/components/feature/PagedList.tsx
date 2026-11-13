@@ -42,7 +42,6 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
     requestRef.current = controller;
     if (manual) focusIndex.current = items.length;
     setLoading(true);
-    setFailed(false);
     try {
       const page = await loadPage(offset, controller.signal);
       if (controller.signal.aborted) return;
@@ -53,6 +52,8 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
       });
       setTotal(page.total);
       setOffset(page.nextOffset);
+      // A retry keeps its key (and focus) until it succeeds; then focus moves to the first new item.
+      setFailed(false);
     } catch {
       if (!controller.signal.aborted) { setFailed(true); focusIndex.current = null; }
     } finally {
@@ -71,6 +72,7 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
     if (!sentinel || typeof IntersectionObserver === 'undefined') return;
     return observeInViewport(sentinel, () => {
       const active = document.activeElement;
+      // A focused control after the list stays where it is; loading resumes once focus moves (observeInViewport).
       if (active && (sentinel.compareDocumentPosition(active) & Node.DOCUMENT_POSITION_FOLLOWING)) return false;
       void load();
     });
@@ -95,13 +97,14 @@ export default function PagedList<T extends { id: string }>({ total: initialTota
         <li key={`pending-${index}`} ref={index === 0 ? sentinelRef : undefined} aria-hidden="true" data-pending="">{skeleton}</li>
       ))}
     </ul>
-    {/* A list that fits in one batch needs no visible counter; screen readers still get the status. */}
+    {/* Pages load on scroll with no key; only a failed request offers one. A list that fits in one batch needs no
+        visible counter; screen readers still get the status. */}
     <div className={!hasMore && !failed && total <= PUBLIC_BATCH_SIZE ? 'sr-only' : styles.tail}>
       <p role="status" aria-atomic="true" className={styles.count}>
-        {t(failed ? 'list_load_error' : loading ? 'list_loading' : hasMore ? 'list_visible_count' : 'list_complete_count', { count: items.length, total })}
+        {t(loading ? 'list_loading' : failed ? 'list_load_error' : hasMore ? 'list_visible_count' : 'list_complete_count', { count: items.length, total })}
       </p>
-      {hasMore && <button type="button" aria-controls={id} aria-disabled={loading} className={styles.more} onClick={() => { void load(true); }}>
-        {t(failed ? 'list_retry' : 'list_load_more')}
+      {failed && <button type="button" aria-controls={id} aria-disabled={loading} className={styles.more} onClick={() => { if (!loading) void load(true); }}>
+        {t('list_retry')}
       </button>}
     </div>
   </>;

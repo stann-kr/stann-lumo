@@ -18,7 +18,8 @@ vi.mock('next/link', () => ({
   },
 }));
 
-vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: 'en' }) }));
+const languageState = vi.hoisted(() => ({ language: 'en' }));
+vi.mock('@/contexts/LanguageContext', () => ({ useLanguage: () => ({ language: languageState.language }) }));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -78,6 +79,14 @@ const photos: GalleryPhoto[] = [
 describe('GalleryPhotoPage', () => {
   beforeEach(() => {
     push.mockReset();
+    languageState.language = 'en';
+  });
+
+  it('names the item in the site language', () => {
+    languageState.language = 'ko';
+    render(<ArchiveDetailPageClient photo={photos[1]} previous={photos[0]} next={photos[2]} index={1} total={photos.length} />);
+
+    expect(screen.getByRole('article', { name: '아카이브 항목: Middle Signal' })).toBeInTheDocument();
   });
 
   it('provides labelled previous and next controls in an archive navigation landmark', () => {

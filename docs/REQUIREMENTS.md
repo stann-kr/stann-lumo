@@ -9,7 +9,7 @@
 포함 범위:
 
 - 공개 artist site route 제공
-- music, events, archive, about, contact, link 페이지 제공
+- music, events, archive, press-kit, contact, link 페이지 제공(`/about`은 `/press-kit`로 영구 이동)
 - 다국어 콘텐츠와 language context 제공
 - 상단 공개 탐색과 펼침 패널 홈, 콘텐츠별 목록·상세 제공
 - admin dashboard에서 home/about/contact/link/music/events/archive/theme 관리
@@ -34,7 +34,7 @@
 
 | ID | 요구사항 | 검증 기준 |
 |---|---|---|
-| FR-001 | public site는 home, about, music, events, archive, contact, link route를 제공해야 한다. | `src/app/(public)/` route가 존재하고 탐색 가능하다. |
+| FR-001 | public site는 home, music, events, archive, press-kit, contact, link route를 제공하고 `/about`을 `/press-kit`로 영구 이동해야 한다. | `src/app/(public)/` route가 존재하고 탐색 가능하다. |
 | FR-002 | admin dashboard는 주요 콘텐츠 영역을 관리할 수 있어야 한다. | `src/app/admin/(dashboard)/` 하위 관리 page가 존재한다. |
 | FR-003 | 사용자는 언어 전환을 통해 콘텐츠를 볼 수 있어야 한다. | `LanguageContext`와 i18next 기반 UI가 동작한다. |
 | FR-004 | public site는 CMS 순서의 홈 패널과 콘텐츠별 목록·미디어 상세를 제공해야 한다. | `PublicSiteShell`과 화면별 client가 기존 route·언어·키보드 탐색을 유지한다. |
