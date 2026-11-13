@@ -151,6 +151,15 @@ describe('PublicSiteShell public navigation', () => {
     expect(screen.getByRole('link', { name: 'Press kit' })).toHaveAttribute('href', '/press-kit');
   });
 
+  it('leaves the site menu out of the press kit, which brings its own header', () => {
+    mocks.pathname = '/press-kit';
+    render(<PublicSiteShell><h1>Stann Lumo</h1></PublicSiteShell>);
+
+    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument();
+  });
+
   it('traps mobile navigation focus and restores the trigger after closing it', async () => {
     const user = userEvent.setup();
     render(<PublicSiteShell><h1>Archive</h1></PublicSiteShell>);

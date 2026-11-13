@@ -61,6 +61,11 @@
   display: none; align-items: center; padding: 0 14px; min-height: 44px; background: var(--v5-band);
   font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
 }
+/* press kit: no site header, 16px side gutters on every width (canvas Presskit/PresskitMobile) */
+.document[data-chrome='press'] {
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+}
 .main { flex: 1; min-width: 0; scroll-margin-top: 1rem; }
 .content { min-width: 0; }
 .pendingContent { animation: pending-hide 0s linear 180ms both; }
