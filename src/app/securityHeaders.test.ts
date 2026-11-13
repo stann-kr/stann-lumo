@@ -25,6 +25,14 @@ describe('Content-Security-Policy', () => {
     for (const src of players) expect(frameSources).toContain(new URL(src!).origin);
   });
 
+  it('lets the Cloudflare Web Analytics beacon injected on the production zone run and report', async () => {
+    const policy = await contentSecurityPolicy();
+    // The edge injects https://static.cloudflareinsights.com/beacon.min.js/<version>; a host source covers every version path.
+    expect(policy.get('script-src')).toContain('https://static.cloudflareinsights.com');
+    // Automatic setup posts to /cdn-cgi/rum on the site's own origin.
+    expect(policy.get('connect-src')).toEqual(["'self'"]);
+  });
+
   it('keeps eval, plugins and framing by other sites closed outside development', async () => {
     const policy = await contentSecurityPolicy();
     expect(policy.get('script-src')).not.toContain("'unsafe-eval'");
