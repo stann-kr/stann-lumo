@@ -135,6 +135,31 @@ function buildAboutSections(
 
 export type ContentLocale = 'en' | 'ko';
 
+// ---------- 음악 목록 투영: 공개 API와 관리자 목록 저장의 충돌 검사가 함께 쓴다 ----------
+
+const TRACKS_SQL = `SELECT t.*, ${TRACK_MEDIA_COLUMNS} FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order`;
+
+/**
+ * `/api/content/[lang]`이 내려주는 한 언어의 음악 목록. 관리자 음악 편집기는 이 목록에서 편집을 시작한다.
+ * KO 행이 하나도 없으면 EN 행을 그대로 보여준다.
+ */
+function projectTracks(lang: ContentLocale, rows: TrackRow[], englishRows: TrackRow[] | undefined): Track[] {
+  const source = lang === 'ko' && rows.length === 0 && englishRows ? englishRows : rows;
+  return source.map((r) => ({
+    id: r.id, title: r.title, type: r.type, duration: r.duration,
+    year: r.year, platform: r.platform, link: r.link, ...trackMediaFields(r),
+  }));
+}
+
+/** 두 언어의 음악 목록을 한 번에 읽는다. 각 목록은 `/api/content/[lang]`의 tracks와 같다. */
+export async function fetchTrackLists(db: D1Database): Promise<Record<ContentLocale, Track[]>> {
+  const [en, ko] = await db.batch<TrackRow>([
+    db.prepare(TRACKS_SQL).bind('en'),
+    db.prepare(TRACKS_SQL).bind('ko'),
+  ]);
+  return { en: projectTracks('en', en.results, undefined), ko: projectTracks('ko', ko.results, en.results) };
+}
+
 export async function fetchContentBundle(
   db: D1Database,
   lang: ContentLocale,
@@ -146,7 +171,7 @@ export async function fetchContentBundle(
       db.prepare('SELECT * FROM about_section_philosophy_items WHERE lang = ? ORDER BY item_order').bind(lang),
       db.prepare('SELECT * FROM page_meta WHERE lang = ?').bind(lang),
       db.prepare('SELECT * FROM home_sections WHERE lang = ? ORDER BY sort_order').bind(lang),
-      db.prepare(`SELECT t.*, ${TRACK_MEDIA_COLUMNS} FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order`).bind(lang),
+      db.prepare(TRACKS_SQL).bind(lang),
       db.prepare('SELECT * FROM performances ORDER BY date DESC, sort_order'),
       db.prepare('SELECT * FROM events_info WHERE id = 1'),
       db.prepare('SELECT * FROM events_set_durations WHERE lang = ? ORDER BY sort_order').bind(lang),
@@ -159,17 +184,17 @@ export async function fetchContentBundle(
 
     if (lang === 'ko') {
       queries.push(
-        db.prepare('SELECT * FROM artist_info WHERE lang = "en" ORDER BY sort_order'),
-        db.prepare('SELECT * FROM about_sections WHERE lang = "en" ORDER BY section_order'),
-        db.prepare('SELECT * FROM about_section_paragraphs WHERE lang = "en" ORDER BY item_order'),
-        db.prepare('SELECT * FROM about_section_philosophy_items WHERE lang = "en" ORDER BY item_order'),
-        db.prepare('SELECT * FROM page_meta WHERE lang = "en"'),
-        db.prepare('SELECT * FROM home_sections WHERE lang = "en" ORDER BY sort_order'),
-        db.prepare(`SELECT t.*, ${TRACK_MEDIA_COLUMNS} FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = 'en' ORDER BY t.sort_order`),
-        db.prepare('SELECT * FROM events_set_durations WHERE lang = "en" ORDER BY sort_order'),
-        db.prepare('SELECT * FROM events_tech_requirements WHERE lang = "en" ORDER BY sort_order'),
-        db.prepare('SELECT * FROM link_platforms WHERE lang = "en" ORDER BY sort_order'),
-        db.prepare('SELECT * FROM contact_info WHERE lang = "en" ORDER BY sort_order'),
+        db.prepare('SELECT * FROM artist_info WHERE lang = ? ORDER BY sort_order').bind('en'),
+        db.prepare('SELECT * FROM about_sections WHERE lang = ? ORDER BY section_order').bind('en'),
+        db.prepare('SELECT * FROM about_section_paragraphs WHERE lang = ? ORDER BY item_order').bind('en'),
+        db.prepare('SELECT * FROM about_section_philosophy_items WHERE lang = ? ORDER BY item_order').bind('en'),
+        db.prepare('SELECT * FROM page_meta WHERE lang = ?').bind('en'),
+        db.prepare('SELECT * FROM home_sections WHERE lang = ? ORDER BY sort_order').bind('en'),
+        db.prepare(TRACKS_SQL).bind('en'),
+        db.prepare('SELECT * FROM events_set_durations WHERE lang = ? ORDER BY sort_order').bind('en'),
+        db.prepare('SELECT * FROM events_tech_requirements WHERE lang = ? ORDER BY sort_order').bind('en'),
+        db.prepare('SELECT * FROM link_platforms WHERE lang = ? ORDER BY sort_order').bind('en'),
+        db.prepare('SELECT * FROM contact_info WHERE lang = ? ORDER BY sort_order').bind('en'),
       );
     }
 
@@ -244,7 +269,6 @@ export async function fetchContentBundle(
       queryIndex.homeSections,
       queryIndex.fallbackHomeSections,
     );
-    const trackRows = getRows<TrackRow>(queryIndex.tracks, queryIndex.fallbackTracks);
     const performanceRows = (res[queryIndex.performances].results as PerformanceRow[]);
     const eventsInfoRow = (res[queryIndex.eventsInfo].results[0] as EventsInfoRow | undefined);
     const setDurationRows = getRows<EventsListRow>(
@@ -285,11 +309,12 @@ export async function fetchContentBundle(
       title: r.title, description: r.description, path: r.path, icon: r.icon,
     }));
 
-    // Tracks
-    const tracks: Track[] = trackRows.map((r) => ({
-      id: r.id, title: r.title, type: r.type, duration: r.duration,
-      year: r.year, platform: r.platform, link: r.link, ...trackMediaFields(r),
-    }));
+    // Tracks — 관리자 목록 저장의 충돌 검사(fetchTrackLists)와 같은 투영
+    const tracks: Track[] = projectTracks(
+      lang,
+      res[queryIndex.tracks].results as TrackRow[],
+      lang === 'ko' ? res[queryIndex.fallbackTracks].results as TrackRow[] : undefined,
+    );
 
     // Performances
     const performances: Performance[] = performanceRows.map((r) => ({

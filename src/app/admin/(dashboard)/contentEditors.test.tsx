@@ -55,7 +55,7 @@ describe('Content editing workflows', () => {
     fireEvent.change(screen.getByLabelText('음악 제목'), { target: { value: 'Renamed mix' } });
     expect(screen.getByLabelText('음악 제목')).toHaveValue('Renamed mix');
     save();
-    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[0], { ...content.tracks[1], title: 'Renamed mix' }]));
+    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[0], { ...content.tracks[1], title: 'Renamed mix' }], content.tracks));
     // Unchanged page settings are not rewritten (they replace every page's text for the language).
     expect(mocks.meta).not.toHaveBeenCalled();
     await waitFor(() => expect(screen.getByTestId('dirty')).toHaveTextContent('false'));
@@ -67,7 +67,7 @@ describe('Content editing workflows', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Second mix 위로 이동' }));
     expect(screen.getByLabelText('음악 제목')).toHaveValue('Second mix');
     save();
-    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[1], content.tracks[0]]));
+    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[1], content.tracks[0]], content.tracks));
   });
 
   it('saves the tracklist and recording date with the list and holds cover uploads until the list is saved', async () => {
@@ -85,6 +85,6 @@ describe('Content editing workflows', () => {
     fireEvent.change(screen.getByLabelText('녹음 날짜'), { target: { value: '2026-10-31' } });
     expect(screen.getByLabelText('Second mix 커버 업로드')).toBeDisabled();
     save();
-    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[0], { ...content.tracks[1], tracklist: 'A — One\nB — Two', recordedOn: '2026-10-31' }]));
+    await waitFor(() => expect(mocks.tracks).toHaveBeenCalledWith('en', [content.tracks[0], { ...content.tracks[1], tracklist: 'A — One\nB — Two', recordedOn: '2026-10-31' }], content.tracks));
   });
 });

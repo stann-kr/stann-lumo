@@ -65,7 +65,8 @@ export async function apiRequest<T>(
     notifyAdminUnauthorized(url, res.status);
     return {
       success: false,
-      error: { code: 'HTTP_ERROR', message: (await readErrorMessage(res)) ?? `Request failed with status ${res.status}` },
+      // A 409 means the data changed since it was loaded; callers offer a reload instead of a plain retry.
+      error: { code: res.status === 409 ? 'CONFLICT' : 'HTTP_ERROR', message: (await readErrorMessage(res)) ?? `Request failed with status ${res.status}` },
     };
   }
 

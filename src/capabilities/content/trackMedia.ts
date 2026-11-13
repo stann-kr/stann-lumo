@@ -23,10 +23,20 @@ export function trackMediaFields(row: TrackMediaColumns): Pick<Track, 'tracklist
 
 const DATE_PATTERN = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
+/** Tracklist text as it is stored: LF line breaks, no surrounding whitespace; anything but a string is empty. */
+export function normalizeTracklist(value: unknown): string {
+  return typeof value === 'string' ? value.replace(/\r\n?/g, '\n').trim() : '';
+}
+
+/** Recording date text as it is stored, before the date format is checked. */
+export function normalizeRecordedOn(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 /** Validates editable mix text. Returns null when the input cannot be stored. */
 export function normalizeTrackMediaInput(track: Pick<Track, 'tracklist' | 'recordedOn'>): { tracklist: string; recordedOn: string } | null {
-  const tracklist = typeof track.tracklist === 'string' ? track.tracklist.replace(/\r\n?/g, '\n').trim() : '';
-  const recordedOn = typeof track.recordedOn === 'string' ? track.recordedOn.trim() : '';
+  const tracklist = normalizeTracklist(track.tracklist);
+  const recordedOn = normalizeRecordedOn(track.recordedOn);
   if (tracklist.length > MAX_TRACKLIST_LENGTH) return null;
   if (recordedOn && !DATE_PATTERN.test(recordedOn)) return null;
   return { tracklist, recordedOn };
