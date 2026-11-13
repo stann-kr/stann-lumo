@@ -20,6 +20,8 @@ export interface AdminEditGuardContextValue {
   isDirty: boolean;
   setDirty: (isDirty: boolean) => void;
   requestExit: (action: () => void) => void;
+  /** Increases each time the user confirms leaving without saving. */
+  discardCount: number;
 }
 
 const AdminEditGuardContext = createContext<AdminEditGuardContextValue | undefined>(undefined);
@@ -31,6 +33,7 @@ const AdminEditGuardContext = createContext<AdminEditGuardContextValue | undefin
 export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) => {
   const [isDirty, setDirty] = useState(false);
   const [pendingExit, setPendingExit] = useState<PendingExit | null>(null);
+  const [discardCount, setDiscardCount] = useState(0);
   const triggerRef = useRef<HTMLElement | null>(null);
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -81,6 +84,7 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
     const action = pendingExit?.action;
     triggerRef.current = null;
     setDirty(false);
+    setDiscardCount((count) => count + 1);
     setPendingExit(null);
     action?.();
   }, [pendingExit]);
@@ -109,7 +113,7 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
   };
 
   return (
-    <AdminEditGuardContext.Provider value={{ isDirty, setDirty, requestExit }}>
+    <AdminEditGuardContext.Provider value={{ isDirty, setDirty, requestExit, discardCount }}>
       {children}
       {pendingExit && (
         <div className={styles.backdrop}>
@@ -140,6 +144,27 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
     </AdminEditGuardContext.Provider>
   );
 };
+
+/**
+ * Drops the screen's drafts after the user confirms leaving without saving.
+ * Some exits keep the screen mounted (switching the edit language), so the drafts must really go:
+ * otherwise they stay on screen while the guard reports nothing to save.
+ */
+export function useDiscardOnConfirmedExit(discard: () => void) {
+  const { discardCount } = useAdminEditGuard();
+  const seenRef = useRef(discardCount);
+  const discardRef = useRef(discard);
+
+  useEffect(() => {
+    discardRef.current = discard;
+  });
+
+  useEffect(() => {
+    if (seenRef.current === discardCount) return;
+    seenRef.current = discardCount;
+    discardRef.current();
+  }, [discardCount]);
+}
 
 export const useAdminEditGuard = () => {
   const context = useContext(AdminEditGuardContext);

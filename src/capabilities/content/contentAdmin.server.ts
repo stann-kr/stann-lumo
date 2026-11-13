@@ -43,6 +43,8 @@ export class TrackInputError extends Error {
 
 /**
  * Replaces one language's track list and stores each track's language-neutral mix text.
+ * Mix text is shared by every language, so a field the request leaves out keeps its stored value
+ * (a new track starts empty); an empty string clears it.
  * Cover images are kept; rows for ids that no longer exist in any language are removed and their
  * cover media ids are returned so the caller can delete the stored objects.
  */
@@ -79,8 +81,15 @@ export async function replaceTracks(
     )),
     ...items.map((track, index) => db.prepare(
       `INSERT INTO track_media (track_id, tracklist, recorded_on, updated_at) VALUES (?, ?, ?, datetime('now'))
-       ON CONFLICT(track_id) DO UPDATE SET tracklist = excluded.tracklist, recorded_on = excluded.recorded_on, updated_at = excluded.updated_at`,
-    ).bind(track.id, media[index]!.tracklist, media[index]!.recordedOn)),
+       ON CONFLICT(track_id) DO UPDATE SET tracklist = COALESCE(?, tracklist), recorded_on = COALESCE(?, recorded_on),
+         updated_at = excluded.updated_at`,
+    ).bind(
+      track.id,
+      media[index]!.tracklist,
+      media[index]!.recordedOn,
+      typeof track.tracklist === 'string' ? media[index]!.tracklist : null,
+      typeof track.recordedOn === 'string' ? media[index]!.recordedOn : null,
+    )),
     db.prepare('DELETE FROM track_media WHERE track_id NOT IN (SELECT id FROM tracks)'),
   ]);
 

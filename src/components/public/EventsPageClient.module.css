@@ -19,7 +19,8 @@
 .status { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; color: var(--v5-muted-2); overflow-wrap: anywhere; }
 .status[data-cancelled='true'] { color: var(--v5-muted); text-decoration: line-through; }
 .poster { align-self: stretch; width: 88px; min-height: 88px; background: var(--v5-inset); }
-.poster > img { object-fit: cover; }
+/* Out of flow, so a loaded poster fills the slot instead of growing the row to the image's own height. */
+.row .poster > img { position: absolute; inset: 0; object-fit: cover; }
 .arrow { align-self: stretch; display: flex; align-items: center; justify-content: center; background: var(--v5-band); font-weight: 700; }
 .row:hover .arrow { background: var(--color-primary); color: #000; }
 

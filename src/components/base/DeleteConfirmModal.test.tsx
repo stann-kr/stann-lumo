@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { useRef, useState } from 'react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { useDeleteConfirm } from '@/capabilities/admin/useDeleteConfirm';
@@ -36,5 +37,24 @@ describe('DeleteConfirmModal', () => {
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await waitFor(() => expect(opener).toHaveFocus());
+  });
+
+  it('moves focus to the given fallback when the opener was removed with the item', async () => {
+    const user = userEvent.setup();
+    function RemovingHarness() {
+      const [items, setItems] = useState(['Fixture']);
+      const [open, setOpen] = useState(false);
+      const listRef = useRef<HTMLElement>(null);
+      return <section ref={listRef} tabIndex={-1} aria-label="LIST">
+        {items.map((item) => <button key={item} type="button" onClick={() => setOpen(true)}>DELETE {item}</button>)}
+        <DeleteConfirmModal show={open} itemName="Fixture" returnFocusRef={listRef}
+          onConfirm={() => { setItems([]); setOpen(false); }} onCancel={() => setOpen(false)} />
+      </section>;
+    }
+    render(<RemovingHarness />);
+    await user.click(screen.getByRole('button', { name: 'DELETE Fixture' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: '취소' })).toHaveFocus());
+    await user.click(screen.getByRole('button', { name: '삭제' }));
+    await waitFor(() => expect(screen.getByRole('region', { name: 'LIST' })).toHaveFocus());
   });
 });

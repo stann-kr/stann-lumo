@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "../feature/PublicLink";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { CONTACT_EMAIL, INSTAGRAM_URL, SITE_NAME } from "@/constants/site";
+import { CONTACT_EMAIL, INSTAGRAM_URL, SITE_NAME, SOUNDCLOUD_URL } from "@/constants/site";
 import { hasKnownDuration, type ArtistInfoItem, type HomeEventPreview, type HomePreviews } from "@/capabilities/content/content";
 import { performanceDate, performanceLocation, performanceToday } from "@/capabilities/events/events";
 import { getPublicImageUrl } from "@/capabilities/media/media";
@@ -131,6 +131,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
               </ul>
             )}
             <div className={styles.keyGrid}>
+              <a className={`${styles.plateKey} ${styles.platformKey}`} href={SOUNDCLOUD_URL} target="_blank" rel="noopener noreferrer">{external("SoundCloud ↗")}</a>
               <Link className={styles.plateKey} href="/music">{copy.allMixes}</Link>
             </div>
           </section>
@@ -211,7 +212,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
           <div className={styles.strip}>
             {photos.map((photo) => (
               <Link key={photo.id} href={`/archive/${photo.id}`} aria-label={photo.caption || photo.altText || copy.viewImage}>
-                <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.caption} quiet className={styles.stripImage} />
+                <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.caption} quiet />
               </Link>
             ))}
           </div>

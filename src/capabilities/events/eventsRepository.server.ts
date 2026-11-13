@@ -85,6 +85,8 @@ function mapPublicPerformance(row: PerformanceRow): Performance {
     ...(row.ra_event_link != null && { raEventLink: row.ra_event_link }),
     ...(row.ra_event_id != null && { raEventId: row.ra_event_id }),
     ...(row.poster_image_id != null && { posterImageId: row.poster_image_id }),
+    // Shown in place of RA's area-wide location "All" (see performanceLocation).
+    ...(row.ra_country_name != null && { raCountryName: row.ra_country_name }),
   };
 }
 

@@ -23,7 +23,8 @@
 }
 .tile:hover { background: var(--v5-band); }
 .tile:focus-visible { outline-offset: -2px; }
-.caption { padding: 12px 16px 14px; font-size: .875rem; line-height: 1.45; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+/* Margins, not padding: a clamped box only clips at its padding edge, so bottom padding would show the third line. */
+.caption { margin: 12px 16px 14px; font-size: .875rem; line-height: 1.45; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .date { display: block; margin-top: -8px; padding: 0 16px 14px; font-size: 12px; color: var(--v5-muted); }
 .empty { color: var(--v5-muted-2); }
 .skeleton { background: var(--v5-plate-2); }
@@ -42,7 +43,7 @@
   .sort { flex: 1; }
   .sortKey { flex: 1; }
   .sortKey > span { flex: 1; padding: 0 8px; }
-  .caption { padding-inline: 12px; }
+  .caption { margin-inline: 12px; }
   .date { padding-inline: 12px; }
   .media[data-video='true']::after { width: 36px; height: 36px; }
 }

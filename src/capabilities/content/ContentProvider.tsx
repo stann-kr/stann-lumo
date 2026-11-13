@@ -15,13 +15,18 @@ import type {
   MusicContent,
   EventsContent,
   ContactContent,
+  Track,
 } from './content';
 
 export type ContentStatus = "loading" | "ready" | "error";
 
+/** Language-neutral track media (stored once per track id). A key set to undefined removes the value. */
+export type TrackMediaPatch = Pick<Track, 'id'> & Partial<Pick<Track, 'tracklist' | 'recordedOn' | 'coverImageId'>>;
+
 interface ContentContextType {
   content: ContentData;
   updateContent: (updates: Partial<ContentData>) => void;
+  updateTrackMedia: (patches: TrackMediaPatch[]) => void;
   musicContent: MusicContent;
   eventsContent: EventsContent;
   contactContent: ContactContent;
@@ -119,6 +124,30 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
+  /**
+   * Track media is shared by every language, so a saved change is copied into each language's
+   * in-memory track with the same id. Patches the latest state, never a copy captured earlier.
+   */
+  const updateTrackMedia = useCallback((patches: TrackMediaPatch[]) => {
+    const byId = new Map(patches.map((patch) => [patch.id, patch]));
+    const patchTracks = (data: ContentData): ContentData => ({
+      ...data,
+      tracks: data.tracks.map((track) => {
+        const patch = byId.get(track.id);
+        if (!patch) return track;
+        const next: Track = { ...track };
+        for (const field of ['tracklist', 'recordedOn', 'coverImageId'] as const) {
+          if (!(field in patch)) continue;
+          const value = patch[field];
+          if (value) next[field] = value;
+          else delete next[field];
+        }
+        return next;
+      }),
+    });
+    setAllContent((prev) => ({ en: patchTracks(prev.en), ko: patchTracks(prev.ko) }));
+  }, []);
+
   const musicContent: MusicContent = { tracks: content.tracks ?? [] };
   const eventsContent: EventsContent = {
     performances: content.performances ?? [],
@@ -133,6 +162,7 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
       value={{
         content,
         updateContent,
+        updateTrackMedia,
         musicContent,
         eventsContent,
         contactContent,

@@ -36,8 +36,10 @@ export async function logout(): Promise<void> {
   await apiPost<void>('/api/auth/logout', {});
 }
 
+/** Ends the admin session. Rejects when the server did not confirm it, so the caller can keep the user signed in and say so. */
 export async function requestLogout(): Promise<void> {
-  await fetch('/api/auth/logout', { method: 'POST' });
+  const response = await fetch('/api/auth/logout', { method: 'POST' });
+  if (!response.ok) throw new Error(`Logout failed with status ${response.status}`);
 }
 
 export type AdminSessionState = 'authenticated' | 'unauthenticated' | 'unknown';

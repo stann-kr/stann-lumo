@@ -39,6 +39,15 @@ function mapGalleryPhoto(row: GalleryPhotoRow): GalleryPhoto {
   };
 }
 
+/**
+ * Gallery columns for public reads, with the event link taken from the joined performance: media whose event was
+ * deleted reads as unlinked instead of pointing at a missing event page. Use with `FROM ${LINKED_GALLERY_SOURCE}`.
+ */
+export const LINKED_GALLERY_COLUMNS = `g.id, g.filename, g.mime_type, g.size_bytes, g.alt_text, g.caption, g.sort_order,
+  g.created_at, g.media_type, g.focal_x, g.focal_y, g.video_youtube_id, g.video_thumbnail_url, p.id AS linked_event_id`;
+export const LINKED_GALLERY_SOURCE = 'gallery_photos g LEFT JOIN performances p ON p.id = g.linked_event_id';
+
+/** Every stored row as saved, including links to events that no longer exist; for the admin editor. */
 export async function fetchGalleryPhotos(db: D1Database): Promise<GalleryPhoto[]> {
   const result = await db.prepare(
     'SELECT * FROM gallery_photos ORDER BY sort_order ASC, created_at DESC',
@@ -46,12 +55,13 @@ export async function fetchGalleryPhotos(db: D1Database): Promise<GalleryPhoto[]
   return result.results.map(mapGalleryPhoto);
 }
 
+/** One item for a public page (the event poster), with its event link resolved like the archive. */
 export async function fetchGalleryPhotoById(
   db: D1Database,
   id: string,
 ): Promise<GalleryPhoto | null> {
   const row = await db.prepare(
-    'SELECT * FROM gallery_photos WHERE id = ?',
+    `SELECT ${LINKED_GALLERY_COLUMNS} FROM ${LINKED_GALLERY_SOURCE} WHERE g.id = ?`,
   ).bind(id).first<GalleryPhotoRow>();
   return row ? mapGalleryPhoto(row) : null;
 }

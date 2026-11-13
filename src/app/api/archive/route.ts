@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { GalleryData } from '@/capabilities/media/media';
-import { fetchGalleryPhotos } from '@/capabilities/media/mediaRepository.server';
 import { getDB } from '@/lib/db';
-import { getArchivePage } from '@/capabilities/content/publicContent.server';
+import { getArchivePage, getArchivePhotos } from '@/capabilities/content/publicContent.server';
 import { publicPageOffset } from '@/capabilities/content/publicPagination';
 import { archiveBrowseState } from '@/capabilities/media/archiveBrowsing';
 
@@ -21,7 +20,8 @@ export async function GET(request: Request) {
   if (!db) return NextResponse.json({ success: true, data: { photos: [] } });
 
   try {
-    const data: GalleryData = { photos: await fetchGalleryPhotos(db) };
+    // The public projection, not the admin rows: event links are resolved and the payload is checked.
+    const data: GalleryData = { photos: await getArchivePhotos() };
     return NextResponse.json({ success: true, data }, {
       headers: { 'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600' },
     });
