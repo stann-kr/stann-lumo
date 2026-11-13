@@ -2,9 +2,9 @@
 .photo { margin: 0; min-height: 100%; background: var(--v5-plate-2); }
 .photo img { display: block; width: 100%; height: 100%; object-fit: cover; aspect-ratio: 1024 / 1400; }
 .intro { display: flex; flex-direction: column; }
-.name { padding: 28px 20px 0; font-weight: 900; font-size: clamp(4rem, 9vw, 8rem); line-height: .88; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
+/* Name and lede sit on the facts, as on the canvas About board; the plate's spare height stays above them. */
+.name { margin-top: auto; padding: 28px 20px 0; font-weight: 900; font-size: clamp(4rem, 9vw, 8rem); line-height: .88; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
 .lede { max-width: 34em; padding: 20px 20px 28px; font-size: clamp(1.125rem, 1.6vw, 1.375rem); font-weight: 500; line-height: 1.5; }
-.facts { margin-top: auto; }
 .fact { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 12px; padding: 12px 20px; }
 .fact dt { color: var(--v5-muted); }
 .fact dd { font-weight: 500; overflow-wrap: anywhere; }
@@ -12,6 +12,11 @@
 .prose p { line-height: 1.7; color: var(--v5-muted-2); white-space: pre-line; overflow-wrap: anywhere; }
 .prose p + p { margin-top: 1em; }
 .philosophy + .philosophy { margin-top: 2rem; }
+/* Canvas About board: the biography reads in two columns beside the wide hero. */
+@media (min-width: 981px) {
+  .columns { max-width: none; columns: 2; column-gap: 32px; }
+  .columns p { break-inside: avoid; }
+}
 .philosophy blockquote { margin-bottom: 1rem; padding-left: 16px; border-left: 4px solid var(--v5-band); font-size: clamp(1.25rem, 2vw, 1.75rem); font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
 .references { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; background: var(--v5-plate); }
 .references > a { min-height: 56px; justify-content: space-between; padding: 0 20px; }

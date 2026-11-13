@@ -42,13 +42,13 @@ export default function AboutPageClient({ artistInfo, aboutSections }: AboutPage
         return (
           <section key={section.id} className={v5.plate} aria-labelledby={`about-${section.id}`}>
             <div className={v5.band}><h2 id={`about-${section.id}`} className={v5.label}>{section.title}</h2></div>
-            <div className={`${v5.pad} ${styles.prose}`}>
+            <div className={`${v5.pad} ${styles.prose} ${biography ? styles.columns : ""}`}>
               {section.type === "paragraphs" && (section.paragraphs ?? []).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               {section.type === "philosophy-items" && (section.items ?? []).map((item) => (
                 <div key={item.id} className={styles.philosophy}>
                   {/* The biography quote already leads the intro plate. */}
                   {item.quote && !(biography && item.description) && <blockquote>{item.quote}</blockquote>}
-                  {item.description && <p>{item.description}</p>}
+                  {item.description?.split(/\n{2,}/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
                 </div>
               ))}
             </div>
