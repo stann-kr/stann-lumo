@@ -153,56 +153,6 @@ body {
     @apply border border-[var(--color-muted)] relative;
     background-color: color-mix(in srgb, var(--color-bg) 30%, transparent);
   }
-
-  /* Corner Crosshairs */
-  .hud-crosshair {
-    @apply relative;
-  }
-  .hud-crosshair::before,
-  .hud-crosshair::after {
-    content: "";
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border: 1px solid var(--color-muted);
-    pointer-events: none;
-    z-index: 10;
-  }
-  .hud-crosshair::before {
-    top: -1px;
-    left: -1px;
-    border-right: none;
-    border-bottom: none;
-  }
-  .hud-crosshair::after {
-    bottom: -1px;
-    right: -1px;
-    border-left: none;
-    border-top: none;
-  }
-
-  /* Sci-Fi Brackets [ Content ] */
-  .hud-bracket {
-    @apply relative overflow-visible;
-  }
-  .hud-bracket::before,
-  .hud-bracket::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 4px;
-    height: 100%;
-    border: 1px solid var(--color-muted);
-    pointer-events: none;
-  }
-  .hud-bracket::before {
-    left: -6px;
-    border-right: none;
-  }
-  .hud-bracket::after {
-    right: -6px;
-    border-left: none;
-  }
 }
 
 @layer utilities {

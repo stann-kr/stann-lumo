@@ -132,14 +132,6 @@ export const COLORS = {
     subtitle: v.accent, // [SUBTITLE] 텍스트
   },
 
-  /** ─ 섹션 헤더 (PageSection 컴포넌트) ────────────────── */
-  section: {
-    accentBar: v.muted, // 제목 좌측 4px 수직 바 (hidden md:block)
-    icon: v.accent, // 섹션 아이콘 (ri-*-line)
-    title: v.primary, // 섹션 h2 타이틀
-    dividerLine: v.muted, // 제목 우측 수평 구분선 (opacity-30)
-  },
-
   /** ─ HUD 패널 / 카드 컨테이너 ────────────────────────── */
   card: {
     bg: v.surface, // hud-panel 반투명 배경
