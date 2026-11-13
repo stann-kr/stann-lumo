@@ -239,10 +239,10 @@ describe('public server content projections', () => {
       expect(previews.pastEvents.map((event) => event.id)).toEqual(['event-0']);
       expect(previews.photos.map((photo) => photo.id)).toEqual(['photo-0', 'photo-1', 'photo-2', 'photo-3']);
       expect(previews.tracks[0]).toEqual({ id: 'track-0', title: 'Track 0', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00' });
-      // Mix media reaches the home card (cover, recording date) but the tracklist stays on /music.
+      // Mix media reaches the home card (cover, recording date, first track for the mobile mix plate); the full tracklist stays on /music.
       sqlite.prepare("INSERT INTO track_media (track_id, tracklist, recorded_on, cover_image_id) VALUES ('track-1', 'A\nB', '2026-10-31', 'cover-1')").run();
       const withMedia = await getHomeProjection('en');
-      expect(withMedia.previews.tracks[1]).toEqual({ id: 'track-1', title: 'Track 1', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00', recordedOn: '2026-10-31', coverImageId: 'cover-1' });
+      expect(withMedia.previews.tracks[1]).toEqual({ id: 'track-1', title: 'Track 1', type: 'Original', year: '2026', platform: 'Bandcamp', link: '', duration: '0:00', recordedOn: '2026-10-31', coverImageId: 'cover-1', firstTrack: 'A' });
       expect(previews.photos[0]).toEqual({ id: 'photo-0', caption: 'Photo 0', altText: '' });
       // Only names reach the home; URLs stay on the Link page.
       expect(previews.platforms).toEqual(['Instagram', 'SoundCloud']);

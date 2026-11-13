@@ -1,6 +1,6 @@
 /* canvas Main/Mobile "player": one 16:9 screen on the darkest plate with a bar under it. The screen and bar keep the
    same size closed and open and for every host, so playing or switching mixes never resizes the mix column. */
-.player { display: flex; flex-direction: column; margin-top: var(--v5-gap); background: var(--v5-inset); }
+.player { display: flex; flex-direction: column; background: var(--v5-inset); }
 .screen { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
 .poster { position: absolute; inset: 0; }
 .poster > * { width: 100%; height: 100%; aspect-ratio: auto; padding: 0; }
@@ -13,13 +13,14 @@
 .screen iframe { display: block; width: 100%; height: 100%; border: 0; background: #000; }
 .bar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; padding: 0 20px;
-  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--v5-muted-2);
+  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--v5-muted);
 }
 .facts { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .source { flex: none; color: var(--v5-link); }
 .host { flex: none; color: var(--v5-muted); }
 @media (max-width: 640px) {
   .playKey { width: 64px; height: 64px; }
+  .playKey svg { width: 20px; height: 20px; }
   .bar { padding-inline: 16px; }
   .heading { padding: 14px 16px 32px; }
 }

@@ -23,15 +23,15 @@ type Track = HomePreviews["tracks"][number];
 
 const COPY = {
   ko: {
-    latestMix: "최근 믹스", allMixes: "모든 믹스 →", all: "전체 →",
+    allMixes: "모든 믹스 →", tracklistAll: "트랙리스트 · 모든 믹스 →", firstTrack: "첫 곡", all: "전체 →",
     datesAll: "전체 일정 · 지난 공연 →", noDates: "예정된 공연이 없습니다.", followDates: "다음 일정 소식 받기 ↗", past: "지난 공연",
-    bookingLead: "클럽·페스티벌·브랜드 이벤트 섭외", inquiry: "문의 보내기 →", photosAll: "사진 전체 →", viewImage: "이미지 보기",
+    bookingLead: "클럽·페스티벌·브랜드 이벤트 섭외", inquiry: "문의 보내기 →", inquiryShort: "문의 →", photosAll: "사진 전체 →", viewImage: "이미지 보기",
     newTab: " (새 창)", mixesLabel: "믹스와 릴리스", recentMixes: "최근 믹스 목록",
   },
   en: {
-    latestMix: "Latest mix", allMixes: "All mixes →", all: "All →",
+    allMixes: "All mixes →", tracklistAll: "Tracklist · All mixes →", firstTrack: "First track", all: "All →",
     datesAll: "All dates · past shows →", noDates: "No upcoming dates.", followDates: "Get notified of new dates ↗", past: "Past",
-    bookingLead: "Clubs, festivals and brand events", inquiry: "Send inquiry →", photosAll: "All photos →", viewImage: "View image",
+    bookingLead: "Clubs, festivals and brand events", inquiry: "Send inquiry →", inquiryShort: "Inquiry →", photosAll: "All photos →", viewImage: "View image",
     newTab: " (opens in a new tab)", mixesLabel: "Mixes and releases", recentMixes: "Recent mixes",
   },
 } as const;
@@ -61,6 +61,8 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   const upcoming = previews?.events ?? [];
   const past = previews?.pastEvents ?? [];
   const next = upcoming[0];
+  // The mobile board lists dates after the one already in the NEXT row.
+  const compactDates = upcoming.length > 0 ? upcoming.slice(1) : past;
   const photos = previews?.photos ?? [];
   const today = performanceToday();
   const [firstName, ...restName] = artistName.split(/\s+/);
@@ -69,6 +71,8 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   const mixFacts = (mix: (typeof deck)[number]) => [mix.type, mix.recordedOn ? `Rec ${mix.recordedOn.replaceAll("-", ".")}` : mix.year, hasKnownDuration(mix.duration) ? mix.duration : ""].filter(Boolean).join(" · ");
 
   const external = (label: string) => <>{label}<span className="sr-only">{copy.newTab}</span></>;
+  /** Desktop and mobile boards word the same key differently. */
+  const responsive = (wide: string, narrow: string) => <><span className={styles.wideOnly}>{wide}</span><span className={styles.narrowOnly}>{narrow}</span></>;
 
   const eventRow = (event: HomeEventPreview, index: number, isPast = false) => {
     const city = performanceLocation(event);
@@ -86,6 +90,17 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
     );
   };
 
+  /** Mobile board row: MM-DD, venue and city, and a quiet INFO/TBA label; the whole row opens the event. */
+  const compactRow = (event: HomeEventPreview, index: number, isPast = false) => (
+    <li key={event.id} data-alt={index % 2 === 1}>
+      <Link className={styles.compactRow} href={`/events/${event.id}`}>
+        <time className={styles.mono} dateTime={performanceDate(event.date)}>{isPast ? performanceDate(event.date) : performanceDate(event.date).slice(5)}</time>
+        <span className={styles.compactPlace}>{[event.venue || event.title, performanceLocation(event)].filter(Boolean).join(", ")}</span>
+        <span className={`${styles.label} ${styles.muted}`}>{event.status === "TBA" ? "TBA" : "Info"}</span>
+      </Link>
+    </li>
+  );
+
   return (
     <div className={styles.home}>
       <div className={styles.heroRow}>
@@ -101,9 +116,10 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
 
         {latestMix && (
           <section className={styles.mix} aria-labelledby="home-mix">
-            <div className={styles.band}><h2 id="home-mix" className={styles.label}>{copy.latestMix}</h2>{deck.length > 1
-              ? <span className={`${styles.label} ${styles.muted}`}>{String(deck.indexOf(latestMix) + 1).padStart(2, "0")} / {String(deck.length).padStart(2, "0")}</span>
-              : latestMix.platform && <span className={`${styles.label} ${styles.muted}`}>{latestMix.platform}</span>}</div>
+            {/* The band reads LATEST MIX in both languages, like the other English plate heads. */}
+            <div className={styles.band}><h2 id="home-mix" className={styles.label}>Latest mix</h2>{deck.length > 1
+              ? <span className={`${styles.label} ${styles.muted} ${styles.wideOnly}`}>{String(deck.indexOf(latestMix) + 1).padStart(2, "0")} / {String(deck.length).padStart(2, "0")}</span>
+              : latestMix.platform && <span className={`${styles.label} ${styles.muted} ${styles.wideOnly}`}>{latestMix.platform}</span>}</div>
             {/* The mix's title and facts live in the player's fixed screen and bar, so switching mixes or pressing play
                 never changes the column's height and the hero beside it keeps its size. */}
             {latestMix.link ? (
@@ -130,9 +146,13 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
                 })}
               </ul>
             )}
+            {/* Mobile board: the deck folds away and the mix's first track shows instead, only when it has a tracklist. */}
+            {latestMix.firstTrack && (
+              <p className={styles.firstTrack}><span className={`${styles.mono} ${styles.muted}`} aria-hidden="true">01</span><span className="sr-only">{copy.firstTrack}: </span><span>{latestMix.firstTrack}</span></p>
+            )}
             <div className={styles.keyGrid}>
               <a className={`${styles.plateKey} ${styles.platformKey}`} href={SOUNDCLOUD_URL} target="_blank" rel="noopener noreferrer">{external("SoundCloud ↗")}</a>
-              <Link className={styles.plateKey} href="/music">{copy.allMixes}</Link>
+              <Link className={styles.plateKey} href="/music">{latestMix.firstTrack ? responsive(copy.allMixes, copy.tracklistAll) : copy.allMixes}</Link>
             </div>
           </section>
         )}
@@ -144,9 +164,11 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
           <time className={styles.mono} dateTime={performanceDate(next.date)}>{performanceDate(next.date)}{next.time ? ` ${next.time}` : ""}</time>
           <Link className={styles.nextTitle} href={`/events/${next.id}`}>{next.title}</Link>
           <span className={styles.nextVenue}>{[next.venue, performanceLocation(next)].filter(Boolean).join(", ")}</span>
+          {/* Mobile board: one mono line, MM-DD HH:MM · venue. */}
+          <span className={`${styles.mono} ${styles.nextLine}`}><time dateTime={performanceDate(next.date)}>{performanceDate(next.date).slice(5)}{next.time ? ` ${next.time}` : ""}</time>{next.venue && ` · ${next.venue}`}</span>
           {next.raEventLink && next.raHasTickets
-            ? <a className={`${styles.rowKey} ${styles.signal}`} href={next.raEventLink} target="_blank" rel="noopener noreferrer">{external("TICKETS ↗")}</a>
-            : <Link className={styles.rowKey} href={`/events/${next.id}`}>INFO →</Link>}
+            ? <a className={`${styles.rowKey} ${styles.nextKey} ${styles.signal}`} href={next.raEventLink} target="_blank" rel="noopener noreferrer">{external("TICKETS ↗")}</a>
+            : <Link className={`${styles.rowKey} ${styles.nextKey}`} href={`/events/${next.id}`}>INFO →</Link>}
         </div>
       )}
 
@@ -174,8 +196,9 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
       )}
 
       <div className={styles.splitRow}>
-        <section className={`${styles.plate} ${styles.dates}`} aria-labelledby="home-dates">
-          <div className={styles.plateHead}><h2 id="home-dates" className={styles.display}>Dates</h2><Link href="/events">{copy.datesAll}</Link></div>
+        {/* On mobile the next date sits in the NEXT row; with nothing after it the plate folds away. */}
+        <section className={`${styles.plate} ${styles.dates}`} aria-labelledby="home-dates" data-compact-empty={compactDates.length === 0 && upcoming.length > 0}>
+          <div className={styles.plateHead}><h2 id="home-dates" className={styles.display}>Dates</h2><Link href="/events">{responsive(copy.datesAll, copy.all)}</Link></div>
           {upcoming.length > 0 ? (
             <ul className={styles.dateList}>{upcoming.map((event, index) => eventRow(event, index))}</ul>
           ) : (
@@ -190,10 +213,16 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
               </>}
             </>
           )}
+          {compactDates.length > 0 && <ul className={styles.compactDates}>{compactDates.map((event, index) => compactRow(event, index, upcoming.length === 0))}</ul>}
         </section>
 
         <section className={styles.booking} aria-labelledby="home-booking">
-          <div className={styles.bookingHead}><h2 id="home-booking" className={styles.display}>Booking</h2><p>{copy.bookingLead}</p></div>
+          <div className={styles.bookingHead}>
+            <h2 id="home-booking" className={styles.display}>Booking</h2>
+            <p className={styles.bookingLead}>{copy.bookingLead}</p>
+            {/* Mobile board: the address alone replaces the lead and the fact rows. */}
+            <p className={`${styles.mono} ${styles.bookingMail}`}><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></p>
+          </div>
           <dl className={styles.bookingFacts}>
             <div><dt className={styles.label}>Contact</dt><dd className={styles.mono}><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></dd></div>
             <div><dt className={styles.label}>Residency</dt><dd>Faust Seoul</dd></div>
@@ -201,7 +230,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
           </dl>
           <div className={styles.bookingKeys}>
             <Link className={styles.inkKey} href="/press-kit">PRESS KIT →</Link>
-            <Link className={styles.redKey} href="/contact">{copy.inquiry}</Link>
+            <Link className={styles.redKey} href="/contact">{responsive(copy.inquiry, copy.inquiryShort)}</Link>
           </div>
         </section>
       </div>

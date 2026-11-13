@@ -357,8 +357,12 @@ describe('Home v5', () => {
     expect(screen.queryByText('0:00')).not.toBeInTheDocument();
     const booking = screen.getByRole('region', { name: 'Booking' });
     expect(within(booking).getByRole('link', { name: 'PRESS KIT →' })).toHaveAttribute('href', '/press-kit');
-    expect(within(booking).getByRole('link', { name: 'Send inquiry →' })).toHaveAttribute('href', '/contact');
-    expect(within(booking).getByRole('link', { name: 'contact@stann.kr' })).toHaveAttribute('href', 'mailto:contact@stann.kr');
+    // The mobile board shortens the inquiry key and shows the address alone; CSS picks one wording per width.
+    const inquiry = within(booking).getByRole('link', { name: /^Send inquiry →/ });
+    expect(inquiry).toHaveAttribute('href', '/contact');
+    expect(inquiry).toHaveTextContent('Inquiry →');
+    for (const mail of within(booking).getAllByRole('link', { name: 'contact@stann.kr' })) expect(mail).toHaveAttribute('href', 'mailto:contact@stann.kr');
+    expect(within(mix).queryByText(/Tracklist/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Real poster' })).toHaveAttribute('href', '/archive/poster');
     expect(screen.getByRole('img', { name: 'Poster' })).toHaveAttribute('src', '/api/media/poster?v=2&w=640');
   });
@@ -371,11 +375,28 @@ describe('Home v5', () => {
     ] })} />);
     expect(screen.getByText(/Next · D-06/)).toBeVisible();
     expect(screen.getByText('2026-11-17 23:00')).toBeVisible();
+    // Mobile board: one mono line under the title.
+    expect(screen.getByText('11-17 23:00').parentElement).toHaveTextContent('11-17 23:00 · Faust');
     const dates = screen.getByRole('region', { name: 'Dates' });
-    expect(within(dates).getAllByRole('link', { name: /TICKETS/ })).toHaveLength(1);
-    expect(within(dates).getByRole('link', { name: /TICKETS/ })).toHaveAttribute('href', 'https://ra.example/a');
-    expect(within(dates).getByRole('link', { name: 'INFO →' })).toHaveAttribute('href', '/events/b');
-    expect(within(dates).getByText('TBA')).toBeVisible();
+    const [rows, compact] = within(dates).getAllByRole('list');
+    expect(within(rows!).getAllByRole('link', { name: /TICKETS/ })).toHaveLength(1);
+    expect(within(rows!).getByRole('link', { name: /TICKETS/ })).toHaveAttribute('href', 'https://ra.example/a');
+    expect(within(rows!).getByRole('link', { name: 'INFO →' })).toHaveAttribute('href', '/events/b');
+    expect(within(rows!).getByText('TBA')).toBeVisible();
+    // Mobile board: the dates after the one in the NEXT row, as MM-DD rows that open the event.
+    expect(within(compact!).getAllByRole('link').map((link) => [link.getAttribute('href'), link.textContent])).toEqual([
+      ['/events/b', '12-06Faust, SeoulInfo'],
+      ['/events/c', '12-31Faust, SeoulTBA'],
+    ]);
+  });
+
+  it('shows the first track of a mix that has a tracklist and points its key at the tracklists', () => {
+    const base = previews();
+    render(<HomePageClient artistInfo={[]} previews={{ ...base, tracks: base.tracks.map((track) => track.id === 'mix' ? { ...track, firstTrack: 'Artist — Track' } : track) }} />);
+    const mix = screen.getByRole('region', { name: 'Latest mix' });
+    expect(within(mix).getByText('Artist — Track')).toBeVisible();
+    const key = within(mix).getByRole('link', { name: /Tracklist · All mixes →/ });
+    expect(key).toHaveAttribute('href', '/music');
   });
 
   it('turns an empty schedule into a follow prompt with recent past dates', () => {
@@ -387,5 +408,7 @@ describe('Home v5', () => {
     const dates = screen.getByRole('region', { name: 'Dates' });
     expect(within(dates).queryByRole('link', { name: /TICKETS/ })).not.toBeInTheDocument();
     expect(within(dates).getByRole('link', { name: 'INFO →' })).toHaveAttribute('href', '/events/old');
+    // Past dates keep their year on the mobile rows.
+    expect(within(dates).getByRole('link', { name: /^2026-09-25/ })).toHaveAttribute('href', '/events/old');
   });
 });

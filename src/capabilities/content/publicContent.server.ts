@@ -22,7 +22,7 @@ import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
 import { SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
 import { SITE_NAME } from '@/constants/site';
-import { trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
+import { trackMediaFields, tracklistLines, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
 export type PublicLocale = 'en' | 'ko';
 
@@ -230,7 +230,7 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
 
   const today = performanceToday();
   const [trackRows, eventRows, pastRows, photoRows] = await Promise.all([
-    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, m.recorded_on AS recorded_on, m.cover_image_id AS cover_image_id
+    localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, ${TRACK_MEDIA_COLUMNS}
       FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order LIMIT 8`, locale),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 3`, today),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE SUBSTR(REPLACE(date, '.', '-'), 1, 10) < ? ORDER BY REPLACE(date, '.', '-') DESC, sort_order LIMIT 3`, today),
@@ -239,9 +239,10 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
   const projection = {
     artistInfo: SITE_ARTIST_INFO,
     previews: {
-      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, recorded_on, cover_image_id }) => ({
-        id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }),
-      })),
+      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, tracklist, recorded_on, cover_image_id }) => {
+        const [firstTrack] = tracklistLines(tracklist ?? undefined);
+        return { id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }), ...(firstTrack && { firstTrack }) };
+      }),
       events: eventRows.map(mapHomeEvent),
       pastEvents: pastRows.map(mapHomeEvent),
       photos: photoRows.map(({ id, caption, alt_text }) => ({ id, caption, altText: alt_text })),
