@@ -75,6 +75,11 @@ export interface ImagesBinding {
   };
 }
 
+/** Workers Rate Limiting binding (`ratelimits` in wrangler.json). Counts are per Cloudflare location and eventually consistent. */
+export interface RateLimitBinding {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+
 // ── @opennextjs/cloudflare 전역 CloudflareEnv 인터페이스 확장 ─────────────────
 // 로컬 export 대신 global 확장 — getCloudflareContext() 반환 타입과 일치
 declare global {
@@ -83,6 +88,8 @@ declare global {
     MEDIA: R2Bucket;
     /** Cloudflare Images binding for resized page images; absent under plain Node dev. */
     IMAGES?: ImagesBinding;
+    /** Admin sign-in attempts per client address; absent under plain Node dev and in the read-only public preview. */
+    LOGIN_RATE_LIMITER?: RateLimitBinding;
     ADMIN_PASSWORD: string;
     /** 마이그레이션 엔드포인트 활성화 플래그 — 기본 비활성 */
     MIGRATE_ENABLED?: string;
@@ -122,6 +129,11 @@ export function getR2(): R2Bucket | null {
 /** Cloudflare Images binding, or undefined where images are served unresized. */
 export function getImages() {
   return getRequestCtx()?.env.IMAGES;
+}
+
+/** The admin sign-in attempt limiter, or undefined where the Worker binding does not exist. */
+export function getLoginRateLimiter() {
+  return getRequestCtx()?.env.LOGIN_RATE_LIMITER;
 }
 
 /**

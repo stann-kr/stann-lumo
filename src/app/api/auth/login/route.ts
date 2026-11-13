@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEnv } from '@/lib/db';
+import { getEnv, getLoginRateLimiter } from '@/lib/db';
 import {
   createSession,
   buildSessionCookieHeader,
@@ -26,7 +26,26 @@ async function timingSafeEqual(a: string, b: string): Promise<boolean> {
   return diff === 0;
 }
 
+/**
+ * Counts every attempt, valid or not, per client address. The binding allows 5 a minute in each Cloudflare location
+ * (wrangler.json); its counts are approximate, so this slows guessing rather than capping it exactly.
+ */
+async function allowSignInAttempt(request: NextRequest): Promise<boolean> {
+  const limiter = getLoginRateLimiter();
+  // Plain Node dev and the read-only public preview have no binding; the preview refuses sign-in on its own.
+  if (!limiter) return true;
+  const { success } = await limiter.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' });
+  return success;
+}
+
 export async function POST(request: NextRequest) {
+  if (!(await allowSignInAttempt(request))) {
+    return NextResponse.json(
+      { success: false, error: { code: 'RATE_LIMITED', message: 'Too many sign-in attempts' } },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
+  }
+
   try {
     const { password } = (await request.json()) as { password?: unknown };
     if (typeof password !== 'string' || password.length === 0 || password.length > 1024) {

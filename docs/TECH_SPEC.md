@@ -25,7 +25,7 @@ Cloudflare
 | Admin content | `src/contexts/ContentContext.tsx` | 편집용 콘텐츠 bootstrap과 상태 |
 | Terminal capability | `src/capabilities/terminal/` | 설정 contract, D1 persistence, API client |
 | Language | `src/contexts/LanguageContext.tsx` | language state |
-| Deploy | `wrangler.json` | Cloudflare route, D1, R2 binding |
+| Deploy | `wrangler.json` | Cloudflare route, D1, R2, Images, rate limit binding |
 | 보안 헤더 | `next.config.ts` | 모든 응답에 CSP·`X-Frame-Options`·`Permissions-Policy` 등. iframe은 SoundCloud·YouTube 플레이어만 허용 |
 
 ## 런타임과 프레임워크
@@ -89,6 +89,7 @@ Cloudflare resources:
 | `.dev.vars` | local wrapper가 관리자 비밀번호만 일회성 Worker 환경으로 투영 | 파일명·키 이름만 가능 |
 | `DB` | Cloudflare D1 binding | binding 이름만 가능 |
 | `MEDIA` | Cloudflare R2 binding | binding 이름만 가능 |
+| `LOGIN_RATE_LIMITER` | 관리자 로그인 시도 제한(Workers Rate Limiting, 접속 주소당 분당 5회, Cloudflare 위치별 근사치). 넘으면 `/api/auth/login`이 429 | binding 이름만 가능 |
 | Cloudflare token/account | 배포 인증 | 실값 금지 |
 
 ## 배포와 운영
