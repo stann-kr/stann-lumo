@@ -41,12 +41,18 @@ export default function AdminMusicPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [coverBusyId, setCoverBusyId] = useState<string | null>(null);
   const [coverMessage, setCoverMessage] = useState<{ id: string; text: string; error: boolean } | null>(null);
+  // Search, filter and the open editor belong to one edit language. Reset them while rendering a new language rather
+  // than in an effect: a mount-time effect also ran after the first render and closed an editor opened before it.
+  const [listLanguage, setListLanguage] = useState(currentEditLanguage);
+  if (listLanguage !== currentEditLanguage) {
+    setListLanguage(currentEditLanguage);
+    setQuery(''); setType('all'); setExpandedId(null); setDeleteId(null);
+  }
   const listRef = useRef<HTMLElement>(null);
   // A cover change replaces the saved list, so nothing else may be edited or saved until it finishes.
   const isBusy = isSaving || isLoading || coverBusyId !== null;
 
   useEffect(() => { setPageMeta(content.pageMeta); }, [content.pageMeta]);
-  useEffect(() => { setQuery(''); setType('all'); setExpandedId(null); setDeleteId(null); }, [currentEditLanguage]);
   // Covers are stored on upload, so they are not part of the unsaved list snapshot.
   const editableTracks = tracks.map((track) => ({ ...track, coverImageId: undefined }));
   const { isDirty, markSaved } = useUnsavedChanges({ pageMeta, tracks: editableTracks }, `${currentEditLanguage}:${isLoading}`);
