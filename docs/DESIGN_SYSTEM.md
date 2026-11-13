@@ -34,7 +34,7 @@
 ## 화면 배치
 
 - **헤더**(`PublicSiteShell`): 워드마크, 주 탐색 키(mono 11px, 400 굵기), KO/EN 전환, 붉은 Booking 키로 이뤄진다.
-  - 주 탐색: Music·Events·Archive·About·Press kit. 데스크톱은 Links를 여섯째 키로 둔다.
+  - 주 탐색: Music·Events·Archive·Press kit. 데스크톱은 Links를 다섯째 키로 둔다. About은 2026-11에 프레스킷으로 합쳐 `/about`이 `/press-kit`로 영구 이동(308)한다.
   - 1199px 이하에서는 Menu 대화상자로 접는다. 메뉴는 Contact와 Links를 주 항목 아래에 둔다.
   - 푸터는 두지 않는다. 연속 로딩 목록에서는 모든 페이지를 불러온 뒤에야 닿기 때문이다.
 - **홈**(`HomePageClient`)은 캔버스 Main·Mobile 보드를 따른다.
@@ -49,7 +49,6 @@
     - 정렬·페이지·Random seed는 URL에 남는다.
     - 상세의 이전·다음은 목록 정렬을 따른다.
     - 목록 복귀는 원래 항목과 스크롤 위치를 복원한다.
-  - 소개: 사진 판과 이름·인용·기본 정보 판을 나란히 둔다. 바이오그래피는 문단을 나누고 981px 이상에서 2단으로 흐른다.
 - **프레스킷**(`PressKitPageClient`)은 캔버스 Presskit·PresskitMobile 보드를 따른다. 공연 관계자용 페이지라 사이트 헤더 대신 전용 헤더(64px)를 쓴다.
   - 전용 헤더: 홈으로 가는 워드마크, PRESS KIT 표지, KO/EN, 전체 다운로드 ZIP 키, 붉은 Booking 키. 이름(Stann Lumo)이 h1이다.
   - 좌우 여백은 모든 폭에서 16px이고, 맨 아래에 STANN LUMO — PRESS KIT · 2026 푸터를 둔다.

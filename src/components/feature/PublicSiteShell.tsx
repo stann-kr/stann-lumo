@@ -151,7 +151,6 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     { label: "Music", path: "/music" },
     { label: "Events", path: "/events" },
     { label: "Archive", path: "/archive" },
-    { label: "About", path: "/about" },
     { label: "Press kit", path: "/press-kit" },
   ];
   const secondaryItems = [
@@ -185,7 +184,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME }: PublicSiteShellPr
     }
   };
 
-  // No footer: on the paged lists it was only reachable after every page had loaded. Desktop carries Links as a sixth key;
+  // No footer: on the paged lists it was only reachable after every page had loaded. Desktop carries Links as a fifth key;
   // the mobile menu lists Contact and Links below the main items. Social profiles live on /link.
   const desktopItems = [...navItems, { label: "Links", path: "/link" }];
   const navigation = (label: string, items = navItems) => (

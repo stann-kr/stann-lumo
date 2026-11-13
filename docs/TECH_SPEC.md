@@ -18,7 +18,7 @@ Cloudflare
 
 | 영역 | 파일/경로 | 확인 내용 |
 |---|---|---|
-| Public routes | `src/app/(public)/` | home, about, music, events, archive, contact, link |
+| Public routes | `src/app/(public)/` | home, music, events, archive, press-kit, contact, link (`/about`은 `/press-kit`로 308) |
 | Admin routes | `src/app/admin/(dashboard)/` | home, about, contact, link, music, events, archive, theme |
 | Public shell | `src/components/feature/PublicSiteShell.tsx` | navigation, language, focus, signal links |
 | 3D scene | `src/components/feature/Scene3D.tsx` | 보관된 모듈; 공개 shell에서는 미사용 |

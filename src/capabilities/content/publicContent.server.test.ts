@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db';
 import { getDB } from '@/lib/db';
 import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
-import { getAboutProjection, getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection } from './publicContent.server';
+import { getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection } from './publicContent.server';
 import { sortArchivePhotos } from '@/capabilities/media/archiveBrowsing';
 import { performanceLocation, performanceToday } from '@/capabilities/events/events';
 import { GET as archiveGET } from '@/app/api/archive/route';
@@ -130,19 +130,17 @@ describe('public server content projections', () => {
     expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
   });
 
-  it('serves About, Contact and Link from code without touching the database', async () => {
+  it('serves Contact and Link from code without touching the database', async () => {
     vi.mocked(getDB).mockReturnValue(null);
-    const about = await getAboutProjection('ko');
     const contact = await getContactProjection('en');
     const link = await getLinkProjection('ko');
-    expect(about.aboutSections[0]).toMatchObject({ title: 'BIOGRAPHY', type: 'philosophy-items' });
     expect(contact.contactInfo).toEqual([{ label: 'Email', value: 'contact@stann.kr', icon: 'ri-mail-line' }]);
     expect(contact.eventsInfo.setDurations).toHaveLength(2);
     expect(link.linkPlatforms.map((item) => item.platform)).toEqual(['Instagram', 'SoundCloud']);
     expect(link.terminalInfo.url).toBe('https://terminal.stann.kr');
     expect((await getPublicShellProjection('en')).artistName).toBe('STANN LUMO');
     expect(getDB).not.toHaveBeenCalled();
-    for (const projection of [about, contact, link]) expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
+    for (const projection of [contact, link]) expect(() => assertPublicPayloadSafe(projection)).not.toThrow();
   });
 
   it('returns null for a missing archive id without exposing a client fetch fallback', async () => {

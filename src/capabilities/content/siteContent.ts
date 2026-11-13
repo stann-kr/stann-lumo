@@ -1,10 +1,10 @@
-import type { ArtistInfoItem, ContactItem, ContactPageMeta, DynamicSection, LinkPageMeta, LinkPlatform } from './content';
+import type { ArtistInfoItem, ContactItem, ContactPageMeta, LinkPageMeta, LinkPlatform } from './content';
 import type { EventsInfo } from '@/capabilities/events/events';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
 import { CONTACT_EMAIL, INSTAGRAM_URL, SITE_NAME, SOUNDCLOUD_URL } from '@/constants/site';
 
 /**
- * Public About, Contact and Link copy kept in code, like the press kit.
+ * Public artist, Contact and Link copy kept in code, like the press kit (the About page became /press-kit in 2026-11).
  * These were admin-edited D1 rows until 2026-11; the values below are the production rows at that time
  * (English only — Korean already fell back to English). The tables stay in D1 for rollback but are no longer read.
  * Edit here and deploy to change them.
@@ -14,25 +14,6 @@ export const SITE_ARTIST_INFO: ArtistInfoItem[] = [
   { id: 'name', key: 'Name', value: SITE_NAME },
   { id: 'genre', key: 'Genre', value: 'Techno' },
   { id: 'location', key: 'Location', value: 'Seoul, South Korea' },
-];
-
-export const SITE_ABOUT_SECTIONS: DynamicSection[] = [
-  {
-    id: 'biography',
-    title: 'BIOGRAPHY',
-    type: 'philosophy-items',
-    order: 0,
-    items: [{
-      id: 'biography-1',
-      quote: 'Seoul-based DJ Stann Lumo captivates audiences with his primal sound and deep mixing, pushing the boundaries of techno as a resident at Club Faust while gaining international recognition.',
-      description: [
-        'Seoul-based DJ Stann Lumo delivers tracks infused with primal sound and intense energy, captivating audiences with his commanding stage presence.',
-        'His unique style is defined by instinctive rhythm, deep mixing, and raw, unrefined sound, all while wrapping listeners in an atmosphere that feels otherworldly.',
-        'This distinctive approach creates a powerful sense of immersion, pushing the boundaries of traditional techno and showcasing his musical prowess.',
-        "Currently a resident DJ at Seoul's iconic techno club Faust, Stann Lumo is also gaining international recognition, with impressive performances in cities like Berlin, Glasgow, and Mongolia.",
-      ].join('\n\n'),
-    }],
-  },
 ];
 
 export const SITE_CONTACT_INFO: ContactItem[] = [

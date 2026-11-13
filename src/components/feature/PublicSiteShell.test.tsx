@@ -43,7 +43,6 @@ vi.mock('next/link', () => ({
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => ({
-      nav_about: 'ABOUT',
       nav_archive: 'ARCHIVE',
       nav_close_menu: 'Close menu',
       nav_contact: 'CONTACT',
@@ -254,11 +253,11 @@ describe('PublicSiteShell public navigation', () => {
     const { resolve } = renderPendingNavigation();
     await user.click(screen.getByRole('link', { name: 'Open music from content' }));
     expect(screen.getByRole('status')).toHaveTextContent('Loading page');
-    await user.click(screen.getByRole('link', { name: 'About' }));
-    expect(await screen.findByRole('heading', { name: '/about' })).toBeVisible();
+    await user.click(screen.getByRole('link', { name: 'Events' }));
+    expect(await screen.findByRole('heading', { name: '/events' })).toBeVisible();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     await act(async () => { resolve(); });
-    expect(screen.getByRole('heading', { name: '/about' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: '/events' })).toBeVisible();
   });
 
   it('preserves modified, external, and cancelled link navigation and localizes the route fallback', async () => {

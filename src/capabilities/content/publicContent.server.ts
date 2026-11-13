@@ -7,7 +7,6 @@ import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
 import type {
   ArtistInfoItem,
   ContactItem,
-  DynamicSection,
   HomePreviews,
   HomeEventPreview,
   LinkPlatform,
@@ -21,7 +20,7 @@ import { LINKED_GALLERY_COLUMNS, LINKED_GALLERY_SOURCE } from '@/capabilities/me
 import { performanceToday } from '@/capabilities/events/events';
 import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
-import { SITE_ABOUT_SECTIONS, SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
+import { SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
 import { SITE_NAME } from '@/constants/site';
 import { trackMediaFields, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
@@ -249,18 +248,6 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
       platforms: SITE_LINK_PLATFORMS.slice(0, 4).map(({ platform }) => platform),
     },
   };
-  assertPublicPayloadSafe(projection);
-  return projection;
-});
-
-export interface AboutProjection {
-  artistInfo: ArtistInfoItem[];
-  aboutSections: DynamicSection[];
-}
-
-export const getAboutProjection = cache(async (locale: PublicLocale): Promise<AboutProjection> => {
-  void locale;
-  const projection = { artistInfo: SITE_ARTIST_INFO, aboutSections: SITE_ABOUT_SECTIONS };
   assertPublicPayloadSafe(projection);
   return projection;
 });

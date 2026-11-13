@@ -49,8 +49,6 @@ export default {
   home_terminal_enter: 'ENTER',
   
   // About page
-  about_title: 'ABOUT',
-  about_work_links: 'Recordings and performances',
   about_label_name: 'NAME',
   about_label_genre: 'GENRE',
   about_label_location: 'LOCATION',

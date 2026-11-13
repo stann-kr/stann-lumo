@@ -49,8 +49,6 @@ export default {
   home_terminal_enter: '입장',
   
   // About page
-  about_title: '소개',
-  about_work_links: '음악과 공연',
   about_label_name: '이름',
   about_label_genre: '장르',
   about_label_location: '위치',
