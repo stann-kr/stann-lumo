@@ -111,6 +111,26 @@ describe('AdminMusicPage shared track media', () => {
     expect(screen.getByLabelText('믹스 A 커버 교체')).toBeInTheDocument();
   });
 
+  it('keeps an editor open when it is opened as soon as the list appears', async () => {
+    mocks.fetchContent.mockImplementation(async (lang: 'en' | 'ko') => bundle([track('a', lang === 'en' ? 'Mix A' : '믹스 A')]));
+    // Open the editor in the same task the list is committed, before React runs the page's mount effects.
+    let opened = false;
+    const observer = new MutationObserver(() => {
+      const opener = screen.queryByRole('button', { name: 'Mix A 편집' });
+      if (!opened && opener) { opened = true; opener.click(); }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    try {
+      renderAdmin();
+      await screen.findByRole('button', { name: 'Mix A 편집' });
+      await nextFrame();
+    } finally {
+      observer.disconnect();
+    }
+    expect(opened).toBe(true);
+    expect(screen.getByRole('button', { name: 'Mix A 편집' })).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('moves focus to the music list after a confirmed delete removes the opener', async () => {
     mocks.fetchContent.mockImplementation(async () => bundle([track('a', 'Mix A'), track('b', 'Mix B')]));
     renderAdmin();
