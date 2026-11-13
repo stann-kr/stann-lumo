@@ -63,7 +63,8 @@ export async function uploadGalleryFiles(
   const minOrderRow = await db
     .prepare('SELECT MIN(sort_order) as min_order FROM gallery_photos')
     .first<{ min_order: number | null }>();
-  let nextOrder = (minOrderRow?.min_order ?? 1) - 1;
+  // The whole batch goes ahead of the current first item, keeping the order the files were chosen in.
+  let nextOrder = (minOrderRow?.min_order ?? 1) - acceptedFiles.length;
 
   const uploaded: GalleryPhoto[] = [];
   const storedKeys: string[] = [];

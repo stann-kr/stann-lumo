@@ -5,11 +5,13 @@ import type {
   D1Result,
   R2Bucket,
 } from '@/lib/db';
+import { createSqliteD1 } from '@/test/sqliteD1';
 import {
   deleteGalleryMedia,
   replaceEventPoster,
   uploadGalleryFiles,
 } from './mediaLifecycle.server';
+import { fetchGalleryPhotos } from './mediaRepository.server';
 
 interface StatementRecord {
   sql: string;
@@ -84,6 +86,26 @@ describe('media lifecycle server capability', () => {
     const storedKeys = r2.put.mock.calls.map(([key]) => key);
     expect(storedKeys).toHaveLength(2);
     expect(r2.delete).toHaveBeenCalledWith(storedKeys);
+  });
+
+  it('places a multi-file upload ahead of every existing item, in the order the files were chosen', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    try {
+      for (let index = 0; index < 4; index++) {
+        sqlite.prepare("INSERT INTO gallery_photos (id, filename, sort_order, created_at) VALUES (?, ?, ?, '2025-01-01 00:00:00')")
+          .run(`old-${index}`, `old-${index}.jpg`, index);
+      }
+
+      const uploaded = await uploadGalleryFiles(db, createBucket().bucket, ['one.webp', 'two.webp', 'three.webp'].map(imageFile));
+
+      // The admin list shows the new files first without reloading; a reload must agree.
+      expect(uploaded.map(({ filename }) => filename)).toEqual(['one.webp', 'two.webp', 'three.webp']);
+      expect((await fetchGalleryPhotos(db)).map(({ filename }) => filename)).toEqual([
+        'one.webp', 'two.webp', 'three.webp', 'old-0.jpg', 'old-1.jpg', 'old-2.jpg', 'old-3.jpg',
+      ]);
+    } finally {
+      close();
+    }
   });
 
   it('keeps the previous poster intact and removes only the new object when D1 replacement fails', async () => {
