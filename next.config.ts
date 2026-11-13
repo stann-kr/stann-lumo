@@ -13,8 +13,8 @@ const nextConfig: NextConfig = {
   // same output directory when they run at the same time.
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   poweredByHeader: false,
-  // About was folded into the press kit (2026-11). The redirect lives here, before rendering: the public segment's
-  // loading.tsx streams a 200 shell first, so a page-level permanentRedirect() could only send a meta refresh.
+  // About was folded into the press kit (2026-11). The redirect answers before any page renders, so it stays a real
+  // 308: under a loading.tsx boundary a page-level permanentRedirect() could only send a meta refresh in a 200 shell.
   async redirects() {
     return [{ source: '/about', destination: '/press-kit', permanent: true }];
   },

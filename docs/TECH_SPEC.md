@@ -18,7 +18,7 @@ Cloudflare
 
 | 영역 | 파일/경로 | 확인 내용 |
 |---|---|---|
-| Public routes | `src/app/(public)/` | home, music, events, archive, press-kit, contact, link (`/about`은 `next.config.ts` redirect로 `/press-kit`에 308) |
+| Public routes | `src/app/(public)/` | home, music, events, archive, press-kit, contact, link는 `(pages)` 그룹에서 loading 화면을 받는다. 공연·Archive 상세(`events/[id]`, `archive/[id]`)는 그 밖에 두어 없는 id가 실제 404 상태로 끝난다. `/about`은 `next.config.ts` redirect로 `/press-kit`에 308 |
 | Admin routes | `src/app/admin/(dashboard)/` | home, about, contact, link, music, events, archive, theme |
 | Public shell | `src/components/feature/PublicSiteShell.tsx` | navigation, language, focus, signal links |
 | 3D scene | `src/components/feature/Scene3D.tsx` | 보관된 모듈; 공개 shell에서는 미사용 |
