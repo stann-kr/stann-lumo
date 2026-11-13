@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, type KeyboardEvent, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './AdminDialog.module.css';
+import { useInertOutside } from './useInertOutside';
 
 interface DeleteConfirmModalProps {
   show: boolean;
@@ -27,6 +29,7 @@ const DeleteConfirmModal = ({
 }: DeleteConfirmModalProps) => {
   const titleId = useId();
   const descriptionId = useId();
+  const layerRef = useRef<HTMLDivElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -53,6 +56,8 @@ const DeleteConfirmModal = ({
       });
     };
   }, [show, returnFocusRef]);
+  // After the opener is recorded above: the page behind the dialog stops taking focus and leaves the accessibility tree.
+  useInertOutside(layerRef, show);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
@@ -78,8 +83,8 @@ const DeleteConfirmModal = ({
 
   if (!show) return null;
 
-  return (
-    <div className={styles.backdrop}>
+  return createPortal(
+    <div ref={layerRef} className={styles.backdrop}>
       <div
         ref={dialogRef}
         role="dialog"
@@ -96,7 +101,8 @@ const DeleteConfirmModal = ({
           <button type="button" onClick={onConfirm} className={styles.leave}>삭제</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
 

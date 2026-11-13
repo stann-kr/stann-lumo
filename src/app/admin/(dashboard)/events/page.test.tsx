@@ -443,8 +443,96 @@ describe("AdminEventsPage performance snapshots", () => {
     fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
     await screen.findByText(/RA API CONFIG 저장에 실패했습니다/);
     expect(mocks.showNotification).not.toHaveBeenCalled();
-    expect(mocks.updateContent).not.toHaveBeenCalled();
+    // The event list was stored, so it is applied even though the config failed. The page text was not edited.
+    expect(mocks.updateContent).toHaveBeenCalledTimes(1);
+    expect(mocks.updateContent).toHaveBeenCalledWith({
+      performances: [expect.objectContaining({ id: "ra-1" })],
+    });
     expect(screen.getByLabelText("events_api_option")).toHaveValue("3");
+  });
+
+  it("applies the stored events and page text when only the config fails, and does not resend the page text", async () => {
+    mocks.updateRaApiConfig.mockResolvedValueOnce({
+      success: false,
+      error: { code: "INTERNAL_ERROR", message: "test" },
+    });
+    renderPage();
+    await screen.findByText("API 키 저장됨");
+    fireEvent.change(screen.getByLabelText("페이지 제목"), {
+      target: { value: "SHOWS" },
+    });
+    fireEvent.change(screen.getByLabelText("events_api_option"), {
+      target: { value: "3" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
+    expect(
+      await screen.findByText(
+        "RA API CONFIG 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.",
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.updateContent).toHaveBeenCalledWith({
+      performances: [expect.objectContaining({ id: "ra-1" })],
+    });
+    expect(mocks.updateContent).toHaveBeenCalledWith({
+      pageMeta: expect.objectContaining({
+        events: expect.objectContaining({ title: "SHOWS" }),
+      }),
+    });
+    expect(mocks.showNotification).not.toHaveBeenCalled();
+    expect(screen.getByTestId("dirty-state")).toHaveTextContent("true");
+
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
+    await waitFor(() => expect(mocks.showNotification).toHaveBeenCalledTimes(1));
+    expect(mocks.updatePageMeta).toHaveBeenCalledTimes(1);
+    expect(mocks.updateRaApiConfig).toHaveBeenCalledTimes(2);
+    await waitFor(() =>
+      expect(screen.getByTestId("dirty-state")).toHaveTextContent("false"),
+    );
+  });
+
+  it("applies the stored page text when the event list fails, and still saves the config only after the events", async () => {
+    mocks.updatePerformances.mockResolvedValueOnce({
+      success: false,
+      error: { code: "HTTP_ERROR", message: "Request failed with status 500" },
+    });
+    renderPage();
+    await screen.findByText("API 키 저장됨");
+    fireEvent.click(await screen.findByRole("button", { name: "상세 편집 Original" }));
+    fireEvent.change(await screen.findByLabelText("공연 제목"), {
+      target: { value: "My draft" },
+    });
+    fireEvent.change(screen.getByLabelText("페이지 제목"), {
+      target: { value: "SHOWS" },
+    });
+    fireEvent.change(screen.getByLabelText("events_api_option"), {
+      target: { value: "3" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
+    expect(
+      await screen.findByText(
+        "EVENTS 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.",
+      ),
+    ).toBeInTheDocument();
+    expect(mocks.updateContent).toHaveBeenCalledTimes(1);
+    expect(mocks.updateContent).toHaveBeenCalledWith({
+      pageMeta: expect.objectContaining({
+        events: expect.objectContaining({ title: "SHOWS" }),
+      }),
+    });
+    expect(mocks.updateRaApiConfig).not.toHaveBeenCalled();
+    expect(mocks.showNotification).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("공연 제목")).toHaveValue("My draft");
+    expect(screen.getByLabelText("events_api_option")).toHaveValue("3");
+    expect(screen.getByTestId("dirty-state")).toHaveTextContent("true");
+
+    fireEvent.click(screen.getByRole("button", { name: "변경 사항 저장" }));
+    await waitFor(() => expect(mocks.showNotification).toHaveBeenCalledTimes(1));
+    expect(mocks.updatePerformances).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ id: "ra-1", title: "My draft" })],
+      3,
+    );
+    expect(mocks.updatePageMeta).toHaveBeenCalledTimes(1);
+    expect(mocks.updateRaApiConfig).toHaveBeenCalledTimes(1);
   });
   it("edits the selected filtered event and saves the entire snapshot", async () => {
     const items = [

@@ -265,22 +265,23 @@ export default function AdminEventsPage() {
           ? apiUpdatePageMeta(currentEditLanguage, pageMeta)
           : Promise.resolve({ success: true }),
       ]);
-      if (!eventResult.success || !eventResult.data) {
-        if (eventResult.error?.code === "CONFLICT") {
-          setHasConflict(true);
-          setSaveError(
-            "다른 동기화 또는 관리자 변경이 먼저 반영되었습니다. 현재 입력은 유지됩니다. 최신 이벤트 목록을 확인한 뒤 다시 저장해 주세요.",
-          );
-          return;
-        }
-        setSaveError(
-          "EVENTS 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.",
-        );
-        return;
+      // Each part that was stored is applied on its own, so a failure in another part cannot leave it stale or dirty.
+      const savedEvents = eventResult.success ? eventResult.data : undefined;
+      const conflict = !savedEvents && eventResult.error?.code === "CONFLICT";
+      const metaSaved = isPageMetaDirty && metaResult.success;
+      if (savedEvents) {
+        applySnapshot(savedEvents.items, savedEvents.revision);
+        updateContent({ performances: savedEvents.items });
       }
-      applySnapshot(eventResult.data.items, eventResult.data.revision);
+      if (metaSaved) {
+        updateContent({ pageMeta });
+        setIsPageMetaDirty(false);
+        setPageMetaLanguage(currentEditLanguage);
+      }
+      if (conflict) setHasConflict(true);
+      // The RA connection is saved only after the event list, as before.
       let configOkay = true;
-      if (isConfigDirty && !isConfigLoading && !configFailed) {
+      if (savedEvents && isConfigDirty && !isConfigLoading && !configFailed) {
         const update: RAApiConfigUpdate = {
           userId: config.userId,
           djId: config.djId,
@@ -299,21 +300,26 @@ export default function AdminEventsPage() {
           setIsConfigDirty(false);
         }
       }
+      if (savedEvents) void loadSyncStatus();
       const failed = [
+        !savedEvents && !conflict && "EVENTS",
         !metaResult.success && "PAGE SETTINGS",
         !configOkay && "RA API CONFIG",
       ].filter(Boolean);
-      if (failed.length) {
+      if (conflict || failed.length) {
         setSaveError(
-          `${failed.join(", ")} 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.`,
+          [
+            conflict &&
+              "다른 동기화 또는 관리자 변경이 먼저 반영되었습니다. 현재 입력은 유지됩니다. 최신 이벤트 목록을 확인한 뒤 다시 저장해 주세요.",
+            failed.length > 0 &&
+              `${failed.join(", ")} 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.`,
+          ]
+            .filter(Boolean)
+            .join(" "),
         );
         return;
       }
-      updateContent({ performances: eventResult.data.items, pageMeta });
-      setIsPageMetaDirty(false);
-      setPageMetaLanguage(currentEditLanguage);
       showNotification();
-      void loadSyncStatus();
     } catch {
       setSaveError(
         "저장 중 오류가 발생했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.",

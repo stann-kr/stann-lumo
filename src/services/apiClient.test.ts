@@ -25,6 +25,11 @@ describe('apiRequest', () => {
     await expect(apiRequest('/api/admin/archive/youtube')).resolves.toEqual({ success: false, error: { code: 'HTTP_ERROR', message: 'Request failed with status 502' } });
   });
 
+  it('marks a 409 as a conflict so the screen can offer a reload, and keeps its reason', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: false, error: { code: 'CONFLICT', message: 'Tracks changed. Refresh and try again.' } }), { status: 409 })));
+    await expect(apiRequest('/api/admin/tracks', { method: 'PUT' })).resolves.toEqual({ success: false, error: { code: 'CONFLICT', message: 'Tracks changed. Refresh and try again.' } });
+  });
+
   it('treats network errors and failed JSON envelopes as failures', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('offline')));
     await expect(apiRequest('/api/admin/test')).resolves.toMatchObject({

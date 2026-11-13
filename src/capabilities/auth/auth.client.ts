@@ -10,6 +10,7 @@ const LOGIN_ERROR_MESSAGES: Record<string, string> = {
   BAD_REQUEST: '비밀번호를 입력해 주세요.',
   NOT_CONFIGURED: '서버에 관리자 비밀번호가 설정되어 있지 않습니다.',
   DB_UNAVAILABLE: '로그인 상태를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  RATE_LIMITED: '로그인 시도가 너무 많습니다. 1분 뒤에 다시 시도해 주세요.',
 };
 
 export async function authenticateAdmin(password: string): Promise<AdminLoginResult> {

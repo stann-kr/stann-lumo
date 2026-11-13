@@ -25,7 +25,8 @@ export type TrackMediaPatch = Pick<Track, 'id'> & Partial<Pick<Track, 'tracklist
 
 interface ContentContextType {
   content: ContentData;
-  updateContent: (updates: Partial<ContentData>) => void;
+  /** Patches the current edit language's content, or `lang`'s when given. */
+  updateContent: (updates: Partial<ContentData>, lang?: "en" | "ko") => void;
   updateTrackMedia: (patches: TrackMediaPatch[]) => void;
   musicContent: MusicContent;
   eventsContent: EventsContent;
@@ -117,10 +118,10 @@ export const ContentProvider = ({ children }: { children: ReactNode }) => {
    * 인메모리 콘텐츠 업데이트 — 어드민 페이지 편집 시 즉시 UI 반영용.
    * 영구 저장은 각 어드민 페이지가 capability client(contentAdmin·eventsAdmin)로 D1에 직접 반영.
    */
-  const updateContent = (updates: Partial<ContentData>) => {
+  const updateContent = (updates: Partial<ContentData>, lang: "en" | "ko" = currentEditLanguage) => {
     setAllContent((prev) => ({
       ...prev,
-      [currentEditLanguage]: { ...prev[currentEditLanguage], ...updates },
+      [lang]: { ...prev[lang], ...updates },
     }));
   };
 

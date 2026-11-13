@@ -35,6 +35,10 @@ test('Wrangler separates fixed development and production resources', () => {
   assert.equal(development.r2_buckets?.[0]?.bucket_name, 'stann-lumo-media-dev');
   assert.equal(development.images?.binding, 'IMAGES');
   assert.notEqual(development.r2_buckets?.[0]?.bucket_name, wrangler.r2_buckets?.[0]?.bucket_name);
+  // Bindings are not inherited by environments; separate namespaces keep dev sign-ins off production's count.
+  assert.equal(wrangler.ratelimits?.[0]?.name, 'LOGIN_RATE_LIMITER');
+  assert.equal(development.ratelimits?.[0]?.name, 'LOGIN_RATE_LIMITER');
+  assert.notEqual(development.ratelimits?.[0]?.namespace_id, wrangler.ratelimits?.[0]?.namespace_id);
   assert.deepEqual(development.triggers?.crons, []);
   assert.deepEqual(development.vars, {
     MIGRATE_ENABLED: 'false',

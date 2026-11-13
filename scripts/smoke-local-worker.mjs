@@ -113,7 +113,8 @@ async function runSmoke() {
     const write = await requestJson('/api/admin/tracks', {
       method: 'PUT',
       headers: { Cookie: sessionCookie, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lang: 'en', items: smokeItems }),
+      // `base` is the list this write starts from; the server refuses the write with 409 when the stored list differs.
+      body: JSON.stringify({ lang: 'en', items: smokeItems, base: originalItems }),
     });
     assertStatus(write.response, 200, 'local D1 write');
 
@@ -127,10 +128,15 @@ async function runSmoke() {
     process.stdout.write('[local-worker-smoke] isolated D1 CRUD PASS\n');
   } finally {
     if (mutationAttempted) {
+      // The write may or may not have landed, so restore from the list that is stored now.
+      const current = await requestJson('/api/admin/tracks?lang=en', {
+        headers: { Cookie: sessionCookie },
+      });
+      assertStatus(current.response, 200, 'pre-restore tracks read');
       const restore = await requestJson('/api/admin/tracks', {
         method: 'PUT',
         headers: { Cookie: sessionCookie, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lang: 'en', items: originalItems }),
+        body: JSON.stringify({ lang: 'en', items: originalItems, base: current.payload?.data }),
       });
       assertStatus(restore.response, 200, 'local D1 restore');
 

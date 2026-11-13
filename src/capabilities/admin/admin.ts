@@ -38,21 +38,6 @@ export interface ListEditorReturn<T> {
 }
 
 /**
- * 어드민 폼 반환 타입 (useAdminForm hook 반환값과 일치)
- */
-export interface AdminFormReturn<T extends object> {
-  formData: T;
-  isSaved: boolean;
-  isSaving: boolean;
-  showSuccess: boolean;
-  showError: boolean;
-  updateField: (field: string, value: unknown) => void;
-  saveForm: () => Promise<void>;
-  setFormData: (data: T) => void;
-  resetForm: () => void;
-}
-
-/**
  * 삭제 확인 반환 타입
  */
 export interface DeleteConfirmReturn {

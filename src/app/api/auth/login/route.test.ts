@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getEnv } from '@/lib/db';
+import { getEnv, getLoginRateLimiter } from '@/lib/db';
 import { buildSessionCookieHeader, createSession, pruneExpiredSessions } from '@/capabilities/auth/auth.server';
 import { POST } from './route';
 
@@ -8,7 +8,7 @@ const SessionStorageUnavailableError = vi.hoisted(
   () => class SessionStorageUnavailableError extends Error {},
 );
 
-vi.mock('@/lib/db', () => ({ getEnv: vi.fn() }));
+vi.mock('@/lib/db', () => ({ getEnv: vi.fn(), getLoginRateLimiter: vi.fn() }));
 vi.mock('@/capabilities/auth/auth.server', () => ({
   createSession: vi.fn(),
   buildSessionCookieHeader: vi.fn(),
@@ -16,11 +16,11 @@ vi.mock('@/capabilities/auth/auth.server', () => ({
   SessionStorageUnavailableError,
 }));
 
-function loginRequest(body: unknown = { password: 'test-password' }) {
+function loginRequest(body: unknown = { password: 'test-password' }, headers: Record<string, string> = {}) {
   return new NextRequest('http://localhost:3004/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(body),
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
   });
 }
 
@@ -61,5 +61,38 @@ describe('admin login storage boundary', () => {
     expect(response.status).toBe(200);
     expect(pruneExpiredSessions).toHaveBeenCalledTimes(1);
     expect(response.headers.get('set-cookie')).toBe('admin_session=test-only-session');
+  });
+});
+
+describe('admin login attempt limit', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getEnv).mockReturnValue({ ADMIN_PASSWORD: 'test-password' });
+  });
+
+  it('answers 429 for an address over the limit without checking the password', async () => {
+    const limit = vi.fn().mockResolvedValue({ success: false });
+    vi.mocked(getLoginRateLimiter).mockReturnValue({ limit });
+
+    const response = await POST(loginRequest(undefined, { 'cf-connecting-ip': '203.0.113.7' }));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('retry-after')).toBe('60');
+    await expect(response.json()).resolves.toMatchObject({ success: false, error: { code: 'RATE_LIMITED' } });
+    expect(limit).toHaveBeenCalledWith({ key: '203.0.113.7' });
+    expect(createSession).not.toHaveBeenCalled();
+  });
+
+  it('counts the attempt and signs in while the address is under the limit', async () => {
+    const limit = vi.fn().mockResolvedValue({ success: true });
+    vi.mocked(getLoginRateLimiter).mockReturnValue({ limit });
+    vi.mocked(createSession).mockResolvedValue('test-only-session');
+    vi.mocked(buildSessionCookieHeader).mockReturnValue('admin_session=test-only-session');
+    vi.mocked(pruneExpiredSessions).mockResolvedValue(undefined);
+
+    const response = await POST(loginRequest());
+
+    expect(response.status).toBe(200);
+    expect(limit).toHaveBeenCalledTimes(1);
   });
 });

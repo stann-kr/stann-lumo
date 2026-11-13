@@ -18,16 +18,16 @@ import { useListEditor } from '@/capabilities/admin/useListEditor';
 import { useItemReorder } from '@/capabilities/admin/useItemReorder';
 import { useSaveNotification } from '@/capabilities/admin/useSaveNotification';
 import { useUnsavedChanges } from '@/capabilities/admin/useUnsavedChanges';
-import { runSave } from '@/capabilities/admin/saveResult';
 import { updateTracks, updatePageMeta, uploadTrackCover, deleteTrackCover } from '@/capabilities/content/contentAdmin.client';
 import { MAX_TRACKLIST_LENGTH } from '@/capabilities/content/trackMedia';
 import { hasKnownDuration, type Track, type PageMeta } from '@/capabilities/content/content';
 
 const TRACK_TYPES = ['Original', 'Live Set', 'DJ Mix', 'Remix'];
 const PLATFORMS = ['SoundCloud', 'Bandcamp', 'Spotify', 'Mixcloud', 'YouTube'];
+const CONFLICT_MESSAGE = '다른 탭이나 관리자가 음악 목록을 먼저 저장했습니다. 현재 입력은 유지됩니다. 최신 음악 목록을 불러온 뒤 다시 저장해 주세요.';
 
 export default function AdminMusicPage() {
-  const { allContent, updateContent, updateTrackMedia, currentEditLanguage, isLoading } = useContent();
+  const { allContent, updateContent, updateTrackMedia, currentEditLanguage, isLoading, retryContent } = useContent();
   const content = allContent[currentEditLanguage];
   const { items: tracks, setItems: setTracks, updateItem: updateTrack, deleteItem: deleteTrack } = useListEditor<Track>(content.tracks);
   const { moveUp, moveDown } = useItemReorder(tracks, setTracks);
@@ -35,6 +35,8 @@ export default function AdminMusicPage() {
   const [pageMeta, setPageMeta] = useState<PageMeta>(content.pageMeta);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  // The stored list changed after this one was loaded; saving stays off until the latest list is loaded.
+  const [hasConflict, setHasConflict] = useState(false);
   const [query, setQuery] = useState('');
   const [type, setType] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export default function AdminMusicPage() {
   if (listLanguage !== currentEditLanguage) {
     setListLanguage(currentEditLanguage);
     setQuery(''); setType('all'); setExpandedId(null); setDeleteId(null);
+    setHasConflict(false); setSaveError('');
   }
   const listRef = useRef<HTMLElement>(null);
   // A cover change replaces the saved list, so nothing else may be edited or saved until it finishes.
@@ -94,7 +97,7 @@ export default function AdminMusicPage() {
     } finally { setCoverBusyId(null); }
   };
   const saveChanges = async () => {
-    if (isBusy) return;
+    if (isBusy || hasConflict) return;
     setIsSaving(true); setSaveError('');
     // Mix text is shared by both languages: send it only where it was edited here, so a stale copy cannot overwrite it.
     const saved = new Map(content.tracks.map((track) => [track.id, track]));
@@ -109,25 +112,50 @@ export default function AdminMusicPage() {
     // Page settings replace every page's text for this language, so send them only when they changed.
     const metaChanged = JSON.stringify(pageMeta) !== JSON.stringify(content.pageMeta);
     try {
-      await runSave(metaChanged ? ['음악 목록', '페이지 문구'] : ['음악 목록'],
-        metaChanged ? [updateTracks(currentEditLanguage, items), updatePageMeta(currentEditLanguage, pageMeta)] : [updateTracks(currentEditLanguage, items)],
-        () => {
-          updateContent({ tracks, pageMeta });
-          updateTrackMedia(items.filter((item) => 'tracklist' in item || 'recordedOn' in item).map(({ id, ...media }) => ({
-            id, ...('tracklist' in media && { tracklist: media.tracklist }), ...('recordedOn' in media && { recordedOn: media.recordedOn }),
-          })));
-          markSaved(); showNotification();
-        },
-        (failed) => setSaveError(`${failed.join(', ')} 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.`));
+      // The saved list is the base the server checks; it was loaded with this page or set by the last save.
+      const [listResult, metaResult] = await Promise.allSettled([
+        updateTracks(currentEditLanguage, items, content.tracks),
+        metaChanged ? updatePageMeta(currentEditLanguage, pageMeta) : Promise.resolve({ success: true }),
+      ]);
+      const listResponse = listResult.status === 'fulfilled' ? listResult.value : null;
+      const listSaved = Boolean(listResponse?.success);
+      const metaSaved = metaResult.status === 'fulfilled' && metaResult.value.success;
+      // Each part that was stored becomes the new saved state on its own, so the next save starts from it.
+      if (listSaved) {
+        updateContent({ tracks });
+        updateTrackMedia(items.filter((item) => 'tracklist' in item || 'recordedOn' in item).map(({ id, ...media }) => ({
+          id, ...('tracklist' in media && { tracklist: media.tracklist }), ...('recordedOn' in media && { recordedOn: media.recordedOn }),
+        })));
+        // A Korean list without rows of its own shows the English rows, so an English save can change it too.
+        const otherLanguage = currentEditLanguage === 'en' ? 'ko' : 'en';
+        const otherTracks = listResponse?.data?.tracks?.[otherLanguage];
+        if (Array.isArray(otherTracks)) updateContent({ tracks: otherTracks }, otherLanguage);
+      }
+      if (metaChanged && metaSaved) updateContent({ pageMeta });
+      if (listSaved && metaSaved) {
+        markSaved(); showNotification();
+        return;
+      }
+      const conflict = !listSaved && listResponse?.error?.code === 'CONFLICT';
+      const failed = [!listSaved && !conflict && '음악 목록', !metaSaved && '페이지 문구'].filter(Boolean);
+      setHasConflict(conflict);
+      setSaveError([conflict && CONFLICT_MESSAGE,
+        failed.length > 0 && `${failed.join(', ')} 저장에 실패했습니다. 입력한 내용은 유지됩니다. 다시 저장해 주세요.`].filter(Boolean).join(' '));
     } finally { setIsSaving(false); }
+  };
+  const reloadLatest = () => {
+    if (!window.confirm('저장하지 않은 음악 목록과 페이지 문구 편집을 버리고 최신 내용을 불러올까요?')) return;
+    // Reloads both languages; the page opens again from the stored lists.
+    retryContent();
   };
 
   return <div className="space-y-8">
     <AdminSectionHeader title="음악" description="트랙과 믹스를 찾아 편집하고, 공개 순서를 바꿉니다."
-      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={isLoading || coverBusyId !== null}
+      onSave={saveChanges} isSaving={isSaving} isSaveDisabled={isLoading || coverBusyId !== null || hasConflict}
       action={<button type="button" className={collection.button} disabled={isBusy} onClick={addTrack}>음악 추가</button>} />
     <SuccessMessage message="변경 사항이 저장되었습니다" show={showSuccess} />
     <SaveErrorMessage message={saveError} />
+    {hasConflict && <button type="button" className={collection.button} onClick={reloadLatest}>최신 음악 목록 불러오기 (현재 음악 편집 버림)</button>}
     <fieldset disabled={isBusy} className="space-y-8">
       <section ref={listRef} tabIndex={-1} aria-label="음악 목록">
         <div className={collection.toolbar}>

@@ -10,7 +10,9 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import styles from '@/components/base/AdminDialog.module.css';
+import { useInertOutside } from '@/components/base/useInertOutside';
 
 interface PendingExit {
   action: () => void;
@@ -36,7 +38,10 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
   const [discardCount, setDiscardCount] = useState(0);
   const triggerRef = useRef<HTMLElement | null>(null);
   const cancelButtonRef = useRef<HTMLButtonElement | null>(null);
+  const layerRef = useRef<HTMLDivElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  // The trigger is recorded in requestExit before the dialog opens, so the page can turn inert right away.
+  useInertOutside(layerRef, pendingExit !== null);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -115,8 +120,8 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
   return (
     <AdminEditGuardContext.Provider value={{ isDirty, setDirty, requestExit, discardCount }}>
       {children}
-      {pendingExit && (
-        <div className={styles.backdrop}>
+      {pendingExit && createPortal(
+        <div ref={layerRef} className={styles.backdrop}>
           <div
             ref={dialogRef}
             role="dialog"
@@ -139,7 +144,8 @@ export const AdminEditGuardProvider = ({ children }: { children: ReactNode }) =>
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </AdminEditGuardContext.Provider>
   );
