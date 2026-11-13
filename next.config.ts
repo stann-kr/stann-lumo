@@ -8,7 +8,9 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 const contentSecurityPolicy = [
   "default-src 'self'",
   // React's development build evaluates code for its error overlays; production never needs eval.
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+  // Cloudflare Web Analytics on the production zone injects its beacon (static.cloudflareinsights.com/beacon.min.js/<version>)
+  // into HTML sent to browsers; it reports to /cdn-cgi/rum on this origin, which connect-src 'self' already covers.
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com${isDevelopment ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   // Archive video thumbnails come straight from YouTube's image hosts; uploads are served from this origin.
