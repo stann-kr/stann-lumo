@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db';
 import { getDB } from '@/lib/db';
 import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
-import { getAboutProjection, getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection } from './publicContent.server';
+import { getAboutProjection, getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection } from './publicContent.server';
 import { sortArchivePhotos } from '@/capabilities/media/archiveBrowsing';
+import { performanceLocation, performanceToday } from '@/capabilities/events/events';
 import { GET as archiveGET } from '@/app/api/archive/route';
 import { GET as eventsGET } from '@/app/api/events/route';
 import { createSqliteD1 } from '@/test/sqliteD1';
@@ -176,6 +177,54 @@ describe('public server content projections', () => {
       close();
     }
   });
+  it('drops an archive link to a deleted event everywhere the public site emits one', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    try {
+      sqlite.exec(`
+        INSERT INTO performances (id, date, venue, title, poster_image_id) VALUES ('kept', '2021-04-10', 'Venue', 'Kept', 'poster');
+        INSERT INTO gallery_photos (id, filename, sort_order, linked_event_id) VALUES ('poster', 'poster.jpg', 0, 'kept');
+        INSERT INTO gallery_photos (id, filename, sort_order, linked_event_id) VALUES ('orphan', 'orphan.jpg', 1, 'deleted');
+      `);
+      const orphanOf = (photos: { id: string }[]) => photos.find(photo => photo.id === 'orphan');
+      const legacy = await (await archiveGET(new Request('http://localhost/api/archive'))).json();
+      const emitted = [
+        orphanOf(await getArchivePhotos()),
+        orphanOf((await getArchivePage({ sort: 'newest', seed: 1 }, 0)).items),
+        (await getArchiveDetail('orphan'))?.photo,
+        orphanOf(legacy.data.photos),
+      ];
+      for (const photo of emitted) {
+        expect(photo).toMatchObject({ id: 'orphan' });
+        expect(photo).not.toHaveProperty('linkedEventId');
+        expect(photo).not.toHaveProperty('eventDate');
+      }
+      await expect(getEventDetail('deleted')).resolves.toBeNull();
+      // Links to events that still exist are untouched.
+      expect((await getArchivePhotos()).find(photo => photo.id === 'poster')).toMatchObject({ linkedEventId: 'kept', eventDate: '2021-04-10' });
+      expect((await getEventDetail('kept'))?.posterPhoto).toMatchObject({ id: 'poster', linkedEventId: 'kept' });
+    } finally { close(); }
+  });
+
+  it('carries the RA country so an area-wide ("All") RA event keeps a visible place', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    try {
+      sqlite.exec(`
+        INSERT INTO performances (id, date, venue, title, location, ra_country_name) VALUES ('past-ra', '2022-09-17', 'Faust', 'Night', 'All', 'South Korea');
+        INSERT INTO performances (id, date, venue, title, location, ra_country_name) VALUES ('next-ra', '2999-01-01', 'Faust', 'Future', 'All', 'South Korea');
+      `);
+      const today = performanceToday();
+      const past = await getEventsPage('past', today, 0);
+      const upcoming = await getEventsPage('upcoming', today, 0);
+      const detail = await getEventDetail('past-ra');
+      const home = await getHomeProjection('en');
+      const shown = [past.items[0], upcoming.items[0], detail?.event, home.previews.events[0], home.previews.pastEvents[0]];
+      for (const event of shown) expect(performanceLocation(event!)).toBe('South Korea');
+      for (const payload of [past, upcoming, detail, home]) expect(() => assertPublicPayloadSafe(payload)).not.toThrow();
+    } finally { close(); }
+  });
+
   it('bounds home previews and uses the existing English fallback without leaking unused fields', async () => {
     const { db, sqlite, close } = createSqliteD1();
     vi.mocked(getDB).mockReturnValue(db);

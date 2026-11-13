@@ -17,6 +17,7 @@ import type {
 import type { EventsInfo, Performance } from '@/capabilities/events/events';
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import { sortArchivePhotos, type ArchiveBrowseState } from '@/capabilities/media/archiveBrowsing';
+import { LINKED_GALLERY_COLUMNS, LINKED_GALLERY_SOURCE } from '@/capabilities/media/mediaRepository.server';
 import { performanceToday } from '@/capabilities/events/events';
 import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
@@ -61,6 +62,7 @@ interface PerformanceRow {
   ra_event_id: string | null;
   poster_image_id: string | null;
   status: string;
+  ra_country_name?: string | null;
 }
 
 interface GalleryPhotoRow {
@@ -132,6 +134,8 @@ function mapPerformances(rowsToMap: PerformanceRow[]): Performance[] {
     ...(row.ra_event_link !== null && { raEventLink: row.ra_event_link }),
     ...(row.ra_event_id !== null && { raEventId: row.ra_event_id }),
     ...(row.poster_image_id !== null && { posterImageId: row.poster_image_id }),
+    // RA files area-wide results under location "All"; the country is what performanceLocation() shows instead.
+    ...(row.ra_country_name != null && { raCountryName: row.ra_country_name }),
     status: row.status as Performance['status'],
   }));
 }
@@ -199,10 +203,12 @@ export const getPublicShellProjection = cache(async (locale: PublicLocale): Prom
 interface HomePerformanceRow {
   id: string; title: string; date: string; venue: string; status: string; poster_image_id: string | null;
   time: string | null; location: string | null; ra_event_link: string | null; ra_has_tickets: number | string | null;
+  ra_country_name: string | null;
 }
 
-const HOME_EVENT_COLUMNS = 'id, title, date, venue, status, poster_image_id, time, location, ra_event_link, ra_has_tickets';
+const HOME_EVENT_COLUMNS = 'id, title, date, venue, status, poster_image_id, time, location, ra_event_link, ra_has_tickets, ra_country_name';
 
+/** The home card resolves its place with performanceLocation(), which needs the RA country for area-wide ("All") results. */
 function mapHomeEvent(row: HomePerformanceRow): HomeEventPreview {
   return {
     id: row.id, title: row.title, date: row.date, venue: row.venue, status: row.status as Performance['status'],
@@ -210,6 +216,7 @@ function mapHomeEvent(row: HomePerformanceRow): HomeEventPreview {
     ...(row.time && { time: row.time }),
     ...(row.location && { location: row.location }),
     ...(row.ra_event_link && { raEventLink: row.ra_event_link }),
+    ...(row.ra_country_name && { raCountryName: row.ra_country_name }),
     raHasTickets: Number(row.ra_has_tickets) === 1,
   };
 }
@@ -298,7 +305,7 @@ export async function getEventsPage(section: 'upcoming' | 'past', today: string,
   const condition = `SUBSTR(REPLACE(date, '.', '-'), 1, 10) ${section === 'upcoming' ? '>=' : '<'} ?`;
   const [count, records] = await Promise.all([
     db.prepare(`SELECT COUNT(*) AS total FROM performances WHERE ${condition}`).bind(today).first<{ total: number }>(),
-    rows<PerformanceRow>(db, `SELECT id, date, venue, location, time, title, status, poster_image_id,
+    rows<PerformanceRow>(db, `SELECT id, date, venue, location, time, title, status, poster_image_id, ra_country_name,
       NULL AS lineup, NULL AS ra_event_link, NULL AS ra_event_id FROM performances WHERE ${condition}
       ORDER BY SUBSTR(REPLACE(date, '.', '-'), 1, 10) ${section === 'upcoming' ? 'ASC' : 'DESC'}, sort_order, id LIMIT ? OFFSET ?`, today, PUBLIC_BATCH_SIZE, offset),
   ]);
@@ -338,8 +345,7 @@ export const getLinkProjection = cache(async (locale: PublicLocale): Promise<Lin
 export const getArchivePhotos = cache(async (): Promise<GalleryPhoto[]> => {
   const db = getPublicDB();
   const photoRows = await rows<GalleryPhotoRow>(db,
-    `SELECT g.*, p.date AS event_date FROM gallery_photos g
-     LEFT JOIN performances p ON p.id = g.linked_event_id
+    `SELECT ${LINKED_GALLERY_COLUMNS}, p.date AS event_date FROM ${LINKED_GALLERY_SOURCE}
      ORDER BY g.sort_order ASC, g.created_at DESC, g.id`);
   const photos = photoRows.map(mapGalleryPhoto);
   assertPublicPayloadSafe(photos);
@@ -359,7 +365,7 @@ export async function getArchivePage(browse: Pick<ArchiveBrowseState, 'sort' | '
      LEFT JOIN performances p ON p.id = g.linked_event_id ORDER BY g.sort_order ASC, g.created_at DESC, g.id`);
   const selected = sortArchivePhotos(index, browse.sort, browse.seed).slice(offset, offset + limit);
   const records = selected.length ? await rows<GalleryPhotoRow>(db,
-    `SELECT g.*, p.date AS event_date FROM gallery_photos g LEFT JOIN performances p ON p.id = g.linked_event_id
+    `SELECT ${LINKED_GALLERY_COLUMNS}, p.date AS event_date FROM ${LINKED_GALLERY_SOURCE}
      WHERE g.id IN (${selected.map(() => '?').join(',')})`, ...selected.map(item => item.id)) : [];
   const byId = new Map(records.map(row => [row.id, mapGalleryPhoto(row)]));
   const items = selected.flatMap(item => { const photo = byId.get(item.id); return photo ? [photo] : []; });
@@ -381,7 +387,7 @@ export const getEventDetail = cache(async (id: string): Promise<{ event: Perform
   if (!eventRow) return null;
   const event = mapPerformances([eventRow])[0];
   const posterPhoto = eventRow.poster_image_id
-    ? await db.prepare('SELECT * FROM gallery_photos WHERE id = ?').bind(eventRow.poster_image_id).first<GalleryPhotoRow>()
+    ? await db.prepare(`SELECT ${LINKED_GALLERY_COLUMNS} FROM ${LINKED_GALLERY_SOURCE} WHERE g.id = ?`).bind(eventRow.poster_image_id).first<GalleryPhotoRow>()
     : null;
   const projection = { event, ...(posterPhoto && { posterPhoto: mapGalleryPhoto(posterPhoto) }) };
   assertPublicPayloadSafe(projection);

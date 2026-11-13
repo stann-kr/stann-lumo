@@ -68,7 +68,7 @@ export interface PageMeta {
   link: LinkPageMeta;
 }
 
-export type HomeEventPreview = Pick<Performance, 'id' | 'title' | 'date' | 'venue' | 'status' | 'posterImageId' | 'time' | 'location' | 'raEventLink' | 'raHasTickets'>;
+export type HomeEventPreview = Pick<Performance, 'id' | 'title' | 'date' | 'venue' | 'status' | 'posterImageId' | 'time' | 'location' | 'raCountryName' | 'raEventLink' | 'raHasTickets'>;
 
 export interface HomePreviews {
   tracks: Pick<Track, 'id' | 'title' | 'type' | 'year' | 'platform' | 'link' | 'duration' | 'recordedOn' | 'coverImageId'>[];
