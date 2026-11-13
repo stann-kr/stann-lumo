@@ -1,6 +1,6 @@
-/* v5 list tail: a band with the mono count and a filled "load more" key. */
+/* v5 list tail: a mono status row; lists load on scroll, so the only key is "retry" after a failed request. */
 .tail { display: flex; align-items: stretch; justify-content: space-between; flex-wrap: wrap; gap: 2px 1.5rem; min-height: 48px; padding-left: 20px; background: var(--v5-inset); }
-.count { display: flex; align-items: center; color: var(--v5-muted); font: 11px/1.6 var(--os-font-mono); letter-spacing: .1em; text-transform: uppercase; word-spacing: var(--mono-word-spacing, normal); font-variant-numeric: tabular-nums; }
+.count { display: flex; align-items: center; color: var(--v5-muted); font: 11px/1.4 var(--os-font-mono); letter-spacing: .14em; text-transform: uppercase; word-spacing: var(--mono-word-spacing, normal); font-variant-numeric: tabular-nums; }
 .more { display: inline-flex; align-items: center; min-height: 48px; padding: 0 20px; background: var(--v5-band); color: var(--color-primary); font-weight: 700; font-size: .8125rem; letter-spacing: .06em; text-transform: uppercase; }
 .more:active { background: var(--color-primary); color: #000; }
 @media (hover: hover) and (pointer: fine) { .more:hover { background: #333; } }

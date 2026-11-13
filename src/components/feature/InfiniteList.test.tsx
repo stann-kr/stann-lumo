@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComponentProps, ReactNode } from 'react';
 import InfiniteList from './InfiniteList';
@@ -44,27 +44,24 @@ describe('infinite public lists', () => {
     expect(links()).toHaveLength(25);
     expect(new Set(links().map(link => link.getAttribute('href'))).size).toBe(25);
     expect(screen.getByRole('status')).toHaveTextContent('list_complete_count');
-    expect(screen.queryByRole('button', { name: 'list_load_more' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^list_/ })).not.toBeInTheDocument();
   });
 
-  it('supports manual loading without IntersectionObserver and focuses the first new item through the last batch', () => {
-    vi.stubGlobal('IntersectionObserver', undefined);
+  it('holds while a control after the list has focus and resumes once focus returns to the list, with no key', async () => {
     render(<MusicPageClient tracks={tracks} musicMeta={{ title: 'Music', subtitle: '' }} />);
     const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('link');
-    fireEvent.click(screen.getByRole('button', { name: 'list_load_more' }));
-    expect(links()[10]).toHaveFocus();
-    fireEvent.click(screen.getByRole('button', { name: 'list_load_more' }));
-    expect(links()[20]).toHaveFocus();
-    expect(links()).toHaveLength(25);
+    screen.getByRole('link', { name: 'music_licensing' }).focus();
+    act(() => observers.at(-1)!.intersect());
+    expect(links()).toHaveLength(10);
+    expect(screen.queryByRole('button', { name: /^list_/ })).not.toBeInTheDocument();
+    links()[9]!.focus();
+    await waitFor(() => expect(links()).toHaveLength(20));
+    expect(links()[9]).toHaveFocus();
   });
 
-  it('does not automatically append while controls, footer, hidden tabs or inert content need to stay stable', () => {
+  it('does not automatically append while a control after the list, a hidden tab or inert content needs to stay stable', () => {
     const view = render(<MusicPageClient tracks={tracks} musicMeta={{ title: 'Music', subtitle: '' }} />);
-    const more = screen.getByRole('button', { name: 'list_load_more' });
     const observer = observers.at(-1)!;
-    more.focus();
-    act(() => observer.intersect());
-    expect(screen.getAllByRole('listitem')).toHaveLength(10);
     screen.getByRole('link', { name: 'music_licensing' }).focus();
     act(() => observer.intersect());
     expect(screen.getAllByRole('listitem')).toHaveLength(10);

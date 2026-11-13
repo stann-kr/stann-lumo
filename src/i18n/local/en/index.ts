@@ -215,7 +215,6 @@ export default {
   gallery_total: '{{total}} items',
   list_visible_count: '{{count}} of {{total}} items',
   list_complete_count: 'All {{total}} items shown',
-  list_load_more: 'Load more',
   list_loading: 'Loading…',
   list_load_error: 'Unable to load more items.',
   list_retry: 'Try again',
