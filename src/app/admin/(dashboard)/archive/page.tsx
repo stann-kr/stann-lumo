@@ -104,6 +104,16 @@ function EventSelect({ value, performances, onChange, label = '연결된 공연'
   );
 }
 
+/**
+ * The save carries a photo's link only when the admin changed it, and an empty link when the admin removed it.
+ * A link to a deleted event arrives as unlinked and stays stored, so a restored RA event (same id) is linked again.
+ */
+function withChangedLinksOnly(photos: GalleryPhoto[], savedPhotos: GalleryPhoto[]): GalleryPhoto[] {
+  const savedLinks = new Map(savedPhotos.map((saved) => [saved.id, saved.linkedEventId ?? '']));
+  return photos.map(({ linkedEventId = '', ...photo }) =>
+    savedLinks.get(photo.id) === linkedEventId ? photo : { ...photo, linkedEventId });
+}
+
 // ─── 메인 페이지 ─────────────────────────────────────────────────────────────
 const AdminGalleryPage = () => {
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
@@ -201,7 +211,7 @@ const AdminGalleryPage = () => {
     try {
       await runSave(
         ['아카이브 목록'],
-        [updateGalleryPhotos(photos)],
+        [updateGalleryPhotos(withChangedLinksOnly(photos, savedPhotos))],
         () => {
           setSavedPhotos(photos);
           showNotification();

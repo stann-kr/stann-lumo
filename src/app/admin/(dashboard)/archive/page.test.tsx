@@ -1,15 +1,17 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminEditGuardProvider, useAdminEditGuard } from '@/capabilities/admin/AdminEditGuard';
+import type { Performance } from '@/capabilities/events/events';
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import AdminGalleryPage from './page';
 
-const mocks = vi.hoisted(() => ({ fetch: vi.fn(), update: vi.fn(), upload: vi.fn(), remove: vi.fn(), addYoutube: vi.fn(), left: vi.fn() }));
+const mocks = vi.hoisted(() => ({ fetch: vi.fn(), update: vi.fn(), upload: vi.fn(), remove: vi.fn(), addYoutube: vi.fn(), left: vi.fn(), performances: vi.fn() }));
 vi.mock('@/capabilities/media/mediaAdmin.client', () => ({
   fetchGalleryPhotos: mocks.fetch, updateGalleryPhotos: mocks.update, uploadGalleryFiles: mocks.upload,
   deleteGalleryPhoto: mocks.remove, addYouTubeGalleryVideo: mocks.addYoutube,
 }));
-vi.mock('@/capabilities/events/eventsAdmin.client', () => ({ fetchPerformances: vi.fn(async () => ({ success: true, data: [] })) }));
+vi.mock('@/capabilities/events/eventsAdmin.client', () => ({ fetchPerformances: mocks.performances }));
+const keptEvent: Performance = { id: 'kept', date: '2021-04-10', venue: 'Venue', title: 'Kept', status: 'Announced' };
 
 const photo = (id: string): GalleryPhoto => ({ id, filename: `${id}.jpg`, caption: id, altText: '', mimeType: 'image/jpeg', sizeBytes: 100,
   sortOrder: 0, createdAt: '', mediaType: 'image', focalX: 50, focalY: 50 });
@@ -36,6 +38,7 @@ describe('Archive editor', () => {
     mocks.update.mockResolvedValue({ success: true });
     mocks.upload.mockResolvedValue({ success: true, data: [photo('uploaded')] });
     mocks.remove.mockResolvedValue({ success: true });
+    mocks.performances.mockResolvedValue({ success: true, data: [] });
   });
 
   it('preserves the complete collection when editing a filtered item and locks immediate changes until save', async () => {
@@ -167,6 +170,42 @@ describe('Archive editor', () => {
     await act(async () => { pending.resolve({ success: true }); await pending.promise; });
     await screen.findByText('1개 표시 / 전체 1개');
     await waitFor(() => expect(screen.getByRole('region', { name: '미디어 목록' })).toHaveFocus());
+  });
+
+  it('lists an item without a link as unlinked and saves a caption edit without sending any link', async () => {
+    // The server lists an item whose event was deleted without a link; sending none keeps its stored link.
+    mocks.performances.mockResolvedValue({ success: true, data: [keptEvent] });
+    mocks.fetch.mockResolvedValue({ success: true, data: [{ ...photo('first'), linkedEventId: 'kept' }, photo('target')] });
+    renderPage();
+    await screen.findByText('2개 표시 / 전체 2개');
+    fireEvent.click(screen.getByRole('button', { name: '공연 미연결' }));
+    await screen.findByText('1개 표시 / 전체 2개');
+    fireEvent.click(screen.getByRole('button', { name: '편집 target.jpg' }));
+    expect(screen.getByLabelText('연결된 공연')).toHaveValue('');
+    fireEvent.change(screen.getByLabelText('캡션'), { target: { value: 'New caption' } });
+    fireEvent.click(screen.getByRole('button', { name: '변경 사항 저장' }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    expect(mocks.update).toHaveBeenCalledWith([photo('first'), { ...photo('target'), caption: 'New caption' }]);
+  });
+
+  it('sends a link the admin chose and an empty link for one the admin removed', async () => {
+    mocks.performances.mockResolvedValue({ success: true, data: [keptEvent] });
+    mocks.fetch.mockResolvedValue({ success: true, data: [{ ...photo('first'), linkedEventId: 'kept' }, photo('target')] });
+    renderPage();
+    await screen.findByText('2개 표시 / 전체 2개');
+    fireEvent.click(screen.getByRole('button', { name: '편집 first.jpg' }));
+    fireEvent.change(screen.getByLabelText('연결된 공연'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: '편집 target.jpg' }));
+    fireEvent.change(screen.getByLabelText('연결된 공연'), { target: { value: 'kept' } });
+    fireEvent.click(screen.getByRole('button', { name: '변경 사항 저장' }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(1));
+    expect(mocks.update).toHaveBeenCalledWith([{ ...photo('first'), linkedEventId: '' }, { ...photo('target'), linkedEventId: 'kept' }]);
+    // Once saved, those links are unchanged, so the next save sends none.
+    await waitFor(() => expect(screen.getByTestId('dirty')).toHaveTextContent('false'));
+    fireEvent.change(screen.getByLabelText('캡션'), { target: { value: 'Again' } });
+    fireEvent.click(screen.getByRole('button', { name: '변경 사항 저장' }));
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledTimes(2));
+    expect(mocks.update).toHaveBeenLastCalledWith([photo('first'), { ...photo('target'), caption: 'Again' }]);
   });
 
   it('keeps the hidden file input out of the tab order behind the visible upload controls', async () => {
