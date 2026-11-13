@@ -4,7 +4,8 @@
 .screen { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
 .poster { position: absolute; inset: 0; }
 .poster > * { width: 100%; height: 100%; aspect-ratio: auto; padding: 0; }
-.heading { position: absolute; inset: 0 0 auto; padding: 18px 20px; background: linear-gradient(to bottom, rgb(0 0 0 / .7), transparent); pointer-events: none; }
+/* The scrim runs past the title so a bright cover never sits behind its last line (canvas: #000c → transparent). */
+.heading { position: absolute; inset: 0 0 auto; padding: 18px 20px 40px; background: linear-gradient(to bottom, rgb(0 0 0 / .8), transparent); pointer-events: none; }
 .control { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: flex-start; }
 .playKey { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; background: var(--v5-red); color: #000; }
 .control:hover .playKey { background: var(--v5-red-hover); }
@@ -20,7 +21,7 @@
 @media (max-width: 640px) {
   .playKey { width: 64px; height: 64px; }
   .bar { padding-inline: 16px; }
-  .heading { padding: 14px 16px; }
+  .heading { padding: 14px 16px 32px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .playKey { transition: background-color var(--os-dur-fast) linear; }

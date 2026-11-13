@@ -341,6 +341,9 @@ describe('Home v5', () => {
     // Type, year and length share one line under the player screen; the host is named beside it.
     expect(within(mix).getByText('DJ Mix · 2025 · 1:58:24')).toBeVisible();
     expect(within(mix).getByRole('link', { name: /Listen on SoundCloud/ })).toHaveAttribute('href', 'https://music.example/tresor');
+    // The plate's two keys: the artist's SoundCloud and the full music page.
+    expect(within(mix).getByRole('link', { name: /^SoundCloud ↗.*opens in a new tab/ })).toHaveAttribute('href', 'https://soundcloud.com/stannlumo');
+    expect(within(mix).getByRole('link', { name: 'All mixes →' })).toHaveAttribute('href', '/music');
     const cards = within(screen.getByRole('list', { name: 'Mixes and releases' })).getAllByRole('link');
     expect(cards.map((card) => card.getAttribute('href'))).toEqual(['https://music.example/frame', 'https://music.example/tresor']);
     expect(screen.queryByText('0:00')).not.toBeInTheDocument();
