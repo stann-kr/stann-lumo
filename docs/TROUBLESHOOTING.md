@@ -32,6 +32,7 @@ curl -I <배포 URL>
 
 - `next.config.ts`의 `headers()`는 현재 어댑터(`@opennextjs/cloudflare` 1.20)에서 응답에 반영된다. CDN 규칙이 닿지 않는 dev Worker 주소에서도 같은 헤더가 나온다. 콘텐츠 보안 정책(CSP)도 이 경로로 보낸다.
 - 미들웨어가 붙인 헤더가 빠지는지는 다시 확인하지 않았다.
+- production 도메인에서는 Cloudflare Web Analytics 자동 설정이 브라우저에 보내는 HTML에 비컨 스크립트(`static.cloudflareinsights.com/beacon.min.js/<버전>`)를 넣는다. dev Worker 주소와 브라우저가 아닌 요청(curl 기본값)에는 넣지 않아서 dev 확인이나 HTML 소스 검사로는 드러나지 않는다. CSP를 바꾼 뒤에는 production을 브라우저로 열어 `securitypolicyviolation`이 없는지 본다. 비컨은 같은 출처 `/cdn-cgi/rum`으로 보내므로 `connect-src 'self'`로 충분하다.
 
 ## 2026-03-19 — lint 훅 엄격 규칙으로 빌드 실패
 

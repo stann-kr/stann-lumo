@@ -26,7 +26,7 @@ Cloudflare
 | Terminal capability | `src/capabilities/terminal/` | 설정 contract, D1 persistence, API client |
 | Language | `src/contexts/LanguageContext.tsx` | language state |
 | Deploy | `wrangler.json` | Cloudflare route, D1, R2, Images, rate limit binding |
-| 보안 헤더 | `next.config.ts` | 모든 응답에 CSP·`X-Frame-Options`·`Permissions-Policy` 등. iframe은 SoundCloud·YouTube 플레이어만 허용 |
+| 보안 헤더 | `next.config.ts` | 모든 응답에 CSP·`X-Frame-Options`·`Permissions-Policy` 등. iframe은 SoundCloud·YouTube 플레이어만, 외부 스크립트는 Cloudflare Web Analytics 비컨만 허용 |
 
 ## 런타임과 프레임워크
 
