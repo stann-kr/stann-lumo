@@ -22,6 +22,19 @@ function deferred<T>() {
   return { promise, resolve: resolve!, reject: reject! };
 }
 
+// Resolves with whether the alert already had focus when it first became observable in the DOM.
+function focusWhenAlertAppears() {
+  return new Promise<boolean>((resolve) => {
+    const observer = new MutationObserver(() => {
+      const alert = document.querySelector('[role="alert"]');
+      if (!alert) return;
+      observer.disconnect();
+      resolve(document.activeElement === alert);
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+  });
+}
+
 function Editor({ saveRequest }: { saveRequest: () => void }) {
   useEffect(() => {
     saveRequest();
@@ -43,7 +56,8 @@ function renderGate(saveRequest = vi.fn()) {
 
 describe('AdminContentGate', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset, not clear: a test that fails early must not leave queued mock*Once values for the next one.
+    vi.resetAllMocks();
   });
 
   it('keeps the editor unmounted until both EN and KO content loads complete', async () => {
@@ -73,9 +87,11 @@ describe('AdminContentGate', () => {
       .mockResolvedValueOnce(content)
       .mockReturnValueOnce(retryEn.promise)
       .mockReturnValueOnce(retryKo.promise);
+    const focusedOnAppear = focusWhenAlertAppears();
     const saveRequest = renderGate();
 
     const error = await screen.findByRole('alert');
+    expect(await focusedOnAppear).toBe(true);
     expect(error).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'SAVE CONTENT' })).not.toBeInTheDocument();
     expect(saveRequest).not.toHaveBeenCalled();
