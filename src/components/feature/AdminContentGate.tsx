@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useLayoutEffect, useRef } from 'react';
 import { useContent } from '@/contexts/ContentContext';
 import styles from './AdminContentGate.module.css';
 
@@ -12,7 +12,9 @@ export default function AdminContentGate({ children }: AdminContentGateProps) {
   const { contentStatus, retryContent } = useContent();
   const statusRef = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
+  // Focus the alert in the same commit that shows it, so it is never observable without focus.
+  // A passive effect would run one task later.
+  useLayoutEffect(() => {
     if (contentStatus === 'error') statusRef.current?.focus();
   }, [contentStatus]);
 
