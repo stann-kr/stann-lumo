@@ -11,6 +11,8 @@ import styles from "./PublicSiteShell.module.css";
 import { useShellMotion } from './useShellMotion';
 import { PublicMotionInputContext, type MotionInput } from './publicMotion';
 import { useRevealGate } from './useRevealGate';
+import { PlayerProvider } from './player/PlayerContext';
+import PlayerDock from './player/PlayerDock';
 
 interface PublicSiteShellProps {
   children: ReactNode;
@@ -217,6 +219,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicS
   return (
     <PublicNavigationContext value={navigate}>
     <PublicMotionInputContext value={motionInputRef}>
+    <PlayerProvider>
     <div ref={shellRef} className={styles.shell}>
       <div inert={mobileMenuOpen || undefined} className={styles.document}>
         <a href="#main-content" className={styles.skipLink}>{skipLinkLabel}</a>
@@ -236,6 +239,8 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicS
         <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed} data-gate={revealHeld ? 'script' : undefined}>
           <div inert={isNavigating || undefined} className={`${styles.content} ${isNavigating ? styles.pendingContent : ''}`}>{children}</div>
         </main>
+        {/* Outside the page content: navigation never remounts it, and it goes inert with the rest under the menu. */}
+        <PlayerDock />
         {isNavigating ? <PublicPageLoading overlay /> : !revealed && <PublicPageLoading overlay gate held={revealHeld} />}
       </div>
       {mobileMenuOpen && (
@@ -260,6 +265,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicS
         </div>
       )}
     </div>
+    </PlayerProvider>
     </PublicMotionInputContext>
     </PublicNavigationContext>
   );

@@ -9,6 +9,8 @@
 .control { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: flex-start; }
 .playKey { display: flex; align-items: center; justify-content: center; width: 72px; height: 72px; background: var(--v5-red); color: #000; }
 .control:hover .playKey { background: var(--v5-red-hover); }
+.playKey[data-playing='true'] { background: var(--color-primary); }
+.control:hover .playKey[data-playing='true'] { background: var(--color-primary); }
 .control:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .screen iframe { display: block; width: 100%; height: 100%; border: 0; background: #000; }
 .bar {

@@ -39,7 +39,7 @@
   - 취소되지 않은 예정 공연이 있으면 메뉴의 Events 항목에 붉은 NEXT 램프를 단다. 서버는 남은 날짜가 있는지만 읽어 헤더를 기다리게 하지 않고 흘려보내며, 읽기에 실패하면 램프만 끈다.
   - 푸터는 두지 않는다. 연속 로딩 목록에서는 모든 페이지를 불러온 뒤에야 닿기 때문이다.
 - **홈**(`HomePageClient`)은 캔버스 Main·Mobile 보드를 따른다.
-  - 첫 줄: 사진 위 아티스트 이름 판과 믹스 판. 믹스 판은 두 언어 모두 LATEST MIX 띠, `MixPlayer`의 고정 16:9 화면, 최근 믹스 목록, SoundCloud ↗·All mixes → 키로 이뤄진다. 재생 중인 믹스에 붉은 표시를 둔다.
+  - 첫 줄: 사진 위 아티스트 이름 판과 믹스 판. 믹스 판은 두 언어 모두 LATEST MIX 띠, `MixPlayer`의 고정 16:9 화면, 최근 믹스 목록, SoundCloud ↗·All mixes → 키로 이뤄진다. 재생 중인 믹스에 붉은 표시를 둔다. 재생은 사이트 하단 플레이어(`PlayerDock`)로 넘기고 화면에는 커버와 재생 중 표시만 남는다.
     - 모바일은 최근 믹스 목록을 접고 All mixes 키 하나만 남긴다. 최신 믹스에 트랙리스트가 있으면 화면 아래에 첫 곡 한 줄을 두고, 키 문구를 트랙리스트 · 모든 믹스 →로 바꾼다. 전체 트랙리스트는 음악 화면에만 둔다.
   - 다음 공연 줄: 붉은 램프와 TICKETS 키를 단다. 모바일은 날짜·장소 칸 대신 제목 아래 mono 한 줄(MM-DD 시각 · 장소)을 둔다.
   - 믹스 카드: 4열이며 1199px 이하에서 2열이다.
@@ -92,6 +92,7 @@
 | `PublicSiteShell`, `useShellMotion`, `useRevealGate`, `PublicPageLoading`, `PublicLink` | 헤더, 탐색, 메뉴 대화상자, 언어 전환, 첫 화면 대기, 경로 로딩 |
 | `PageLayout`, `useContentMotion`, `publicMotion.ts` | 내지 제목 판, 진입·스크롤 등장, 입력 방식 추적 |
 | `src/components/public/*PageClient`, `MixPlayer`, `TrackCover` | 화면별 판과 인접 CSS Module |
+| `src/components/feature/player/*` | 사이트 하단 플레이어: 공개 셸에 한 번 두는 `PlayerProvider`·`PlayerDock`과 재생 키 `PlayTrackKey`. 데스크톱은 오른쪽 아래 420px 판, 640px 이하는 전체 폭. 외부 iframe은 트랙별로 한 번만 만들고 접기는 크기만 바꾼다 |
 | `PublicNotFound`, `PublicFallback.module.css`, `src/app/global-error.tsx` | 없는 경로·오류 대체 화면 |
 | `LoadingImage` | 이미지 지연 요청과 상태 틀 |
 | `AdminLayout`, `AdminCard`, `AdminSectionHeader`, `designV2.module.css` | 관리자 공통 구성 |

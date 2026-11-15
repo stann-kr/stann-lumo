@@ -371,7 +371,7 @@ describe('Home v5', () => {
     expect(within(mix).getByRole('link', { name: /^SoundCloud ↗.*opens in a new tab/ })).toHaveAttribute('href', 'https://soundcloud.com/stannlumo');
     expect(within(mix).getByRole('link', { name: 'All mixes →' })).toHaveAttribute('href', '/music');
     const cards = within(screen.getByRole('list', { name: 'Mixes and releases' })).getAllByRole('link');
-    expect(cards.map((card) => card.getAttribute('href'))).toEqual(['https://music.example/frame', 'https://music.example/tresor']);
+    expect(cards.map((card) => card.getAttribute('href'))).toEqual(['/music/release', '/music/mix']);
     expect(screen.queryByText('0:00')).not.toBeInTheDocument();
     const booking = screen.getByRole('region', { name: 'Booking' });
     expect(within(booking).getByRole('link', { name: 'PRESS KIT →' })).toHaveAttribute('href', '/press-kit');

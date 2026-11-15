@@ -7,7 +7,9 @@ import InfiniteList from "@/components/feature/InfiniteList";
 import Link from '../feature/PublicLink';
 import { hasKnownDuration, isMixType, type MusicPageMeta, type Track } from "@/capabilities/content/content";
 import { tracklistLines } from "@/capabilities/content/trackMedia";
-import { trackStoreLinks } from "@/capabilities/media/storeLinks";
+import { playerEmbed } from "@/capabilities/media/playerEmbed";
+import PlayTrackKey from "../feature/player/PlayTrackKey";
+import { usePlayer } from "../feature/player/PlayerContext";
 import TrackCover from "./TrackCover";
 import v5 from "@/styles/v5.module.css";
 import styles from "./MusicPageClient.module.css";
@@ -24,32 +26,29 @@ function TrackRow({ track }: { track: Track }) {
   const isKorean = language === 'ko';
   const newTabLabel = isKorean ? ' (새 창)' : ' (opens in a new tab)';
   const lines = tracklistLines(track.tracklist);
-  const stores = trackStoreLinks(track.link);
+  const href = `/music/${encodeURIComponent(track.id)}`;
+  const playable = Boolean(usePlayer()) && Boolean(playerEmbed(track.link));
   return (
     <article className={styles.row}>
       <TrackCover track={track} className={styles.cover} showType={false} />
       <div className={styles.body}>
-        <h3 className={styles.title}>{track.title}</h3>
+        {/* The title link stretches over the whole row, so the card is one target; play and the tracklist sit above it. */}
+        <h3 className={styles.title}><Link href={href} className={styles.rowLink}>{track.title}</Link></h3>
         <p className={`${v5.mono} ${styles.meta}`}>{[track.type, track.platform, track.year].filter(Boolean).join(' · ')}</p>
       </div>
       <dl className={styles.facts}>
         {hasKnownDuration(track.duration) && <div><dt className={v5.label}>Length</dt><dd className={v5.mono}>{track.duration}</dd></div>}
         {track.recordedOn && <div><dt className={v5.label}>Rec</dt><dd className={v5.mono}><time dateTime={track.recordedOn}>{track.recordedOn.replaceAll('-', '.')}</time></dd></div>}
       </dl>
-      {track.link && (
-        <div className={styles.listen}>
+      {/* Play sends the track to the site player; a link without a player keeps its outbound key. Stores live on the detail page. */}
+      <div className={styles.listen}>
+        {playable ? <PlayTrackKey track={track} className={`${v5.key} ${styles.play}`} /> : track.link && (
           <a href={track.link} target="_blank" rel="noopener noreferrer" className={v5.key}
             aria-label={`${track.title} — ${t('music_listen_on', { platform: track.platform })}${newTabLabel}`}>
             {track.platform || (isKorean ? '듣기' : 'Listen')} ↗
           </a>
-          {stores.map((store) => (
-            <a key={store.platform} href={store.url} target="_blank" rel="noopener noreferrer" className={v5.key}
-              aria-label={`${track.title} — ${t('music_listen_on', { platform: store.platform })}${newTabLabel}`}>
-              {store.platform} ↗
-            </a>
-          ))}
-        </div>
-      )}
+        )}
+      </div>
       {lines.length > 0 && (
         <details className={styles.tracklist}>
           <summary className={v5.label}>{isKorean ? `트랙리스트 · ${lines.length}곡` : `Tracklist · ${lines.length}`}<span className="sr-only"> — {track.title}</span></summary>

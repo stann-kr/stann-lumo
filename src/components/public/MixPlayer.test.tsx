@@ -14,7 +14,7 @@ describe('MixPlayer', () => {
   });
 
   it('opens hosts without an embed in a new tab', () => {
-    render(<MixPlayer title="Frame Dragging" platform="Bandcamp" language="ko" link="https://ameniiarecords.bandcamp.com/album/frame-dragging" />);
+    render(<MixPlayer title="Unrecorded" platform="Bandcamp" language="ko" link="https://ameniiarecords.bandcamp.com/album/unrecorded" />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Bandcamp에서 듣기/ })).toHaveAttribute('target', '_blank');
   });
