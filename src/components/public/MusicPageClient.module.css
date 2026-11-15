@@ -14,11 +14,13 @@
 .facts > div { padding: 8px 14px; background: var(--v5-inset); }
 .facts dt { color: var(--v5-muted); }
 .facts dd { font-size: .9375rem; white-space: nowrap; }
+/* The platform keys fill the key column top to bottom; a release on Beatport and Spotify too stacks one key per store. */
+.listen { grid-area: key; align-self: stretch; display: flex; flex-direction: column; gap: 2px; min-height: 112px; }
 /* The canvas key has no side padding, so "SOUNDCLOUD ↗" stays on one line in the 150px column; keep only a thin inset. */
-.listen { grid-area: key; align-self: stretch; min-height: 112px; padding-inline: 8px; background: var(--v5-plate-2); font-size: 14px; }
+.listen > a { flex: 1; min-height: 36px; padding-inline: 8px; background: var(--v5-plate-2); font-size: 14px; }
 /* Canvas Music board: the platform key sits one tone above its row. */
-.rows > li:nth-child(even) .listen { background: var(--v5-band); }
-.rows > li .listen:hover { background: #333; }
+.rows > li:nth-child(even) .listen > a { background: var(--v5-band); }
+.rows > li .listen > a:hover { background: #333; }
 .tracklist { grid-area: list; margin: 0 20px 16px 0; background: var(--v5-inset); }
 .tracklist summary { display: flex; align-items: center; min-height: 44px; padding: 0 16px; color: var(--v5-muted-2); cursor: pointer; list-style: none; }
 .tracklist summary::-webkit-details-marker { display: none; }
@@ -50,6 +52,7 @@
   .body { padding-block: 12px; padding-right: 16px; }
   .facts { margin: 0; }
   .facts > div { flex: 1; padding-inline: 16px; }
-  .listen { min-height: 44px; justify-content: space-between; padding-inline: 16px; }
+  .listen { flex-direction: row; min-height: 44px; }
+  .listen > a { min-height: 44px; padding-inline: 12px; }
   .licensing { padding: 0 16px; }
 }
