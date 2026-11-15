@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LumoWordmark from "../base/LumoWordmark";
 import {
-  CONTACT_EMAIL, PRESS_BIO_TXT, PRESS_CONTACT, PRESS_FACTS, PRESS_KIT_COPY, PRESS_LOGO_FILES, PRESS_MIXES, PRESS_PDFS, PRESS_PHOTOS,
+  CONTACT_EMAIL, PRESS_BIO_TXT, PRESS_CONTACT, PRESS_FACTS, PRESS_KIT_COPY, PRESS_LOGOS, PRESS_MIXES, PRESS_PDFS, PRESS_PHOTOS,
   PRESS_RELEASES, PRESS_STAGES, PRESS_VIDEO_PATH, PRESS_VIDEOS, PRESS_ZIP, pressVideoPoster,
 } from "@/capabilities/presskit/pressKit";
 import styles from "./PressKitPageClient.module.css";
@@ -16,18 +16,55 @@ import styles from "./PressKitPageClient.module.css";
 const UI = {
   ko: {
     stages: "플레이한 무대", photosNote: "원본 해상도로 저장", copyBio: "바이오 복사", copyAddress: "주소 복사", emailBooking: "섭외 문의 메일 →",
-    copied: "복사했습니다.", copyFailed: "복사하지 못했습니다. 직접 선택해 복사해 주세요.", dark: "어두운 배경", light: "밝은 배경", newTab: " (새 창)",
+    copied: "복사했습니다.", copyFailed: "복사하지 못했습니다. 직접 선택해 복사해 주세요.", newTab: " (새 창)",
     bioLength: "바이오 길이", download: "내려받기", clip: "영상", downloadAll: "전체 다운로드", bioTxt: "바이오 텍스트 파일 내려받기",
+    play: "재생", tone: { White: "어두운 배경", Black: "밝은 배경", Red: "기본색" },
   },
   en: {
     stages: "Selected stages", photosNote: "Saved at full resolution", copyBio: "Copy bio", copyAddress: "Copy address", emailBooking: "Email booking →",
-    copied: "Copied.", copyFailed: "Copy failed. Please select the text and copy it.", dark: "Dark backgrounds", light: "Light backgrounds", newTab: " (opens in a new tab)",
+    copied: "Copied.", copyFailed: "Copy failed. Please select the text and copy it.", newTab: " (opens in a new tab)",
     bioLength: "Biography length", download: "Download", clip: "clip", downloadAll: "Download all", bioTxt: "download the biography as text",
+    play: "Play", tone: { White: "Dark backgrounds", Black: "Light backgrounds", Red: "Primary" },
   },
 } as const;
 
 const fileName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 const VIDEO_TOTAL = PRESS_VIDEOS.reduce((sum, venue) => sum + venue.clips.length, 0);
+
+/** The confirmed B3 octagon mark (1500×1000, 45° chamfer 250); the tile sets its colour. */
+const LumoMark = ({ title }: { title: string }) => (
+  <svg viewBox="0 0 1500 1000" role="img" aria-label={title}><polygon fill="currentColor" points="250,0 1250,0 1500,250 1500,750 1250,1000 250,1000 0,750 0,250" /></svg>
+);
+
+/**
+ * A clip stays a lazy poster until it is asked to play: nothing is fetched from R2 before the click (preload="none"),
+ * play() runs inside the click so mobile browsers accept it, and focus moves to the player that replaces the button.
+ */
+function ClipPreview({ file, label, duration, playLabel }: { file: string; label: string; duration: string; playLabel: string }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const [started, setStarted] = useState(false);
+  const poster = pressVideoPoster(file);
+  const start = () => {
+    setStarted(true);
+    const player = video.current;
+    if (!player) return;
+    player.focus();
+    void player.play().catch(() => undefined);
+  };
+  return (
+    <div className={styles.screen} data-started={started}>
+      <video ref={video} src={`${PRESS_VIDEO_PATH}/${file}?preview`} poster={started ? poster : undefined} preload="none" playsInline
+        controls={started} tabIndex={started ? 0 : -1} aria-hidden={!started} aria-label={label} />
+      {!started && (
+        <button type="button" className={styles.play} onClick={start} aria-label={`${playLabel} ${label}`}>
+          <img src={poster} alt="" loading="lazy" width={640} height={360} />
+          <span className={styles.playKey} aria-hidden="true">▶</span>
+        </button>
+      )}
+      {!started && <span className={`${styles.mono} ${styles.duration}`}>{duration}</span>}
+    </div>
+  );
+}
 
 export default function PressKitPageClient() {
   const { language } = useLanguage();
@@ -170,10 +207,7 @@ export default function PressKitPageClient() {
                 return (
                   <li key={item.file}>
                     <figure className={styles.ph}>
-                      <div className={styles.screen}>
-                        <img src={pressVideoPoster(item.file)} alt={`${venue.venue} ${ui.clip} ${number}`} loading="lazy" width={640} height={360} />
-                        <span className={`${styles.mono} ${styles.duration}`}>{item.duration}</span>
-                      </div>
+                      <ClipPreview file={item.file} label={`${venue.venue} ${ui.clip} ${number}`} duration={item.duration} playLabel={ui.play} />
                       <figcaption className={styles.meta}>
                         <span className={`${styles.mono} ${styles.muted} ${styles.small}`}>{number}</span>
                         <a className={styles.key} href={`${PRESS_VIDEO_PATH}/${item.file}`} download aria-label={`${ui.download} ${venue.venue} ${ui.clip} ${number} (${item.size})`}>↓ {item.size}</a>
@@ -191,19 +225,26 @@ export default function PressKitPageClient() {
       <div className={styles.two}>
         <section className={styles.plate} aria-labelledby="press-logo">
           <div className={styles.band}><h2 id="press-logo" className={styles.label}>Logo</h2><span className={`${styles.label} ${styles.muted}`}>SVG · PDF · EPS · PNG</span></div>
-          <div className={styles.logos}>
-            {(["White", "Black"] as const).map((tone) => (
-              <div key={tone}>
-                <div className={styles.tile} data-tone={tone}><LumoWordmark title={`STANN LUMO ${tone}`} /></div>
-                <div className={styles.tileCap}><span className={styles.label}>{tone}</span><span className={`${styles.label} ${styles.muted}`}>{tone === "White" ? ui.dark : ui.light}</span></div>
-                <div className={styles.keys}>
-                  {PRESS_LOGO_FILES.filter((file) => file.label.startsWith(tone)).map((file) => (
-                    <a key={file.file} className={styles.key} href={file.file} download aria-label={`${ui.download} ${file.label}`}>{file.label.split(" ")[1]}</a>
-                  ))}
-                </div>
+          {PRESS_LOGOS.map((set) => (
+            <div key={set.kind} className={styles.logoSet}>
+              <h3 className={styles.venueHead}><strong>{set.kind}</strong><span className={`${styles.mono} ${styles.muted} ${styles.small}`}>{set.tones.length}</span></h3>
+              <div className={styles.logos} data-kind={set.kind}>
+                {set.tones.map(({ tone, files }) => (
+                  <div key={tone}>
+                    <div className={styles.tile} data-tone={tone} data-kind={set.kind}>
+                      {set.kind === "Mark" ? <LumoMark title={`STANN LUMO mark ${tone}`} /> : <LumoWordmark title={`STANN LUMO ${tone}`} />}
+                    </div>
+                    <div className={styles.tileCap}><span className={styles.label}>{tone}</span><span className={`${styles.label} ${styles.muted}`}>{ui.tone[tone as keyof typeof ui.tone]}</span></div>
+                    <div className={styles.keys}>
+                      {files.map((file) => (
+                        <a key={file.file} className={styles.key} href={file.file} download aria-label={`${ui.download} ${file.label}`}>{file.format}</a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
           <div className={styles.pad}><p className={`${styles.prose} ${styles.small} ${styles.logoNote}`}>{copy.logoNote}</p></div>
         </section>
         <section className={`${styles.plate} ${styles.column}`} aria-labelledby="press-terminal">
