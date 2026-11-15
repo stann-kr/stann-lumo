@@ -27,7 +27,9 @@
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
 .mixType { margin-top: 8px; font-size: .875rem; color: var(--v5-muted-2); }
 /* recent mixes deck: the loaded mix is the current item, so it carries the red lamp */
-.deck { display: flex; flex-direction: column; margin-top: var(--v5-gap); list-style: none; }
+.deckWell { position: relative; flex: 1 1 auto; min-height: 224px; margin-top: var(--v5-gap); }
+.deck > li { flex: none; }
+.deck { position: absolute; inset: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; list-style: none; }
 .deckRow {
   display: grid; grid-template-columns: 28px 40px minmax(0, 1fr) 48px; align-items: center; gap: 12px; width: 100%; min-height: 56px;
   padding: 8px 20px 8px 17px; border-left: 3px solid transparent; background: var(--v5-plate-2); font-size: 14px; text-align: left;
@@ -131,7 +133,7 @@
   .band, .mixHead, .plateKey { padding-inline: 16px; }
   .mixTitle { font-size: 26px; }
   /* Mobile board: no deck; the first track (when there is a tracklist) and one key follow the player directly. */
-  .deck { display: none; }
+  .deckWell { display: none; }
   .firstTrack { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; padding: 11px 16px; background: var(--v5-plate); font-size: 14px; overflow-wrap: anywhere; }
   .keyGrid { grid-template-columns: minmax(0, 1fr); padding-top: 0; }
   .platformKey { display: none; }

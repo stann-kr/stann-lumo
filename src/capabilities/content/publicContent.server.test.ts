@@ -249,6 +249,20 @@ describe('public server content projections', () => {
     } finally { close(); }
   });
 
+  it('reaches past newer releases for up to eight mixes for the Latest mix deck', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    try {
+      for (let index = 0; index < 20; index++) {
+        const type = index < 10 ? 'Remix' : 'DJ Mix';
+        sqlite.prepare("INSERT INTO tracks (id, lang, title, type, duration, year, platform, sort_order) VALUES (?, 'en', ?, ?, '', '2026', 'SoundCloud', ?)").run(`t-${index}`, `T ${index}`, type, index);
+      }
+      const { previews } = await getHomeProjection('en');
+      // The eight newest for the cards, then the eight newest mixes; a remix is a release.
+      expect(previews.tracks.map((track) => track.id)).toEqual([...Array.from({ length: 8 }, (_, i) => `t-${i}`), ...Array.from({ length: 8 }, (_, i) => `t-${i + 10}`)]);
+    } finally { close(); }
+  });
+
   it('bounds home previews and uses the existing English fallback without leaking unused fields', async () => {
     const { db, sqlite, close } = createSqliteD1();
     vi.mocked(getDB).mockReturnValue(db);

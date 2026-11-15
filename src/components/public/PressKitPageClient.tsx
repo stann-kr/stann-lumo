@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LumoWordmark from "../base/LumoWordmark";
@@ -11,7 +10,8 @@ import {
 import styles from "./PressKitPageClient.module.css";
 
 /* v5 press kit — canvas boards Presskit (1440) and PresskitMobile (390): https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ
-   The page draws its own header (the site shell leaves its menu out here): promoters get language, the full pack and booking. */
+   The site header stays on this page too (2026-11-16: without it there was no way back to the site); the page's own band
+   names it and offers the full pack. */
 
 const UI = {
   ko: {
@@ -30,7 +30,7 @@ const fileName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 const VIDEO_TOTAL = PRESS_VIDEOS.reduce((sum, venue) => sum + venue.clips.length, 0);
 
 export default function PressKitPageClient() {
-  const { language, setLanguage } = useLanguage();
+  const { language } = useLanguage();
   const locale = language === "ko" ? "ko" : "en";
   const copy = PRESS_KIT_COPY[locale];
   const ui = UI[locale];
@@ -51,18 +51,12 @@ export default function PressKitPageClient() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.hdr}>
-        <div className={styles.brand}>
-          <Link href="/" className={styles.home} aria-label="STANN LUMO"><LumoWordmark className={styles.wordmark} title="STANN LUMO" /></Link>
-          <span className={`${styles.label} ${styles.muted}`}>Press kit</span>
-        </div>
+      <div className={styles.hdr}>
+        <div className={styles.brand}><span className={styles.label}>Press kit</span></div>
         <div className={styles.keys}>
-          <button type="button" className={styles.key} onClick={() => setLanguage("ko")} aria-label="언어를 한국어로 전환" aria-pressed={language === "ko"}>KO</button>
-          <button type="button" className={styles.key} onClick={() => setLanguage("en")} aria-label="Switch language to English" aria-pressed={language === "en"}>EN</button>
           <a className={styles.key} href={PRESS_ZIP.file} download>{ui.downloadAll} <span className={`${styles.mono} ${styles.muted}`}>ZIP {PRESS_ZIP.size}</span></a>
-          <a className={`${styles.key} ${styles.red}`} href="#press-contact">Booking</a>
         </div>
-      </header>
+      </div>
 
       <section className={styles.hero} aria-labelledby="press-name">
         <figure className={styles.photo}>

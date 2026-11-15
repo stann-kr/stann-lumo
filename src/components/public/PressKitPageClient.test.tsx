@@ -12,7 +12,6 @@ describe('PressKitPageClient', () => {
   it('serves the official kit files from same-origin downloads', () => {
     render(<PressKitPageClient />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/^Stann\s*Lumo$/);
-    expect(screen.getByRole('link', { name: 'STANN LUMO' })).toHaveAttribute('href', '/');
     const zip = screen.getByRole('link', { name: /Download all/ });
     expect(zip).toHaveAttribute('href', '/press/download/stann-lumo-press-kit.zip');
     expect(zip).toHaveAttribute('download');
@@ -54,8 +53,7 @@ describe('PressKitPageClient', () => {
     expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/^Stann Lumo는 서울 기반의/));
     expect(screen.getByRole('status')).toHaveTextContent('복사했습니다.');
     expect(screen.getAllByText('국내 페스티벌')).toHaveLength(2);
-    expect(screen.getByRole('button', { name: '언어를 한국어로 전환' })).toHaveAttribute('aria-pressed', 'true');
-    await user.click(screen.getByRole('button', { name: 'Switch language to English' }));
-    expect(mocks.setLanguage).toHaveBeenCalledWith('en');
+    // The site header carries the language keys; the kit only follows the chosen language.
+    expect(screen.queryByRole('button', { name: 'Switch language to English' })).not.toBeInTheDocument();
   });
 });

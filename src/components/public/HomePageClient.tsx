@@ -51,7 +51,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   const copy = COPY[language === "ko" ? "ko" : "en"];
   const artistName = artistInfo.find((item) => item.key === "Name" || item.key === "이름")?.value || SITE_NAME;
   const tracks = previews?.tracks ?? [];
-  const recentMixes = tracks.filter(isMix).slice(0, 4);
+  const recentMixes = tracks.filter(isMix).slice(0, 8);
   const deck = recentMixes.length > 0 ? recentMixes : tracks.slice(0, 1);
   const [selectedMixId, setSelectedMixId] = useState<string | null>(null);
   // Once a mix is playing, choosing another deck entry loads that mix's player in the same screen.
@@ -130,6 +130,8 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
               <div className={styles.mixHead}><p className={styles.mixTitle}>{latestMix.title}</p><p className={styles.mixType}>{[mixFacts(latestMix), latestMix.platform].filter(Boolean).join(" · ")}</p></div>
             )}
             {deck.length > 1 && (
+              // The deck fills the column beside the hero and scrolls inside it, so more mixes never make the row taller.
+              <div className={styles.deckWell}>
               <ul className={styles.deck} aria-label={copy.recentMixes}>
                 {deck.map((track, index) => {
                   const current = track.id === latestMix.id;
@@ -145,6 +147,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
                   );
                 })}
               </ul>
+              </div>
             )}
             {/* Mobile board: the deck folds away and the mix's first track shows instead, only when it has a tracklist. */}
             {latestMix.firstTrack && (
