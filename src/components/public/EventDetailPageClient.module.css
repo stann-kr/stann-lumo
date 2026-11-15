@@ -1,21 +1,30 @@
-.detail { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 640px); gap: var(--v5-gap); align-items: start; }
-.facts { display: flex; flex-direction: column; }
-@media (min-width: 800px) and (min-height: 760px) { .detail[data-poster='true'] .facts { position: sticky; top: var(--v5-gap); } }
-.fact { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; padding: 14px 20px; }
-.fact dt { padding-top: 3px; color: var(--v5-muted); }
-.fact dd { font-size: 1.0625rem; font-weight: 500; overflow-wrap: anywhere; }
-.fact dd span { display: block; margin-top: 2px; font-size: .875rem; font-weight: 400; color: var(--v5-muted-2); }
+/* Poster on the left at a readable size, the fact plate filling the rest of the width (as on the music detail). */
+.detail { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: var(--v5-gap); align-items: stretch; }
+.facts { display: flex; flex-direction: column; min-width: 0; }
+@media (min-width: 800px) and (min-height: 760px) { .poster { position: sticky; top: var(--v5-gap); } }
+.fact { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 16px; padding: 18px 24px; }
+.fact:nth-child(even) { background: var(--v5-plate-2); }
+.fact dt { padding-top: 4px; color: var(--v5-muted); }
+.fact dd { font-size: 1.25rem; font-weight: 500; line-height: 1.35; overflow-wrap: anywhere; }
+.fact dd span { display: block; margin-top: 4px; font-size: .9375rem; font-weight: 400; color: var(--v5-muted-2); }
 .lineup { white-space: pre-line; line-height: 1.6; }
-.external { margin-top: var(--v5-gap); min-height: 56px; justify-content: space-between; padding: 0 20px; }
-.poster { min-width: 0; padding: 0; }
+.external { margin-top: auto; min-height: 64px; justify-content: space-between; padding: 0 24px; font-size: 1rem; }
+.poster { align-self: start; min-width: 0; padding: 0; }
 .poster img { width: 100%; max-height: min(calc(100svh - 160px), 860px); object-fit: contain; }
 /* Without a poster the facts are the page. */
 .detail[data-poster='false'] { grid-template-columns: minmax(0, 1fr); }
 .detail[data-poster='false'] .fact { grid-template-columns: 160px minmax(0, 1fr); }
 .detail[data-poster='false'] .lineup { max-width: 48ch; font-size: clamp(1.125rem, 1.8vw, 1.5rem); }
+/* a nearby event without a poster: its year on a band plate */
+.noPoster {
+  display: flex; align-items: flex-end; padding: 12px; background: var(--v5-band); color: var(--v5-muted);
+  font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em;
+}
 @media (max-width: 799px) {
-  .detail { grid-template-columns: minmax(0, 1fr); }
-  .detail[data-poster='false'] .fact { grid-template-columns: 96px minmax(0, 1fr); }
+  .detail, .detail[data-poster='false'] { grid-template-columns: minmax(0, 1fr); }
+  .poster { justify-self: center; width: min(100%, 560px); }
+  .fact, .detail[data-poster='false'] .fact { grid-template-columns: 96px minmax(0, 1fr); padding: 14px 20px; }
+  .fact dd { font-size: 1.0625rem; }
 }
 @media (max-width: 640px) {
   .fact { padding-inline: 16px; }

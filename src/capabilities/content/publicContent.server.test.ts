@@ -198,6 +198,9 @@ describe('public server content projections', () => {
       expect(middle).toMatchObject({ track: { id: 'b', title: 'Second' }, previous: { id: 'a' }, next: { id: 'c' } });
       expect(await getTrackDetail('a', 'en')).toMatchObject({ previous: null, next: { id: 'b' } });
       expect((await getTrackDetail('a', 'ko'))?.track.title).toBe('첫 번째');
+      // "More" stays within the kind (mixes with mixes) and wraps round from the current track.
+      expect((await getTrackDetail('c', 'en'))?.more.map((track) => track.id)).toEqual(['a']);
+      expect((await getTrackDetail('b', 'en'))?.more).toEqual([]);
       await expect(getTrackDetail('missing', 'en')).resolves.toBeNull();
       // One URL per track, not per language row.
       await expect(getSitemapTrackIds()).resolves.toEqual(['a', 'b', 'c']);
@@ -250,6 +253,25 @@ describe('public server content projections', () => {
       // Links to events that still exist are untouched.
       expect((await getArchivePhotos()).find(photo => photo.id === 'poster')).toMatchObject({ linkedEventId: 'kept', eventDate: '2021-04-10' });
       expect((await getEventDetail('kept'))?.posterPhoto).toMatchObject({ id: 'poster', linkedEventId: 'kept' });
+    } finally { close(); }
+  });
+
+  it('offers the events nearest in date, two on each side when both sides have them, oldest first', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    try {
+      sqlite.exec(`
+        INSERT INTO performances (id, date, venue, title, lineup, sort_order) VALUES
+          ('e1', '2024-01-01', 'V', 'One', 'secret lineup', 0), ('e2', '2024-02-01', 'V', 'Two', NULL, 0),
+          ('e3', '2024-03-01', 'V', 'Three', NULL, 0), ('e4', '2024.04.01', 'V', 'Four', NULL, 0),
+          ('e5', '2024-05-01', 'V', 'Five', NULL, 0), ('e6', '2024-06-01', 'V', 'Six', NULL, 0);
+      `);
+      expect((await getEventDetail('e4'))?.nearby.map((event) => event.id)).toEqual(['e2', 'e3', 'e5', 'e6']);
+      // At the newest end the older side fills the four.
+      expect((await getEventDetail('e6'))?.nearby.map((event) => event.id)).toEqual(['e2', 'e3', 'e4', 'e5']);
+      expect((await getEventDetail('e2'))?.nearby.map((event) => event.id)).toEqual(['e1', 'e3', 'e4', 'e5']);
+      // The cards only need list fields.
+      expect((await getEventDetail('e2'))?.nearby[0]).not.toHaveProperty('lineup');
     } finally { close(); }
   });
 
