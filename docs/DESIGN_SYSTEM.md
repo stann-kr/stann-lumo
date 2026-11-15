@@ -56,10 +56,11 @@
     - 정렬·페이지·Random seed는 URL에 남는다.
     - 상세의 이전·다음은 목록 정렬을 따른다.
     - 목록 복귀는 원래 항목과 스크롤 위치를 복원한다.
+  - 음악·공연 상세: 왼쪽에 커버·포스터(최대 560px, 화면 높이를 넘지 않음)를 두고 오른쪽 정보 판이 남은 폭을 채우며 이미지 높이까지 늘어난다. 재생·티켓 키는 판 아래쪽에 붙는다. 음악 정보는 판독 타일(라벨 위, 값 아래)로 판을 채운다. 페이지 끝은 `DetailMore` 판(같은 종류 음악 또는 날짜가 가까운 공연 4개, 999px 이하 2열)이다. 799px 이하에서는 이미지가 먼저 온다.
   - 연락처: bone 판은 Booking · Press 띠(오른쪽 Mail ↗)와 mono 700 큰 주소로 이뤄지고, 주소가 하나면 판 전체가 메일 링크다. BOOKING INFO는 검은 2px 이음매로 나뉜 세 칸이다.
   - 링크: 행마다 큰 이름 아래에 주소를 mono로 두고 오른쪽에 96px 화살표 칸을 둔다. 사이드 프로젝트는 inset 판이고, 페이지 끝은 폭 전체의 붉은 CONTACT & BOOKING 막대다.
-- **프레스킷**(`PressKitPageClient`)은 캔버스 Presskit·PresskitMobile 보드를 따른다. 공연 관계자용 페이지라 사이트 헤더 대신 전용 헤더(64px)를 쓴다.
-  - 전용 헤더: 홈으로 가는 워드마크, PRESS KIT 표지, KO/EN, 전체 다운로드 ZIP 키, 붉은 Booking 키. 이름(Stann Lumo)이 h1이다.
+- **프레스킷**(`PressKitPageClient`)은 캔버스 Presskit·PresskitMobile 보드를 따르되, 사이트 헤더와 다른 내지와 같은 `PageLayout` 제목 판(PRESS KIT, h1)을 쓴다.
+  - 제목 판 오른쪽 수치 칸 자리에 전체 다운로드(ZIP 크기) 키를 둔다. 히어로의 이름(Stann Lumo)은 h2다. 플레이한 무대 목록은 2026-11-16에 뺐다.
   - 좌우 여백은 모든 폭에서 16px이고, 맨 아래에 STANN LUMO — PRESS KIT · 2026 푸터를 둔다.
   - 바이오 txt 두 개와 전체 ZIP은 `npm run press:build`가 `pressKit.ts`의 바이오와 `public/press/download`의 파일로 만든다. 바이오나 파일을 바꾸면 다시 만들고, `npm run test:scripts`가 낡은 파일과 틀린 크기 표기를 잡는다.
 - **대체 화면**: 없는 경로와 오류 화면은 `PublicFallback.module.css`의 판(코드 램프, 큰 제목, 돌아가기 키)을 쓴다. 루트 레이아웃까지 실패하면 `src/app/global-error.tsx`가 같은 판을 실제 토큰 값으로 다시 그린다.

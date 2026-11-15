@@ -22,5 +22,5 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const detail = await getEventDetail((await params).id);
   if (!detail) notFound();
-  return <EventDetailPageClient event={detail.event} posterPhoto={detail.posterPhoto} />;
+  return <EventDetailPageClient event={detail.event} posterPhoto={detail.posterPhoto} nearby={detail.nearby} />;
 }

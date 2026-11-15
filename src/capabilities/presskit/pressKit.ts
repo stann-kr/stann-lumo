@@ -12,7 +12,6 @@ export interface PressKitCopy {
   sound: string;
   liveSet: string;
   terminal: string;
-  festivalKorea: string;
   videoNote: string;
   logoNote: string;
 }
@@ -28,7 +27,6 @@ export const PRESS_KIT_COPY: Record<PressKitLocale, PressKitCopy> = {
     sound: 'Stann Lumo는 테크노를 무게감, 공간감, 움직임의 관계 안에서 다룬다. 그의 셋은 여러 트랙을 유기적으로 물려가며 흐름을 만드는 방식에 가깝고, 힙노틱한 추진력 위에 미래적인 질감과 묵직한 저역의 존재감을 함께 쌓아 올린다. 하나의 정해진 공식보다 대비와 압력, 그리고 지속적인 움직임 속에서 더 큰 곡선을 만드는 데 초점을 둔다.',
     liveSet: 'Stann Lumo는 DJ 셋과 함께 Ableton Live로 구성한 라이브 셋을 선보인다. 직접 전개하는 TERMINAL이 그 무대로, Faust Seoul에서 열린 TERMINAL 01(2026년 3월)과 TERMINAL 02(2026년 5월)에서 라이브 셋을 공연했다.',
     terminal: 'TERMINAL은 Stann Lumo가 전개하는 관련 디지털/라이브 인터페이스 프로젝트다. 그의 음악 세계를 시각적·공간적으로 확장하는 별도 프로젝트로, 사운드를 둘러싼 맥락과 라이브 경험을 다룬다. 2026년부터 Faust Seoul에서 이벤트로 이어지고 있다.',
-    festivalKorea: '국내 페스티벌',
     videoNote: `공연 영상 12편을 원본 MP4로 내려받을 수 있습니다. 다른 자료가 필요하면 ${CONTACT_EMAIL}로 문의해 주세요.`,
     logoNote: '워드마크와 팔각형 마크를 늘리거나 색을 바꾸거나 외곽선·효과를 넣지 마세요. 주변 여백은 워드마크 글자 높이, 마크 높이의 1/4 이상 확보해 주세요. 마크의 기본색은 NASA Red #E03C31입니다.',
   },
@@ -42,7 +40,6 @@ export const PRESS_KIT_COPY: Record<PressKitLocale, PressKitCopy> = {
     sound: 'Stann Lumo approaches techno through weight, space, and movement. His sets are built by layering and linking tracks into fluid sequences, balancing hypnotic drive with futuristic texture and heavy low-end presence. Rather than relying on a single fixed mood, he shapes a wider arc through contrast, pressure, and continuous motion.',
     liveSet: 'Alongside his DJ sets, Stann Lumo performs a live set built in Ableton Live. TERMINAL is where he presents it: he has performed live at TERMINAL 01 (March 2026) and TERMINAL 02 (May 2026) at Faust Seoul.',
     terminal: 'TERMINAL is a related digital/live interface project developed by Stann Lumo. A separate project that extends his musical world visually and spatially, it deals with the context around the sound and the live experience. Since 2026 it has taken shape as a series of nights at Faust Seoul.',
-    festivalKorea: 'Festival, Korea',
     videoNote: `All 12 performance clips download as original MP4 files. For anything else, email ${CONTACT_EMAIL}.`,
     logoNote: 'Please do not stretch, recolor, outline, or add effects to the wordmark or the octagon mark. Keep clear space of at least the letter height around the wordmark and a quarter of its height around the mark. The mark\'s primary colour is NASA Red #E03C31.',
   },
@@ -55,20 +52,6 @@ export const PRESS_FACTS = {
   formats: 'DJ set · Live set (Ableton Live)',
   project: 'TERMINAL',
 } as const;
-
-export interface PressStage { name: string; city: string | 'festival-korea'; tag?: string; live?: { date: string; latest: boolean } }
-
-export const PRESS_STAGES: PressStage[] = [
-  { name: 'TERMINAL 02', city: 'Faust, Seoul', live: { date: '2026-05', latest: true } },
-  { name: 'TERMINAL 01', city: 'Faust, Seoul', live: { date: '2026-03', latest: false } },
-  { name: 'Faust', city: 'Seoul', tag: 'Resident' },
-  { name: 'Tresor', city: 'Berlin' },
-  { name: 'HÖR', city: 'Berlin' },
-  { name: 'Radion', city: 'Amsterdam' },
-  { name: 'UKW Kraftwerk', city: 'Rostock' },
-  { name: 'Tor Festival', city: 'festival-korea' },
-  { name: 'High Tech Seoul', city: 'festival-korea' },
-];
 
 export const PRESS_MIXES = [
   { title: 'Tresor, Berlin', meta: '2025-02-05', source: 'SoundCloud', url: 'https://soundcloud.com/stannlumo/tresor-berlin-february-5th-2025' },

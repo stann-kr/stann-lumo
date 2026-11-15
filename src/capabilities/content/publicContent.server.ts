@@ -17,7 +17,7 @@ import type { EventsInfo, Performance } from '@/capabilities/events/events';
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import { sortArchivePhotos, type ArchiveBrowseState } from '@/capabilities/media/archiveBrowsing';
 import { LINKED_GALLERY_COLUMNS, LINKED_GALLERY_SOURCE } from '@/capabilities/media/mediaRepository.server';
-import { performanceToday } from '@/capabilities/events/events';
+import { performanceDate, performanceToday } from '@/capabilities/events/events';
 import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
 import { SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
@@ -413,15 +413,39 @@ export async function getSitemapArchiveIds(): Promise<string[]> {
   return records.map(({ id }) => id);
 }
 
-export const getEventDetail = cache(async (id: string): Promise<{ event: Performance; posterPhoto?: GalleryPhoto } | null> => {
+const EVENT_LIST_COLUMNS = `id, date, venue, location, time, title, status, poster_image_id, ra_country_name,
+  NULL AS lineup, NULL AS ra_event_link, NULL AS ra_event_id`;
+const EVENT_DAY = "SUBSTR(REPLACE(date, '.', '-'), 1, 10)";
+/** How many neighbouring items a detail page offers under its own content. */
+export const DETAIL_MORE_COUNT = 4;
+
+/** The events nearest in date to this one, half on each side when both sides have enough, oldest first. */
+async function nearbyEvents(db: D1Database, event: Performance): Promise<Performance[]> {
+  const day = performanceDate(event.date);
+  const [later, earlier] = await Promise.all([
+    rows<PerformanceRow>(db, `SELECT ${EVENT_LIST_COLUMNS} FROM performances WHERE id <> ? AND ${EVENT_DAY} >= ?
+      ORDER BY ${EVENT_DAY} ASC, sort_order, id LIMIT ?`, event.id, day, DETAIL_MORE_COUNT),
+    rows<PerformanceRow>(db, `SELECT ${EVENT_LIST_COLUMNS} FROM performances WHERE id <> ? AND ${EVENT_DAY} < ?
+      ORDER BY ${EVENT_DAY} DESC, sort_order, id LIMIT ?`, event.id, day, DETAIL_MORE_COUNT),
+  ]);
+  const half = DETAIL_MORE_COUNT / 2;
+  const laterCount = Math.min(later.length, Math.max(half, DETAIL_MORE_COUNT - earlier.length));
+  const earlierCount = Math.min(earlier.length, DETAIL_MORE_COUNT - laterCount);
+  return mapPerformances([...earlier.slice(0, earlierCount).reverse(), ...later.slice(0, laterCount)]);
+}
+
+export const getEventDetail = cache(async (id: string): Promise<{ event: Performance; posterPhoto?: GalleryPhoto; nearby: Performance[] } | null> => {
   const db = getPublicDB();
   const eventRow = await db.prepare('SELECT * FROM performances WHERE id = ?').bind(id).first<PerformanceRow>();
   if (!eventRow) return null;
   const event = mapPerformances([eventRow])[0];
-  const posterPhoto = eventRow.poster_image_id
-    ? await db.prepare(`SELECT ${LINKED_GALLERY_COLUMNS} FROM ${LINKED_GALLERY_SOURCE} WHERE g.id = ?`).bind(eventRow.poster_image_id).first<GalleryPhotoRow>()
-    : null;
-  const projection = { event, ...(posterPhoto && { posterPhoto: mapGalleryPhoto(posterPhoto) }) };
+  const [posterPhoto, nearby] = await Promise.all([
+    eventRow.poster_image_id
+      ? db.prepare(`SELECT ${LINKED_GALLERY_COLUMNS} FROM ${LINKED_GALLERY_SOURCE} WHERE g.id = ?`).bind(eventRow.poster_image_id).first<GalleryPhotoRow>()
+      : null,
+    nearbyEvents(db, event),
+  ]);
+  const projection = { event, nearby, ...(posterPhoto && { posterPhoto: mapGalleryPhoto(posterPhoto) }) };
   assertPublicPayloadSafe(projection);
   return projection;
 });
@@ -439,13 +463,18 @@ export const getArchiveDetail = cache(async (id: string): Promise<{ photo: Galle
   return projection;
 });
 
-/** A track in the music page's order, with its neighbours for the detail page's previous/next keys. */
-export const getTrackDetail = cache(async (id: string, locale: PublicLocale): Promise<{ track: Track; previous: Track | null; next: Track | null } | null> => {
+/** A track in the music page's order, with its neighbours for the detail page's previous/next keys and the next few of
+    the same kind (mix or release, wrapping round) for its "more" plate. */
+export const getTrackDetail = cache(async (id: string, locale: PublicLocale): Promise<{ track: Track; previous: Track | null; next: Track | null; more: Track[] } | null> => {
   const { tracks } = await getMusicProjection(locale);
   const index = tracks.findIndex((track) => track.id === id);
   if (index === -1) return null;
+  const track = tracks[index];
+  const sameKind = tracks.filter((candidate) => isMixType(candidate.type) === isMixType(track.type));
+  const at = sameKind.indexOf(track);
+  const more = [...sameKind.slice(at + 1), ...sameKind.slice(0, at)].slice(0, DETAIL_MORE_COUNT);
   // The tracks already passed assertPublicPayloadSafe in getMusicProjection.
-  return { track: tracks[index], previous: tracks[index - 1] ?? null, next: tracks[index + 1] ?? null };
+  return { track, previous: tracks[index - 1] ?? null, next: tracks[index + 1] ?? null, more };
 });
 
 /** The outbound link of a public track, used only to look up its platform artwork. */
