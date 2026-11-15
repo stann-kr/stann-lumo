@@ -19,7 +19,8 @@ export function createPublicMetadata({ title, description, path, image }: Public
 
   return {
     metadataBase: SITE_URL,
-    title,
+    // The public layout's '%s | STANN LUMO' template would double the home title; absolute skips it.
+    title: title === SITE_NAME ? { absolute: SITE_NAME } : title,
     description,
     alternates: { canonical: path },
     openGraph: {

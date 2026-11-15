@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSitemapEventIds } from '@/capabilities/content/publicContent.server';
+import { getSitemapArchiveIds, getSitemapEventIds } from '@/capabilities/content/publicContent.server';
 import robots from './robots';
 import sitemap from './sitemap';
 
 const requestHeaders = vi.hoisted(() => ({ host: 'lumo.stann.kr' }));
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ host: requestHeaders.host }) }));
-vi.mock('@/capabilities/content/publicContent.server', () => ({ getSitemapEventIds: vi.fn() }));
+vi.mock('@/capabilities/content/publicContent.server', () => ({ getSitemapEventIds: vi.fn(), getSitemapArchiveIds: vi.fn() }));
 
 describe('robots.txt', () => {
   beforeEach(() => { requestHeaders.host = 'lumo.stann.kr'; });
@@ -25,18 +25,34 @@ describe('robots.txt', () => {
 });
 
 describe('sitemap.xml', () => {
-  it('lists the public pages and every event page', async () => {
+  it('lists the public pages, every event page and every archive item page', async () => {
     vi.mocked(getSitemapEventIds).mockResolvedValue(['ra-2', 'ra 1']);
+    vi.mocked(getSitemapArchiveIds).mockResolvedValue(['photo-1']);
 
     const urls = (await sitemap()).map(({ url }) => url);
 
     expect(urls).toContain('https://lumo.stann.kr/');
     expect(urls).toContain('https://lumo.stann.kr/archive');
-    expect(urls.slice(-2)).toEqual(['https://lumo.stann.kr/events/ra-2', 'https://lumo.stann.kr/events/ra%201']);
+    expect(urls.slice(-3)).toEqual([
+      'https://lumo.stann.kr/events/ra-2',
+      'https://lumo.stann.kr/events/ra%201',
+      'https://lumo.stann.kr/archive/photo-1',
+    ]);
+  });
+
+  it('keeps the archive pages when only the event read fails', async () => {
+    vi.mocked(getSitemapEventIds).mockRejectedValue(new Error('test-only database failure'));
+    vi.mocked(getSitemapArchiveIds).mockResolvedValue(['photo-1']);
+
+    const urls = (await sitemap()).map(({ url }) => url);
+
+    expect(urls.at(-1)).toBe('https://lumo.stann.kr/archive/photo-1');
+    expect(urls.some((url) => url.includes('/events/'))).toBe(false);
   });
 
   it('still lists the fixed pages when the database is unavailable', async () => {
     vi.mocked(getSitemapEventIds).mockRejectedValue(new Error('test-only database failure'));
+    vi.mocked(getSitemapArchiveIds).mockRejectedValue(new Error('test-only database failure'));
 
     const urls = (await sitemap()).map(({ url }) => url);
 
