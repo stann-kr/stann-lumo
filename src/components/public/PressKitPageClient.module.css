@@ -86,6 +86,8 @@ a.row:hover { background: var(--v5-band) !important; }
 .logos[data-kind='Mark'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tile svg { display: block; width: 100%; height: auto; }
 .tileCap { display: flex; justify-content: space-between; gap: 8px; padding: 8px 16px; background: var(--v5-plate-2); }
+.logos > div { display: flex; flex-direction: column; }
+.logos .tileCap { flex: 1; }
 .logos .keys { background: var(--v5-inset); }
 .logos .key { flex: 1; }
 
@@ -148,6 +150,8 @@ a.row:hover { background: var(--v5-band) !important; }
   .arrow { display: none; }
   .logos .key { min-width: 0; padding: 0 6px; font-size: .75rem; letter-spacing: .02em; }
   .logos[data-kind='Mark'] .keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .logos[data-kind='Mark'] .tileCap { flex-direction: column; justify-content: flex-start; gap: 2px; padding: 8px 12px; }
+  .logos[data-kind='Mark'] .tileCap .label { overflow-wrap: anywhere; }
   .playKey { width: 40px; height: 40px; }
 }
 @media (prefers-reduced-motion: no-preference) {
