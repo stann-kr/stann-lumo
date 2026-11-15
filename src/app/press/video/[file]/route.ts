@@ -5,15 +5,16 @@ import { getR2, type R2Object, type R2ObjectBody } from '@/lib/db';
 
 /**
  * Press kit performance clips. Only the files listed in PRESS_VIDEOS are read, from R2 `press/video/<file>`,
- * and always as an attachment. Ranges let download managers resume the larger clips.
+ * as an attachment, or inline with `?preview` for the press kit's player. Ranges let download managers resume the larger
+ * clips and let the player seek.
  */
 
 const notFound = () => new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 
-function headers(file: string, object: R2Object): Headers {
+function headers(file: string, object: R2Object, preview: boolean): Headers {
   const result = new Headers({
     'Content-Type': 'video/mp4',
-    'Content-Disposition': `attachment; filename="${file}"`,
+    'Content-Disposition': `${preview ? 'inline' : 'attachment'}; filename="${file}"`,
     'Cache-Control': 'public, max-age=86400',
     'Accept-Ranges': 'bytes',
     'X-Content-Type-Options': 'nosniff',
@@ -38,7 +39,7 @@ async function serve(request: NextRequest, file: string, withBody: boolean): Pro
     }
     const start = range?.start ?? 0;
     const length = range ? range.end - range.start + 1 : head.size;
-    const responseHeaders = headers(file, head);
+    const responseHeaders = headers(file, head, request.nextUrl.searchParams.has('preview'));
     responseHeaders.set('Content-Length', String(length));
     if (range) responseHeaders.set('Content-Range', `bytes ${range.start}-${range.end}/${head.size}`);
     const status = range ? 206 : 200;

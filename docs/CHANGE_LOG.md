@@ -6,6 +6,10 @@
 
 - 파비콘·앱 아이콘을 확정된 팔각형 마크(B3, 1500×1000, 45° 모따기 250)로 바꿨다.
 - 엑센트 레드를 `#FF0033`에서 NASA Red `#E03C31`(Pantone 179)로 바꿨다. hover `#E8584E`, 본문 링크 `#EE6A60`.
+- 공용 토큰 소스(`stann-os.css`의 `--os-music-accent`)도 `#E03C31`로 맞췄다.
+- 프레스킷 로고 영역을 Wordmark(기존 STANN LUMO 로고)와 Mark(팔각형 마크, Red·White·Black × SVG·PNG·PDF·EPS)로 나눴다. 로고 README와 전체 ZIP(7.1MB)에도 들어 있다.
+- 프레스킷 공연 영상 12편을 페이지에서 바로 재생해 볼 수 있다. 재생 버튼을 누르기 전에는 영상을 받지 않고, 다운로드 버튼은 그대로다. 미리보기는 `/press/video/<file>?preview`로 inline 응답한다.
+- 프레스킷 PDF(KO/EN)를 새 레드와 헤더 마크로 다시 만들었다. 본문 문구는 그대로다.
 - 음악 페이지의 릴리스 9곡에 Bandcamp와 함께 Beatport·Spotify 링크 버튼이 나온다. Bandcamp에만 있는 곡은 그대로다.
 - Remix가 믹스 목록이 아니라 릴리스 목록에 나온다.
 - 프레스킷 페이지에서도 사이트 메뉴가 보인다. 프레스킷 자체 띠에는 PRESS KIT과 전체 다운로드만 남겼다.

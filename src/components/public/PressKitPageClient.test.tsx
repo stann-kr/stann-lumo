@@ -15,7 +15,7 @@ describe('PressKitPageClient', () => {
     const zip = screen.getByRole('link', { name: /Download all/ });
     expect(zip).toHaveAttribute('href', '/press/download/stann-lumo-press-kit.zip');
     expect(zip).toHaveAttribute('download');
-    expect(zip).toHaveTextContent('ZIP 7.0MB');
+    expect(zip).toHaveTextContent('ZIP 7.1MB');
     const bio = within(screen.getByRole('region', { name: 'Biography' }));
     expect(bio.getByRole('link', { name: /^KO \.txt/ })).toHaveAttribute('href', '/press/download/stann-lumo-bio-ko.txt');
     expect(bio.getByRole('link', { name: /^EN \.txt/ })).toHaveAttribute('href', '/press/download/stann-lumo-bio-en.txt');
@@ -26,8 +26,11 @@ describe('PressKitPageClient', () => {
       ['/press/download/stann-lumo-photo-profile.png', true],
     ]);
     const logo = within(screen.getByRole('region', { name: 'Logo' }));
-    expect(logo.getAllByRole('link')).toHaveLength(8);
-    expect(logo.getByRole('link', { name: 'Download White SVG' })).toHaveAttribute('href', '/press/download/logo/StannLumo_Logo_White.svg');
+    expect(logo.getAllByRole('heading', { level: 3 }).map((heading) => heading.querySelector('strong')?.textContent)).toEqual(['Wordmark', 'Mark']);
+    expect(logo.getAllByRole('link')).toHaveLength(20);
+    expect(logo.getByRole('link', { name: 'Download Wordmark White SVG' })).toHaveAttribute('href', '/press/download/logo/StannLumo_Logo_White.svg');
+    expect(logo.getByRole('link', { name: 'Download Mark Red EPS' })).toHaveAttribute('href', '/press/download/logo/StannLumo_Mark_Red.eps');
+    expect(logo.getByRole('img', { name: 'STANN LUMO mark Red' })).toBeInTheDocument();
     const video = within(screen.getByRole('region', { name: 'Performance video' }));
     const clips = video.getAllByRole('link');
     expect(clips).toHaveLength(12);
@@ -36,6 +39,24 @@ describe('PressKitPageClient', () => {
     expect(screen.getAllByRole('link', { name: 'KO PDF' })[0]).toHaveAttribute('href', '/press/download/stann-lumo-press-kit-ko.pdf');
     const contact = within(screen.getByRole('region', { name: 'Booking · Press' }));
     expect(contact.getByRole('link', { name: 'Email booking →' })).toHaveAttribute('href', expect.stringMatching(/^mailto:contact@stann\.kr\?subject=/));
+  });
+
+  it('previews a clip only after it is asked to play', async () => {
+    const play = vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    const { container } = render(<PressKitPageClient />);
+    const players = container.querySelectorAll('video');
+    expect(players).toHaveLength(12);
+    expect([...players].every((player) => player.getAttribute('preload') === 'none' && !player.hasAttribute('controls') && !player.hasAttribute('autoplay'))).toBe(true);
+    const video = within(screen.getByRole('region', { name: 'Performance video' }));
+    await user.click(video.getByRole('button', { name: 'Play HÖR, Berlin clip 04' }));
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(video.queryByRole('button', { name: 'Play HÖR, Berlin clip 04' })).toBeNull();
+    const player = container.querySelector<HTMLVideoElement>('video[src="/press/video/stann-lumo-hor-berlin-4.mp4?preview"]')!;
+    expect(player).toHaveAttribute('controls');
+    expect(player).toHaveFocus();
+    expect(player).toHaveAttribute('poster', '/press/poster/stann-lumo-hor-berlin-4.jpg');
+    play.mockRestore();
   });
 
   it('switches bio length, follows the site language and copies with a status message', async () => {

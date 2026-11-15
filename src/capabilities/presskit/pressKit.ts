@@ -30,7 +30,7 @@ export const PRESS_KIT_COPY: Record<PressKitLocale, PressKitCopy> = {
     terminal: 'TERMINAL은 Stann Lumo가 전개하는 관련 디지털/라이브 인터페이스 프로젝트다. 그의 음악 세계를 시각적·공간적으로 확장하는 별도 프로젝트로, 사운드를 둘러싼 맥락과 라이브 경험을 다룬다. 2026년부터 Faust Seoul에서 이벤트로 이어지고 있다.',
     festivalKorea: '국내 페스티벌',
     videoNote: `공연 영상 12편을 원본 MP4로 내려받을 수 있습니다. 다른 자료가 필요하면 ${CONTACT_EMAIL}로 문의해 주세요.`,
-    logoNote: '로고를 늘리거나 색을 바꾸거나 외곽선·효과를 넣지 마세요. 주변 여백은 글자 높이 이상 확보해 주세요.',
+    logoNote: '워드마크와 팔각형 마크를 늘리거나 색을 바꾸거나 외곽선·효과를 넣지 마세요. 주변 여백은 워드마크 글자 높이, 마크 높이의 1/4 이상 확보해 주세요. 마크의 기본색은 NASA Red #E03C31입니다.',
   },
   en: {
     shortBio: 'Stann Lumo is a Seoul-based DJ/producer and Faust Seoul resident working in futuristic, weighty hypnotic techno shaped by fluid mixing, layered pressure, and space-like texture. He also develops TERMINAL, a digital/live interface project that extends his music visually and spatially and serves as the stage for his live set.',
@@ -44,7 +44,7 @@ export const PRESS_KIT_COPY: Record<PressKitLocale, PressKitCopy> = {
     terminal: 'TERMINAL is a related digital/live interface project developed by Stann Lumo. A separate project that extends his musical world visually and spatially, it deals with the context around the sound and the live experience. Since 2026 it has taken shape as a series of nights at Faust Seoul.',
     festivalKorea: 'Festival, Korea',
     videoNote: `All 12 performance clips download as original MP4 files. For anything else, email ${CONTACT_EMAIL}.`,
-    logoNote: 'Please do not stretch, recolor, outline, or add effects. Keep clear space of at least the letter height.',
+    logoNote: 'Please do not stretch, recolor, outline, or add effects to the wordmark or the octagon mark. Keep clear space of at least the letter height around the wordmark and a quarter of its height around the mark. The mark\'s primary colour is NASA Red #E03C31.',
   },
 };
 
@@ -90,16 +90,22 @@ export const PRESS_PHOTOS = [
   { preview: '/press/profile.jpg', file: `${DL}/stann-lumo-photo-profile.png`, size: '1000×1000 · PNG · 0.3MB', alt: { ko: '흑백 스튜디오 프로필 사진', en: 'Black and white studio profile portrait' } },
 ] as const;
 
-export const PRESS_LOGO_FILES = [
-  { label: 'White SVG', file: `${DL}/logo/StannLumo_Logo_White.svg` },
-  { label: 'White PNG', file: `${DL}/logo/StannLumo_Logo_White.png` },
-  { label: 'White PDF', file: `${DL}/logo/StannLumo_Logo_White.pdf` },
-  { label: 'White EPS', file: `${DL}/logo/StannLumo_Logo_White.eps` },
-  { label: 'Black SVG', file: `${DL}/logo/StannLumo_Logo_Black.svg` },
-  { label: 'Black PNG', file: `${DL}/logo/StannLumo_Logo_Black.png` },
-  { label: 'Black PDF', file: `${DL}/logo/StannLumo_Logo_Black.pdf` },
-  { label: 'Black EPS', file: `${DL}/logo/StannLumo_Logo_Black.eps` },
-] as const;
+/** Wordmark (StannLumo_Logo_*) and octagon mark (StannLumo_Mark_*, B3 1500×1000 in NASA Red #E03C31) in every format. */
+export type PressLogoKind = 'Wordmark' | 'Mark';
+const LOGO_FORMATS = ['SVG', 'PNG', 'PDF', 'EPS'] as const;
+const logoSet = (kind: PressLogoKind, tones: readonly string[]) => tones.map((tone) => ({
+  tone,
+  files: LOGO_FORMATS.map((format) => ({
+    format,
+    label: `${kind} ${tone} ${format}`,
+    file: `${DL}/logo/StannLumo_${kind === 'Wordmark' ? 'Logo' : 'Mark'}_${tone}.${format.toLowerCase()}`,
+  })),
+}));
+
+export const PRESS_LOGOS = [
+  { kind: 'Wordmark', tones: logoSet('Wordmark', ['White', 'Black']) },
+  { kind: 'Mark', tones: logoSet('Mark', ['Red', 'White', 'Black']) },
+] as const satisfies readonly { kind: PressLogoKind; tones: unknown }[];
 
 export const PRESS_PDFS = { ko: `${DL}/stann-lumo-press-kit-ko.pdf`, en: `${DL}/stann-lumo-press-kit-en.pdf` } as const;
 
@@ -108,7 +114,7 @@ export const PRESS_PDFS = { ko: `${DL}/stann-lumo-press-kit-ko.pdf`, en: `${DL}/
  * Rebuild after changing the bios or any download; `npm run test:scripts` fails while they are stale or the size is wrong.
  */
 export const PRESS_BIO_TXT = { ko: `${DL}/stann-lumo-bio-ko.txt`, en: `${DL}/stann-lumo-bio-en.txt` } as const;
-export const PRESS_ZIP = { file: `${DL}/stann-lumo-press-kit.zip`, size: '7.0MB' } as const;
+export const PRESS_ZIP = { file: `${DL}/stann-lumo-press-kit.zip`, size: '7.1MB' } as const;
 
 /** Performance clips live in R2 under `press/video/<file>` and are served by `/press/video/[file]`; posters are static. */
 export const PRESS_VIDEO_PATH = '/press/video';
