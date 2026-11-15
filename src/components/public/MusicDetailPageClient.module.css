@@ -1,26 +1,29 @@
-/* The event detail's fact column beside a cover held to a readable size (never wider than the viewport is tall);
-   wide screens put the tracklist in the remaining column, narrower ones run it under both. */
-.detail { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, min(560px, calc(100svh - 160px))) minmax(0, 1fr); gap: var(--v5-gap); align-items: start; }
-.tracks { min-width: 0; }
-@media (max-width: 1199px) {
-  .detail { grid-template-columns: minmax(300px, 420px) minmax(0, 560px); }
-  .tracks { grid-column: 1 / -1; }
-}
-.facts { display: flex; flex-direction: column; }
-@media (min-width: 800px) and (min-height: 760px) { .facts { position: sticky; top: var(--v5-gap); } }
-.fact { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; padding: 14px 20px; }
-.fact dt { padding-top: 3px; color: var(--v5-muted); }
-.fact dd { font-size: 1.0625rem; font-weight: 500; overflow-wrap: anywhere; }
-.play { margin-top: var(--v5-gap); min-height: 64px; justify-content: flex-start; gap: 14px; padding: 0 20px; font-size: 1rem; }
+/* Cover on the left, held to a readable size (never taller than the viewport); the fact plate and tracklist fill the rest
+   of the width, so the page is balanced at any desktop width. Narrow screens stack the cover first. */
+.detail { display: grid; grid-template-columns: minmax(0, min(560px, calc(100svh - 160px))) minmax(0, 1fr); gap: var(--v5-gap); align-items: stretch; }
+.art { align-self: start; min-width: 0; padding: 0; }
+@media (min-width: 800px) and (min-height: 760px) { .art { position: sticky; top: var(--v5-gap); } }
+.cover { width: 100%; }
+.info { display: flex; flex-direction: column; gap: var(--v5-gap); min-width: 0; }
+.facts { flex: 1 0 auto; display: flex; flex-direction: column; }
+/* facts as readout tiles across the plate: label over value, alternating tones */
+.factGrid { flex: 1 0 auto; display: flex; flex-wrap: wrap; align-content: stretch; gap: 2px; }
+.fact { flex: 1 1 160px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-height: 96px; padding: 16px 20px; background: var(--v5-plate-2); }
+.fact:nth-child(even) { background: var(--v5-band); }
+.fact dt { color: var(--v5-muted); }
+.fact dd { font-size: clamp(1.25rem, 2.2vw, 2rem); font-weight: 500; line-height: 1.15; overflow-wrap: anywhere; }
+.actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--v5-gap); margin-top: auto; padding-top: 2px; }
+.play { min-height: 72px; justify-content: flex-start; gap: 14px; padding: 0 20px; font-size: 1rem; }
 .play[data-playing='true'] { background: var(--color-primary); color: #000; }
 .play:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
-.outbound { display: flex; flex-direction: column; gap: 10px; padding: 16px 20px 20px; }
+.outbound { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 12px 20px 16px; }
+/* Without a play key (no embeddable player) the outbound keys take the whole row. */
+.actions > :only-child { grid-column: 1 / -1; }
 .outboundKeys { display: flex; flex-wrap: wrap; gap: 2px; }
 .outboundKeys > a { flex: 1 1 auto; background: var(--v5-plate-2); font-size: 14px; white-space: nowrap; }
-.art { min-width: 0; padding: 0; }
-.cover { width: 100%; }
-.tracklist { list-style: none; }
-.tracklist li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 10px 20px; font-size: .9375rem; overflow-wrap: anywhere; }
+.tracks { min-width: 0; }
+.tracklist { list-style: none; columns: 2 320px; column-gap: 2px; }
+.tracklist li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 10px 20px; font-size: .9375rem; overflow-wrap: anywhere; break-inside: avoid; }
 .tracklist li:nth-child(odd) { background: var(--v5-plate-2); }
 .tracklist li > span:first-child { color: var(--v5-muted); font-size: 12px; }
 .pager { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--v5-gap); }
@@ -28,11 +31,15 @@
 .step strong { font-weight: 900; text-transform: uppercase; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .step:hover { background: var(--v5-plate-2); }
 .stepNext { text-align: right; }
+@media (max-width: 1099px) {
+  .actions { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 799px) {
   .detail { grid-template-columns: minmax(0, 1fr); }
-  .art { order: -1; justify-self: center; width: min(100%, 480px); }
+  .art { justify-self: center; width: min(100%, 480px); }
 }
 @media (max-width: 640px) {
-  .fact, .tracklist li { padding-inline: 16px; }
+  .fact { min-height: 80px; padding: 14px 16px; }
+  .tracklist li { padding-inline: 16px; }
   .play, .outbound, .step { padding-inline: 16px; }
 }

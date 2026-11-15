@@ -36,7 +36,10 @@ describe('MusicDetailPageClient', () => {
   });
 
   it('keeps only the outbound key for a release the player cannot load', () => {
-    render(<PlayerProvider><MusicDetailPageClient track={{ ...release, link: 'https://ameniiarecords.bandcamp.com/album/unrecorded' }} previous={mix} next={null} /></PlayerProvider>);
+    render(<PlayerProvider><MusicDetailPageClient track={{ ...release, link: 'https://ameniiarecords.bandcamp.com/album/unrecorded' }} previous={mix} next={null} more={[{ ...release, id: 'rel-2', title: 'Astral Prologue' }]} /></PlayerProvider>);
+    const more = within(screen.getByRole('region', { name: 'More releases' }));
+    expect(more.getByRole('link', { name: /Astral Prologue/ })).toHaveAttribute('href', '/music/rel-2');
+    expect(more.getByRole('link', { name: /All music/ })).toHaveAttribute('href', '/music');
     expect(screen.queryByRole('button', { name: /Play/ })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /^Bandcamp ↗/ })).toHaveAttribute('href', 'https://ameniiarecords.bandcamp.com/album/unrecorded');
     expect(screen.getByText('6:12')).toBeInTheDocument();

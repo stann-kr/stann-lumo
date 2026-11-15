@@ -9,10 +9,12 @@ import type { Performance } from '@/capabilities/events/events';
 import { performanceDate, performanceLocation, performanceToday } from '@/capabilities/events/events';
 import LoadingImage from '@/capabilities/media/LoadingImage';
 import v5 from '@/styles/v5.module.css';
+import DetailMore from './DetailMore';
 import styles from './EventDetailPageClient.module.css';
 
-/* v5 event detail: fact rows on a plate beside the poster on an inset plate; tickets are the red signal key. */
-export default function EventDetailPageClient({ event, posterPhoto }: { event: Performance; posterPhoto?: GalleryPhoto }) {
+/* v5 event detail: the poster on an inset plate at the left, the fact plate filling the rest of the width; tickets are the
+   red signal key. The events nearest in date close the page. */
+export default function EventDetailPageClient({ event, posterPhoto, nearby = [] }: { event: Performance; posterPhoto?: GalleryPhoto; nearby?: Performance[] }) {
   const { t } = useTranslation();
   const { language } = useLanguage();
   const isKorean = language === 'ko';
@@ -24,6 +26,7 @@ export default function EventDetailPageClient({ event, posterPhoto }: { event: P
   return (
     <PageLayout title={event.title} titleSize="display" eyebrow={<Link href="/events">{t('events_title')}</Link>}>
       <div className={styles.detail} data-poster={Boolean(posterPhoto)}>
+        {posterPhoto && <div className={`${v5.inset} ${styles.poster}`}><LoadingImage src={getPublicImageUrl(posterPhoto.id, 1600)} alt={posterPhoto.altText || event.title} loading="eager" natural /></div>}
         <aside className={`${v5.plate} ${styles.facts}`} aria-label={isKorean ? '공연 정보' : 'Event information'}>
           <div className={v5.band}><span className={v5.label}>{isUpcoming ? (isKorean ? '예정 공연' : 'Upcoming') : (isKorean ? '지난 공연' : 'Past')}</span></div>
           <dl className={v5.rows}>
@@ -38,8 +41,21 @@ export default function EventDetailPageClient({ event, posterPhoto }: { event: P
             </a>
           )}
         </aside>
-        {posterPhoto && <div className={`${v5.inset} ${styles.poster}`}><LoadingImage src={getPublicImageUrl(posterPhoto.id, 1600)} alt={posterPhoto.altText || event.title} loading="eager" natural /></div>}
       </div>
+      <DetailMore
+        id="event-nearby"
+        title={isKorean ? '다른 공연' : 'More events'}
+        all={{ href: '/events', label: isKorean ? '전체 공연' : 'All events' }}
+        items={nearby.map((item) => ({
+          id: item.id,
+          href: `/events/${encodeURIComponent(item.id)}`,
+          title: item.title,
+          meta: [performanceDate(item.date).replaceAll('-', '.'), item.venue].filter(Boolean).join(' · '),
+          media: item.posterImageId
+            ? <LoadingImage src={getPublicImageUrl(item.posterImageId, 640)} alt="" quiet loading="lazy" />
+            : <span className={styles.noPoster} aria-hidden="true">{performanceDate(item.date).slice(0, 4)}</span>,
+        }))}
+      />
     </PageLayout>
   );
 }
