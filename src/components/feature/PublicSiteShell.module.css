@@ -16,7 +16,7 @@
 .shell :global(.font-sans) { font-family: var(--font-display); }
 .document {
   position: relative; z-index: 1; min-height: 100svh; display: flex; flex-direction: column; gap: var(--v5-gap);
-  padding: calc(var(--shell-pad) + env(safe-area-inset-top, 0px)) max(var(--shell-pad), env(safe-area-inset-right, 0px)) calc(var(--shell-pad) + env(safe-area-inset-bottom, 0px)) max(var(--shell-pad), env(safe-area-inset-left, 0px));
+  padding: calc(var(--shell-pad) + env(safe-area-inset-top, 0px)) max(var(--shell-pad), env(safe-area-inset-right, 0px)) calc(var(--shell-pad) + var(--player-space, 0px) + env(safe-area-inset-bottom, 0px)) max(var(--shell-pad), env(safe-area-inset-left, 0px));
 }
 
 /* header: a row of plates on the black field, 2px seams like every other v5 table. Nav items are numbered mono keys;

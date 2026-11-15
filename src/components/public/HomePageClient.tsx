@@ -10,6 +10,7 @@ import { getPublicImageUrl } from "@/capabilities/media/media";
 import styles from "./HomePageClient.module.css";
 import MixPlayer from "./MixPlayer";
 import TrackCover from "./TrackCover";
+import { usePlayer } from "@/components/feature/player/PlayerContext";
 import LoadingImage from "@/capabilities/media/LoadingImage";
 
 /* v5 home — canvas boards Main (1440) and Mobile (390): https://claude.ai/artifact/LsKdx338m7MYQNUuEREhYQ */
@@ -57,6 +58,12 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   // Once a mix is playing, choosing another deck entry loads that mix's player in the same screen.
   const [playerOpen, setPlayerOpen] = useState(false);
   const latestMix = deck.find((track) => track.id === selectedMixId) ?? deck[0];
+  const player = usePlayer();
+  // While the site player runs a mix from this deck, picking another mix plays it there, like the inline player did.
+  const selectMix = (track: Track) => {
+    setSelectedMixId(track.id);
+    if (player?.current && deck.some((mix) => mix.id === player.current?.id)) player.play(track);
+  };
   const cards = tracks.slice(0, 4);
   const upcoming = previews?.events ?? [];
   const past = previews?.pastEvents ?? [];
@@ -125,7 +132,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
             {latestMix.link ? (
               <MixPlayer key={latestMix.id} title={latestMix.title} link={latestMix.link} platform={latestMix.platform} language={language === "ko" ? "ko" : "en"}
                 poster={<TrackCover track={latestMix} showType={false} eager />} heading={<p className={styles.mixTitle}>{latestMix.title}</p>}
-                facts={mixFacts(latestMix)} open={playerOpen} onOpen={() => setPlayerOpen(true)} />
+                facts={mixFacts(latestMix)} track={latestMix} open={playerOpen} onOpen={() => setPlayerOpen(true)} />
             ) : (
               <div className={styles.mixHead}><p className={styles.mixTitle}>{latestMix.title}</p><p className={styles.mixType}>{[mixFacts(latestMix), latestMix.platform].filter(Boolean).join(" · ")}</p></div>
             )}
@@ -137,7 +144,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
                   const current = track.id === latestMix.id;
                   return (
                     <li key={track.id}>
-                      <button type="button" className={styles.deckRow} aria-pressed={current} onClick={() => setSelectedMixId(track.id)}>
+                      <button type="button" className={styles.deckRow} aria-pressed={current} onClick={() => selectMix(track)}>
                         <span className={`${styles.mono} ${styles.deckIndex}`} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                         <TrackCover track={track} className={styles.deckCover} showType={false} eager />
                         <span className={styles.deckTitle}>{track.title}</span>
@@ -181,17 +188,10 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
           <ul className={styles.cards} aria-label={copy.mixesLabel}>
             {cards.map((track) => (
               <li key={track.id}>
-                {track.link ? (
-                  <a className={styles.card} href={track.link} target="_blank" rel="noopener noreferrer">
-                    <TrackCover track={track} />
-                    <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span><span className="sr-only">{copy.newTab}</span></span>
-                  </a>
-                ) : (
-                  <Link className={styles.card} href="/music">
-                    <TrackCover track={track} />
-                    <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span></span>
-                  </Link>
-                )}
+                <Link className={styles.card} href={`/music/${encodeURIComponent(track.id)}`}>
+                  <TrackCover track={track} />
+                  <span className={styles.cardBody}><strong>{track.title}</strong><span className={styles.mono}>{trackMeta(track)}</span></span>
+                </Link>
               </li>
             ))}
           </ul>

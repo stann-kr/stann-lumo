@@ -30,7 +30,7 @@ describe('infinite public lists', () => {
 
   it('automatically extends Music ten at a time, ignores duplicate signals and retains existing rows and focus', () => {
     render(<MusicPageClient tracks={tracks} musicMeta={{ title: 'Music', subtitle: '' }} />);
-    const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('link');
+    const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('heading', { level: 3 }).map((title) => within(title).getByRole('link'));
     expect(links()).toHaveLength(10);
     const first = links()[0]!;
     first.focus();
@@ -49,7 +49,7 @@ describe('infinite public lists', () => {
 
   it('holds while a control after the list has focus and resumes once focus returns to the list, with no key', async () => {
     render(<MusicPageClient tracks={tracks} musicMeta={{ title: 'Music', subtitle: '' }} />);
-    const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('link');
+    const links = () => within(screen.getByRole('list', { name: 'Mixes' })).getAllByRole('heading', { level: 3 }).map((title) => within(title).getByRole('link'));
     screen.getByRole('link', { name: 'music_licensing' }).focus();
     act(() => observers.at(-1)!.intersect());
     expect(links()).toHaveLength(10);

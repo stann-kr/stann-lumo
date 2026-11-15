@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { D1Database, D1PreparedStatement } from '@/lib/db';
 import { getDB } from '@/lib/db';
 import { assertPublicPayloadSafe } from '@/lib/security/publicPayload';
-import { getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection, hasUpcomingDate } from './publicContent.server';
+import { getArchiveDetail, getArchivePhotos, getArchivePage, getContactProjection, getEventDetail, getEventsProjection, getEventsPage, getHomeProjection, getLinkProjection, getMusicProjection, getPublicShellProjection, getSitemapTrackIds, getTrackDetail, hasUpcomingDate } from './publicContent.server';
 import { sortArchivePhotos } from '@/capabilities/media/archiveBrowsing';
 import { performanceLocation, performanceToday } from '@/capabilities/events/events';
 import { GET as archiveGET } from '@/app/api/archive/route';
@@ -181,6 +181,29 @@ describe('public server content projections', () => {
     vi.mocked(getDB).mockReturnValue(null);
 
     await expect(getMusicProjection('en')).rejects.toThrow('Public content is unavailable');
+  });
+
+  it('finds a track page in the music order with its neighbours, in the visitor\'s language', async () => {
+    const { db, sqlite, close } = createSqliteD1();
+    vi.mocked(getDB).mockReturnValue(db);
+    try {
+      sqlite.exec(`
+        INSERT INTO tracks (id, lang, title, type, duration, year, platform, link, sort_order) VALUES
+          ('b', 'en', 'Second', 'Original', '0:00', '2025', 'Bandcamp', 'https://x.bandcamp.com/album/b', 2),
+          ('a', 'en', 'First', 'DJ Mix', '60:00', '2026', 'SoundCloud', 'https://soundcloud.com/u/a', 1),
+          ('c', 'en', 'Third', 'DJ Mix', '0:00', '2024', 'YouTube', 'https://youtu.be/abcdefghijk', 3),
+          ('a', 'ko', '첫 번째', 'DJ Mix', '60:00', '2026', 'SoundCloud', 'https://soundcloud.com/u/a', 1);
+      `);
+      const middle = await getTrackDetail('b', 'en');
+      expect(middle).toMatchObject({ track: { id: 'b', title: 'Second' }, previous: { id: 'a' }, next: { id: 'c' } });
+      expect(await getTrackDetail('a', 'en')).toMatchObject({ previous: null, next: { id: 'b' } });
+      expect((await getTrackDetail('a', 'ko'))?.track.title).toBe('첫 번째');
+      await expect(getTrackDetail('missing', 'en')).resolves.toBeNull();
+      // One URL per track, not per language row.
+      await expect(getSitemapTrackIds()).resolves.toEqual(['a', 'b', 'c']);
+    } finally {
+      close();
+    }
   });
 
   it('projects the linked event date without dropping unlinked archive media', async () => {

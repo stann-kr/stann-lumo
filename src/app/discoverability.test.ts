@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSitemapArchiveIds, getSitemapEventIds } from '@/capabilities/content/publicContent.server';
+import { getSitemapArchiveIds, getSitemapEventIds, getSitemapTrackIds } from '@/capabilities/content/publicContent.server';
 import robots from './robots';
 import sitemap from './sitemap';
 
 const requestHeaders = vi.hoisted(() => ({ host: 'lumo.stann.kr' }));
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ host: requestHeaders.host }) }));
-vi.mock('@/capabilities/content/publicContent.server', () => ({ getSitemapEventIds: vi.fn(), getSitemapArchiveIds: vi.fn() }));
+vi.mock('@/capabilities/content/publicContent.server', () => ({ getSitemapTrackIds: vi.fn(), getSitemapEventIds: vi.fn(), getSitemapArchiveIds: vi.fn() }));
 
 describe('robots.txt', () => {
   beforeEach(() => { requestHeaders.host = 'lumo.stann.kr'; });
@@ -25,7 +25,10 @@ describe('robots.txt', () => {
 });
 
 describe('sitemap.xml', () => {
-  it('lists the public pages, every event page and every archive item page', async () => {
+  beforeEach(() => { vi.mocked(getSitemapTrackIds).mockResolvedValue([]); });
+
+  it('lists the public pages and every track, event and archive item page', async () => {
+    vi.mocked(getSitemapTrackIds).mockResolvedValue(['track-1']);
     vi.mocked(getSitemapEventIds).mockResolvedValue(['ra-2', 'ra 1']);
     vi.mocked(getSitemapArchiveIds).mockResolvedValue(['photo-1']);
 
@@ -33,7 +36,8 @@ describe('sitemap.xml', () => {
 
     expect(urls).toContain('https://lumo.stann.kr/');
     expect(urls).toContain('https://lumo.stann.kr/archive');
-    expect(urls.slice(-3)).toEqual([
+    expect(urls.slice(-4)).toEqual([
+      'https://lumo.stann.kr/music/track-1',
       'https://lumo.stann.kr/events/ra-2',
       'https://lumo.stann.kr/events/ra%201',
       'https://lumo.stann.kr/archive/photo-1',
@@ -51,6 +55,7 @@ describe('sitemap.xml', () => {
   });
 
   it('still lists the fixed pages when the database is unavailable', async () => {
+    vi.mocked(getSitemapTrackIds).mockRejectedValue(new Error('test-only database failure'));
     vi.mocked(getSitemapEventIds).mockRejectedValue(new Error('test-only database failure'));
     vi.mocked(getSitemapArchiveIds).mockRejectedValue(new Error('test-only database failure'));
 
