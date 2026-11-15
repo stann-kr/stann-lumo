@@ -14,7 +14,7 @@
    */
   --color-primary: var(--os-music-primary); /* #ffffff */
   --color-secondary: var(--os-music-sub); /* #b8b8b8 — 구 #cbcbcb에서 정본 정렬 */
-  --color-accent: var(--os-music-accent); /* #ff0033 */
+  --color-accent: var(--os-music-accent); /* #e03c31 NASA Red */
   --color-muted: #333333; /* lumo 고유 — 구분선/보더 */
   --color-text-muted: #a0a0a0; /* 본문·메타 보조 텍스트, black 표면에서 AA 대비 */
   --color-bg: var(--os-music-bg); /* #000000 */
@@ -26,9 +26,9 @@
   --v5-plate-2: #1c1c1c;
   --v5-band: #262626;
   --v5-inset: #0c0c0c;
-  --v5-red: #ff0033;      /* 신호 전용: 재생·현재 트랙·다음 공연·TICKETS·BOOKING */
-  --v5-red-hover: #ff3355;
-  --v5-link: #ff4d6a;
+  --v5-red: #e03c31;      /* 신호 전용: 재생·현재 트랙·다음 공연·TICKETS·BOOKING */
+  --v5-red-hover: #e8584e;
+  --v5-link: #ee6a60;
   --v5-bone: #e8e6df;
   --v5-bone-2: #dcdad2;
   --v5-bone-muted: #4a4842;

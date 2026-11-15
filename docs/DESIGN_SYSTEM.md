@@ -10,8 +10,8 @@
 | 판 / 교차 행 | `--v5-plate` `#141414` / `--v5-plate-2` `#1c1c1c` |
 | 띠(소제목·키 바탕) | `--v5-band` `#262626` |
 | 미디어 바탕 | `--v5-inset` `#0c0c0c` |
-| 신호 | `--v5-red` `#ff0033`, hover `--v5-red-hover`; 재생·현재 항목·다음 공연·영상 표시·TICKETS·BOOKING/문의에만 쓴다 |
-| 본문 링크 | `--v5-link` `#ff4d6a` |
+| 신호 | `--v5-red` `#e03c31`(NASA Red · Pantone 179), hover `--v5-red-hover`; 재생·현재 항목·다음 공연·영상 표시·TICKETS·BOOKING/문의에만 쓴다 |
+| 본문 링크 | `--v5-link` `#ee6a60` |
 | 섭외 판 | `--v5-bone` `#e8e6df`, `--v5-bone-2`, `--v5-bone-muted` |
 | 보조 글자 | `--v5-muted` `#a3a3a3`, `--v5-muted-2` `#c4c4c4` |
 | 판 간격 / 키 간격 | `--v5-gap` 10px(640px 이하 8px) / `--v5-key-gap` 2px |

@@ -23,8 +23,8 @@ const bucket: R2Bucket = {
   async delete() { throw new Error('not used'); },
 };
 
-const call = (handler: typeof GET, name: string, headers: Record<string, string> = {}) =>
-  handler(new NextRequest(`https://lumo.test/press/video/${encodeURIComponent(name)}`, { headers }), { params: Promise.resolve({ file: name }) });
+const call = (handler: typeof GET, name: string, headers: Record<string, string> = {}, query = '') =>
+  handler(new NextRequest(`https://lumo.test/press/video/${encodeURIComponent(name)}${query}`, { headers }), { params: Promise.resolve({ file: name }) });
 
 describe('/press/video/[file]', () => {
   beforeEach(() => vi.mocked(getR2).mockReturnValue(bucket));
@@ -56,5 +56,12 @@ describe('/press/video/[file]', () => {
     expect(head.body).toBeNull();
 
     expect((await call(GET, file, { range: 'bytes=20-' })).status).toBe(416);
+  });
+
+  it('plays inline for the press kit preview and still seeks by range', async () => {
+    const part = await call(GET, file, { range: 'bytes=0-3' }, '?preview');
+    expect(part.status).toBe(206);
+    expect(part.headers.get('Content-Disposition')).toBe(`inline; filename="${file}"`);
+    expect(await part.text()).toBe('0123');
   });
 });

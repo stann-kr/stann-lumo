@@ -80,6 +80,10 @@ a.row:hover { background: var(--v5-band) !important; }
 .logos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--v5-key-gap); }
 .tile { display: flex; align-items: center; justify-content: center; aspect-ratio: 2.4 / 1; padding: 12%; background: #000; color: #fff; }
 .tile[data-tone='Black'] { background: var(--v5-bone); color: #000; }
+.tile[data-tone='Red'] { color: var(--v5-red); }
+.tile[data-kind='Mark'] { padding: 10% 30%; }
+.logoSet + .logoSet { margin-top: var(--v5-key-gap); }
+.logos[data-kind='Mark'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tile svg { display: block; width: 100%; height: auto; }
 .tileCap { display: flex; justify-content: space-between; gap: 8px; padding: 8px 16px; background: var(--v5-plate-2); }
 .logos .keys { background: var(--v5-inset); }
@@ -90,7 +94,14 @@ a.row:hover { background: var(--v5-band) !important; }
 .venueHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 20px 10px; font-size: 1rem; }
 .clips { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--v5-key-gap); list-style: none; }
 .screen { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--v5-inset); }
-.screen img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.screen img, .screen video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.screen video { position: absolute; inset: 0; background: #000; }
+.screen[data-started='true'] video { object-fit: contain; }
+.play { position: absolute; inset: 0; display: block; width: 100%; padding: 0; border: 0; background: var(--v5-inset); color: #fff; cursor: pointer; }
+.playKey { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 48px; height: 48px; transform: translate(-50%, -50%);
+  background: var(--v5-red); color: #000; font-size: .875rem; clip-path: polygon(25% 0, 75% 0, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0 75%, 0 25%); }
+.play:hover .playKey, .play:focus-visible .playKey { background: var(--v5-red-hover); }
+.play:focus-visible { outline-offset: -3px; }
 .duration { position: absolute; left: 0; bottom: 0; padding: 4px 8px; background: #000; font-size: .75rem; }
 
 /* terminal: shares a row with the logo, key sits at the foot */
@@ -136,7 +147,9 @@ a.row:hover { background: var(--v5-band) !important; }
   .links .row { grid-template-columns: 96px minmax(0, 1fr); }
   .arrow { display: none; }
   .logos .key { min-width: 0; padding: 0 6px; font-size: .75rem; letter-spacing: .02em; }
+  .logos[data-kind='Mark'] .keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .playKey { width: 40px; height: 40px; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .key, a.row { transition: background-color var(--os-dur-fast) linear; }
+  .key, a.row, .playKey { transition: background-color var(--os-dur-fast) linear; }
 }

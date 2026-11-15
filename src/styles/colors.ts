@@ -32,7 +32,7 @@ export const PALETTE = {
 
   // 포인트 컬러
   subGray: "#b8b8b8",
-  cyberRed: "#ff0033",
+  nasaRed: "#e03c31",
 } as const;
 
 // ──────────────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ export const PALETTE = {
 export const THEME = {
   primary: PALETTE.white, // --color-primary    : 주 텍스트, 헤딩
   secondary: PALETTE.subGray, // --color-secondary  : 보조 텍스트, 일반 본문
-  accent: PALETTE.cyberRed, // --color-accent     : 아이콘, 라벨, 포인트 컬러
+  accent: PALETTE.nasaRed, // --color-accent     : 아이콘, 라벨, 포인트 컬러
   muted: PALETTE.midGray, // --color-muted      : 흐린 텍스트, 구분선
   bg: PALETTE.black, // --color-bg         : 페이지 배경
   bgSidebar: PALETTE.nearBlack, // --color-bg-sidebar : 사이드바/헤더 배경
