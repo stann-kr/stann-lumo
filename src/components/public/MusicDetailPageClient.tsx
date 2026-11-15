@@ -54,13 +54,13 @@ export default function MusicDetailPageClient({ track, previous, next }: MusicDe
           )}
         </aside>
         <div className={`${v5.inset} ${styles.art}`}><TrackCover track={track} className={styles.cover} eager /></div>
+        {lines.length > 0 && (
+          <section className={`${v5.plate} ${styles.tracks}`} aria-labelledby="music-tracklist">
+            <div className={v5.band}><h2 id="music-tracklist" className={v5.label}>{isKorean ? '트랙리스트' : 'Tracklist'}</h2><span className={`${v5.label} ${v5.muted}`}>{String(lines.length).padStart(2, '0')}</span></div>
+            <ol className={styles.tracklist}>{lines.map((line, index) => <li key={index}><span className={v5.mono} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span>{line}</span></li>)}</ol>
+          </section>
+        )}
       </div>
-      {lines.length > 0 && (
-        <section className={v5.plate} aria-labelledby="music-tracklist">
-          <div className={v5.band}><h2 id="music-tracklist" className={v5.label}>{isKorean ? '트랙리스트' : 'Tracklist'}</h2><span className={`${v5.label} ${v5.muted}`}>{String(lines.length).padStart(2, '0')}</span></div>
-          <ol className={styles.tracklist}>{lines.map((line, index) => <li key={index}><span className={v5.mono} aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span>{line}</span></li>)}</ol>
-        </section>
-      )}
       {(previous || next) && (
         <nav className={styles.pager} aria-label={isKorean ? '다른 음악' : 'More music'}>
           {previous ? <Link href={`/music/${encodeURIComponent(previous.id)}`} className={styles.step} rel="prev"><span className={`${v5.label} ${v5.muted}`}>← {isKorean ? '이전' : 'Previous'}</span><strong>{previous.title}</strong></Link> : <span />}

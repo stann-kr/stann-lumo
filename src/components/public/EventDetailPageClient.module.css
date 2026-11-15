@@ -1,4 +1,4 @@
-.detail { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr); gap: var(--v5-gap); align-items: start; }
+.detail { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 640px); gap: var(--v5-gap); align-items: start; }
 .facts { display: flex; flex-direction: column; }
 @media (min-width: 800px) and (min-height: 760px) { .detail[data-poster='true'] .facts { position: sticky; top: var(--v5-gap); } }
 .fact { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; padding: 14px 20px; }
@@ -8,7 +8,7 @@
 .lineup { white-space: pre-line; line-height: 1.6; }
 .external { margin-top: var(--v5-gap); min-height: 56px; justify-content: space-between; padding: 0 20px; }
 .poster { min-width: 0; padding: 0; }
-.poster img { width: 100%; max-height: calc(100svh - 96px); object-fit: contain; }
+.poster img { width: 100%; max-height: min(calc(100svh - 160px), 860px); object-fit: contain; }
 /* Without a poster the facts are the page. */
 .detail[data-poster='false'] { grid-template-columns: minmax(0, 1fr); }
 .detail[data-poster='false'] .fact { grid-template-columns: 160px minmax(0, 1fr); }

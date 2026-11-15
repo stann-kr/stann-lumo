@@ -6,17 +6,23 @@
   display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, auto) 150px; grid-template-areas: 'cover body facts key' 'cover list list list';
   align-items: center; column-gap: 20px; padding: 0 0 0 0;
 }
-.coverLink { grid-area: cover; align-self: start; display: block; }
-.cover { width: 112px; }
+.cover { grid-area: cover; align-self: start; width: 112px; }
 .body { grid-area: body; min-width: 0; padding-block: 18px; }
-.title a:hover { color: var(--v5-link); }
+/* The whole row is the detail link: the title link's box covers it, and the row lights on hover like a v5 key. */
+.row { position: relative; }
+.rowLink::after { content: ''; position: absolute; inset: 0; }
+.rowLink:focus-visible { outline: none; }
+.rowLink:focus-visible::after { outline: 2px solid #fff; outline-offset: -2px; }
+.row:hover { background: var(--v5-band); }
+.row:hover .title { color: var(--v5-link); }
+.listen, .tracklist { position: relative; z-index: 1; }
 .title { font-weight: 900; font-size: clamp(1.25rem, 2vw, 1.75rem); line-height: 1; letter-spacing: -.035em; text-transform: uppercase; overflow-wrap: anywhere; }
 .meta { margin-top: 8px; font-size: 12px; color: var(--v5-muted); overflow-wrap: anywhere; }
 .facts { grid-area: facts; display: flex; gap: 2px; }
 .facts > div { padding: 8px 14px; background: var(--v5-inset); }
 .facts dt { color: var(--v5-muted); }
 .facts dd { font-size: .9375rem; white-space: nowrap; }
-/* The key column stacks play (red signal key) over details; a link without a player shows its platform key instead. */
+/* The key column is the red play key; a link without a player shows its platform key instead. */
 .listen { grid-area: key; align-self: stretch; display: flex; flex-direction: column; gap: 2px; min-height: 112px; }
 /* The canvas key has no side padding, so "SOUNDCLOUD ↗" stays on one line in the 150px column; keep only a thin inset. */
 .listen > :is(a, button) { flex: 1; min-height: 36px; padding-inline: 8px; font-size: 14px; }
@@ -24,7 +30,15 @@
 /* Canvas Music board: the platform key sits one tone above its row. */
 .rows > li:nth-child(even) .listen > a { background: var(--v5-band); }
 .rows > li .listen > a:hover { background: #333; }
-.play[data-playing='true'] { background: var(--color-primary); color: #000; }
+/* Play keys follow the row tones like the platform keys, so a long list is not a column of red: the key sits one tone
+   above its row, turns red when the row or key is hovered (the signal), and white while that track plays. */
+.listen > .play { background: var(--v5-plate-2); color: var(--color-primary); }
+.rows > li:nth-child(even) .listen > .play { background: var(--v5-band); }
+.listen > .play svg { color: var(--v5-red); }
+.rows > li > .row:hover > .listen > .play:not([data-playing='true']) { background: var(--v5-red); color: #000; }
+.rows > li > .row:hover > .listen > .play:not([data-playing='true']) svg { color: #000; }
+.rows > li .listen > .play[data-playing='true'] { background: var(--color-primary); color: #000; }
+.rows > li .listen > .play[data-playing='true'] svg { color: #000; }
 .listen > :is(a, button):focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .tracklist { grid-area: list; margin: 0 20px 16px 0; background: var(--v5-inset); }
 .tracklist summary { display: flex; align-items: center; min-height: 44px; padding: 0 16px; color: var(--v5-muted-2); cursor: pointer; list-style: none; }

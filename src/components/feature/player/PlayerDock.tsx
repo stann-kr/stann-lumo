@@ -16,8 +16,8 @@ const COPY = {
 /**
  * The site's one music player, fixed to the bottom of the viewport. The host's iframe is keyed by track and never moves
  * or remounts while the visitor browses; collapsing only shrinks its box. YouTube's player must stay visible at a usable
- * size, so only the audio hosts can collapse. The dock reserves its own height under the page (`--player-space`), so the
- * last rows and the list-end sentinel stay reachable.
+ * size, so only the audio hosts can collapse. On phones the full-width dock reserves its own height under the page
+ * (`--player-space`, read by the shell at ≤640px) so the last rows stay reachable; the desktop panel floats beside them.
  */
 export default function PlayerDock() {
   const player = usePlayer();
