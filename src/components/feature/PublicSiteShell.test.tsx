@@ -150,13 +150,14 @@ describe('PublicSiteShell public navigation', () => {
     expect(screen.getByRole('link', { name: 'Press kit' })).toHaveAttribute('href', '/press-kit');
   });
 
-  it('leaves the site menu out of the press kit, which brings its own header', () => {
+  it('keeps the site menu on the press kit so visitors can get back to the site', () => {
     mocks.pathname = '/press-kit';
     render(<PublicSiteShell><h1>Stann Lumo</h1></PublicSiteShell>);
 
     expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
-    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument();
+    expect(screen.getByRole('navigation')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Press kit' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
   });
 
   it('lights the NEXT lamp on the mobile menu Events item only while a date is ahead', async () => {

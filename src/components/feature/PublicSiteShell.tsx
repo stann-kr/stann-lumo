@@ -166,8 +166,6 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicS
     { label: "Links", path: "/link" },
   ];
   const isCurrent = (path: string) => pathname === path || pathname.startsWith(path + "/");
-  // The press kit is a page for promoters with its own header (canvas Presskit board): the site menu stays out of it.
-  const ownHeader = pathname === "/press-kit";
 
   const handleMobileDialogKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") {
@@ -220,9 +218,9 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicS
     <PublicNavigationContext value={navigate}>
     <PublicMotionInputContext value={motionInputRef}>
     <div ref={shellRef} className={styles.shell}>
-      <div inert={mobileMenuOpen || undefined} className={styles.document} data-chrome={ownHeader ? "press" : undefined}>
+      <div inert={mobileMenuOpen || undefined} className={styles.document}>
         <a href="#main-content" className={styles.skipLink}>{skipLinkLabel}</a>
-        {!ownHeader && <header className={styles.header}>
+        <header className={styles.header}>
           <Link ref={brandRef} href="/" className={styles.brand} aria-label={artistName}><LumoWordmark className={styles.wordmark} title={artistName} /></Link>
           <div className={styles.desktopNav}>{navigation(mainNavigationLabel, desktopItems)}</div>
           <div className={styles.tools}>
@@ -234,7 +232,7 @@ const PublicSiteShell = ({ children, artistName = SITE_NAME, nextDate }: PublicS
               Menu
             </button>
           </div>
-        </header>}
+        </header>
         <main ref={mainRef} id="main-content" tabIndex={-1} aria-busy={isNavigating} className={styles.main} data-revealed={revealed} data-gate={revealHeld ? 'script' : undefined}>
           <div inert={isNavigating || undefined} className={`${styles.content} ${isNavigating ? styles.pendingContent : ''}`}>{children}</div>
         </main>
