@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "../feature/PublicLink";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { CONTACT_EMAIL, INSTAGRAM_URL, SITE_NAME, SOUNDCLOUD_URL } from "@/constants/site";
-import { hasKnownDuration, type ArtistInfoItem, type HomeEventPreview, type HomePreviews } from "@/capabilities/content/content";
+import { hasKnownDuration, isMixType, type ArtistInfoItem, type HomeEventPreview, type HomePreviews } from "@/capabilities/content/content";
 import { performanceDate, performanceLocation, performanceToday } from "@/capabilities/events/events";
 import { getPublicImageUrl } from "@/capabilities/media/media";
 import styles from "./HomePageClient.module.css";
@@ -36,7 +36,7 @@ const COPY = {
   },
 } as const;
 
-const isMix = (track: Track) => /mix|set/i.test(track.type);
+const isMix = (track: Track) => isMixType(track.type);
 
 function daysUntil(date: string, today: string): number {
   return Math.round((Date.parse(`${performanceDate(date)}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);

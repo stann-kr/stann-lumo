@@ -5,8 +5,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import PageLayout from "@/components/feature/PageLayout";
 import InfiniteList from "@/components/feature/InfiniteList";
 import Link from '../feature/PublicLink';
-import { hasKnownDuration, type MusicPageMeta, type Track } from "@/capabilities/content/content";
+import { hasKnownDuration, isMixType, type MusicPageMeta, type Track } from "@/capabilities/content/content";
 import { tracklistLines } from "@/capabilities/content/trackMedia";
+import { trackStoreLinks } from "@/capabilities/media/storeLinks";
 import TrackCover from "./TrackCover";
 import v5 from "@/styles/v5.module.css";
 import styles from "./MusicPageClient.module.css";
@@ -15,7 +16,7 @@ import styles from "./MusicPageClient.module.css";
 
 interface MusicPageClientProps { musicMeta: MusicPageMeta; tracks: Track[]; }
 
-const isMix = (track: Track) => /mix|set/i.test(track.type);
+const isMix = (track: Track) => isMixType(track.type);
 
 function TrackRow({ track }: { track: Track }) {
   const { t } = useTranslation();
@@ -23,6 +24,7 @@ function TrackRow({ track }: { track: Track }) {
   const isKorean = language === 'ko';
   const newTabLabel = isKorean ? ' (새 창)' : ' (opens in a new tab)';
   const lines = tracklistLines(track.tracklist);
+  const stores = trackStoreLinks(track.link);
   return (
     <article className={styles.row}>
       <TrackCover track={track} className={styles.cover} showType={false} />
@@ -35,10 +37,18 @@ function TrackRow({ track }: { track: Track }) {
         {track.recordedOn && <div><dt className={v5.label}>Rec</dt><dd className={v5.mono}><time dateTime={track.recordedOn}>{track.recordedOn.replaceAll('-', '.')}</time></dd></div>}
       </dl>
       {track.link && (
-        <a href={track.link} target="_blank" rel="noopener noreferrer" className={`${v5.key} ${styles.listen}`}
-          aria-label={`${track.title} — ${t('music_listen_on', { platform: track.platform })}${newTabLabel}`}>
-          {track.platform || (isKorean ? '듣기' : 'Listen')} ↗
-        </a>
+        <div className={styles.listen}>
+          <a href={track.link} target="_blank" rel="noopener noreferrer" className={v5.key}
+            aria-label={`${track.title} — ${t('music_listen_on', { platform: track.platform })}${newTabLabel}`}>
+            {track.platform || (isKorean ? '듣기' : 'Listen')} ↗
+          </a>
+          {stores.map((store) => (
+            <a key={store.platform} href={store.url} target="_blank" rel="noopener noreferrer" className={v5.key}
+              aria-label={`${track.title} — ${t('music_listen_on', { platform: store.platform })}${newTabLabel}`}>
+              {store.platform} ↗
+            </a>
+          ))}
+        </div>
       )}
       {lines.length > 0 && (
         <details className={styles.tracklist}>
