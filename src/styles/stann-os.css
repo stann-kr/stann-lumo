@@ -42,13 +42,13 @@
   --os-dev-border: #dfdacb;
   --os-dev-accent: #c23b22;
   --os-dev-grid: rgba(31, 30, 26, 0.04);
-  /* MUSIC — 다크 네온 (액센트 = 사이버 레드, 결정 D2 · JS THEME 키는 "lumo") */
+  /* MUSIC — 다크 네온 (액센트 = NASA Red #e03c31, 2026-11-16 로고 확정 · JS THEME 키는 "lumo") */
   --os-music-bg: #000000;
   --os-music-panel: #0a0a0a;
   --os-music-primary: #ffffff;
   --os-music-sub: #b8b8b8;
   --os-music-border: rgba(255, 255, 255, 0.12);
-  --os-music-accent: #ff0033;
+  --os-music-accent: #e03c31;
   --os-music-grid: rgba(255, 255, 255, 0.03);
   /* NEUTRAL — 허브 랜딩 */
   --os-neutral-bg: #0d0d0c;

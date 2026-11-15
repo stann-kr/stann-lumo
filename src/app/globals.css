@@ -14,7 +14,7 @@
    */
   --color-primary: var(--os-music-primary); /* #ffffff */
   --color-secondary: var(--os-music-sub); /* #b8b8b8 — 구 #cbcbcb에서 정본 정렬 */
-  --color-accent: #e03c31; /* lumo 고유 — NASA Red(Pantone 179), 2026-11-16 로고 캔버스 확정. 공통 정본 --os-music-accent(#ff0033)는 stann-web 소유라 여기서 덮어쓴다 */
+  --color-accent: var(--os-music-accent); /* #e03c31 NASA Red */
   --color-muted: #333333; /* lumo 고유 — 구분선/보더 */
   --color-text-muted: #a0a0a0; /* 본문·메타 보조 텍스트, black 표면에서 AA 대비 */
   --color-bg: var(--os-music-bg); /* #000000 */
