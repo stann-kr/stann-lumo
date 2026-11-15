@@ -30,9 +30,10 @@ function TrackRow({ track }: { track: Track }) {
   const playable = Boolean(usePlayer()) && Boolean(playerEmbed(track.link));
   return (
     <article className={styles.row}>
-      <Link href={href} className={styles.coverLink} tabIndex={-1} aria-hidden="true"><TrackCover track={track} className={styles.cover} showType={false} /></Link>
+      <TrackCover track={track} className={styles.cover} showType={false} />
       <div className={styles.body}>
-        <h3 className={styles.title}><Link href={href}>{track.title}</Link></h3>
+        {/* The title link stretches over the whole row, so the card is one target; play and the tracklist sit above it. */}
+        <h3 className={styles.title}><Link href={href} className={styles.rowLink}>{track.title}</Link></h3>
         <p className={`${v5.mono} ${styles.meta}`}>{[track.type, track.platform, track.year].filter(Boolean).join(' · ')}</p>
       </div>
       <dl className={styles.facts}>
@@ -47,7 +48,6 @@ function TrackRow({ track }: { track: Track }) {
             {track.platform || (isKorean ? '듣기' : 'Listen')} ↗
           </a>
         )}
-        <Link href={href} className={v5.key}>{isKorean ? '상세' : 'Details'}<span className="sr-only"> — {track.title}</span></Link>
       </div>
       {lines.length > 0 && (
         <details className={styles.tracklist}>

@@ -16,7 +16,7 @@
 .shell :global(.font-sans) { font-family: var(--font-display); }
 .document {
   position: relative; z-index: 1; min-height: 100svh; display: flex; flex-direction: column; gap: var(--v5-gap);
-  padding: calc(var(--shell-pad) + env(safe-area-inset-top, 0px)) max(var(--shell-pad), env(safe-area-inset-right, 0px)) calc(var(--shell-pad) + var(--player-space, 0px) + env(safe-area-inset-bottom, 0px)) max(var(--shell-pad), env(safe-area-inset-left, 0px));
+  padding: calc(var(--shell-pad) + env(safe-area-inset-top, 0px)) max(var(--shell-pad), env(safe-area-inset-right, 0px)) calc(var(--shell-pad) + env(safe-area-inset-bottom, 0px)) max(var(--shell-pad), env(safe-area-inset-left, 0px));
 }
 
 /* header: a row of plates on the black field, 2px seams like every other v5 table. Nav items are numbered mono keys;
@@ -62,6 +62,8 @@
   font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
 }
 .main { flex: 1; min-width: 0; scroll-margin-top: 1rem; }
+/* The phone player dock spans the width, so the page ends above it; the desktop dock floats at the right edge instead. */
+@media (max-width: 640px) { .document { padding-bottom: calc(var(--shell-pad) + var(--player-space, 0px) + env(safe-area-inset-bottom, 0px)); } }
 .content { min-width: 0; }
 .pendingContent { animation: pending-hide 0s linear 180ms both; }
 /* Reveal gate (useRevealGate): a new page stays hidden until its first-screen media has arrived, then appears whole.
