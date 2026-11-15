@@ -30,7 +30,7 @@ function renderEvents(records: Performance[]) {
 let viewport: ReturnType<typeof stubViewport>;
 /** Scrolls to the end of one section; its next page loads with no key. */
 async function loadRegion(region: HTMLElement, count: number) {
-  viewport.reachListEnd(region);
+  await viewport.reachListEnd(region);
   await waitFor(() => expect(within(region).getAllByRole('link')).toHaveLength(count));
 }
 

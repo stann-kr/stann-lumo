@@ -78,7 +78,7 @@ const links = () => within(screen.getByRole('list')).queryAllByRole('link');
 let viewport: ReturnType<typeof stubViewport>;
 /** Scrolls to the end of the grid; the next page loads with no key. */
 async function loadMore(count: number) {
-  viewport.reachListEnd();
+  await viewport.reachListEnd();
   await waitFor(() => expect(links()).toHaveLength(count));
 }
 

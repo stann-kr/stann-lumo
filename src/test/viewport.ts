@@ -1,4 +1,4 @@
-import { act } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 
 interface Watch { target?: Element; live: boolean; intersect: () => void }
@@ -18,10 +18,16 @@ export function stubViewport() {
     takeRecords() { return []; }
   });
   return {
-    /** Scrolls the pending end of the paged list inside `scope` into view. */
-    reachListEnd(scope: Element = document.body) {
-      const watch = [...watches].reverse().find(entry => entry.live && entry.target?.matches('[data-pending]') && scope.contains(entry.target));
-      if (!watch) throw new Error('No list end is waiting for the viewport');
+    /**
+     * Scrolls the pending end of the paged list inside `scope` into view. After a page lands, the list re-arms its end
+     * in an effect, so this waits for that watch instead of failing when it is called a tick too early.
+     */
+    async reachListEnd(scope: Element = document.body) {
+      const watch = await waitFor(() => {
+        const found = [...watches].reverse().find(entry => entry.live && entry.target?.matches('[data-pending]') && scope.contains(entry.target));
+        if (!found) throw new Error('No list end is waiting for the viewport');
+        return found;
+      });
       act(() => watch.intersect());
     },
   };
