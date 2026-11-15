@@ -385,6 +385,13 @@ export async function getSitemapEventIds(): Promise<string[]> {
   return records.map(({ id }) => id);
 }
 
+/** Every archive item has its own public page at /archive/[id]; listed in the archive's own order. */
+export async function getSitemapArchiveIds(): Promise<string[]> {
+  const records = await rows<{ id: string }>(getPublicDB(),
+    'SELECT id FROM gallery_photos ORDER BY sort_order ASC, created_at DESC, id');
+  return records.map(({ id }) => id);
+}
+
 export const getEventDetail = cache(async (id: string): Promise<{ event: Performance; posterPhoto?: GalleryPhoto } | null> => {
   const db = getPublicDB();
   const eventRow = await db.prepare('SELECT * FROM performances WHERE id = ?').bind(id).first<PerformanceRow>();
