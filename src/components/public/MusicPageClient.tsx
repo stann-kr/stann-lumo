@@ -42,7 +42,7 @@ function TrackRow({ track }: { track: Track }) {
       </dl>
       {/* Play sends the track to the site player; a link without a player keeps its outbound key. Stores live on the detail page. */}
       <div className={styles.listen}>
-        {playable ? <PlayTrackKey track={track} className={`${v5.key} ${v5.red} ${styles.play}`} /> : track.link && (
+        {playable ? <PlayTrackKey track={track} className={`${v5.key} ${styles.play}`} /> : track.link && (
           <a href={track.link} target="_blank" rel="noopener noreferrer" className={v5.key}
             aria-label={`${track.title} — ${t('music_listen_on', { platform: track.platform })}${newTabLabel}`}>
             {track.platform || (isKorean ? '듣기' : 'Listen')} ↗
