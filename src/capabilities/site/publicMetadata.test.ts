@@ -22,6 +22,7 @@ describe('createPublicMetadata', () => {
   it('does not repeat the site name for the home page share title', () => {
     const metadata = createPublicMetadata({ title: 'STANN LUMO', description: 'TECHNO / SEOUL', path: '/' });
 
+    expect(metadata.title).toEqual({ absolute: 'STANN LUMO' });
     expect(metadata.openGraph).toMatchObject({ title: 'STANN LUMO' });
     expect(metadata.twitter).toMatchObject({ title: 'STANN LUMO' });
   });
