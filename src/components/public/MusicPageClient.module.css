@@ -53,6 +53,7 @@
   .facts { margin: 0; }
   .facts > div { flex: 1; padding-inline: 16px; }
   .listen { flex-direction: row; min-height: 44px; }
-  .listen > a { min-height: 44px; padding-inline: 12px; }
+  /* Three store keys share a 390px row; size each to its name so none of them wraps. */
+  .listen > a { flex: 1 1 auto; min-height: 44px; padding-inline: 6px; font-size: 13px; letter-spacing: .04em; white-space: nowrap; }
   .licensing { padding: 0 16px; }
 }

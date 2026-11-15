@@ -6,6 +6,8 @@
 
 - 음악 페이지의 릴리스 9곡에 Bandcamp와 함께 Beatport·Spotify 링크 버튼이 나온다. Bandcamp에만 있는 곡은 그대로다.
 - Remix가 믹스 목록이 아니라 릴리스 목록에 나온다.
+- 프레스킷 페이지에서도 사이트 메뉴가 보인다. 프레스킷 자체 띠에는 PRESS KIT과 전체 다운로드만 남겼다.
+- 홈 Latest mix 목록에 최근 믹스가 8개까지 나온다. 칸을 넘는 줄은 목록 안에서 스크롤한다.
 - 홈 페이지 제목이 `STANN LUMO | STANN LUMO`로 겹쳐 보이지 않고 `STANN LUMO`로 나온다. 다른 페이지는 `Archive | STANN LUMO`처럼 그대로다.
 - sitemap에 아카이브 상세 페이지(`/archive/...`)를 모두 넣었다. 공연 목록과 아카이브 목록 중 하나를 읽지 못해도 다른 쪽과 고정 페이지는 그대로 실린다.
 
