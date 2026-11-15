@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mixEmbed } from '@/capabilities/media/mixEmbed';
+import { playerEmbed } from '@/capabilities/media/playerEmbed';
 import nextConfig from '../../next.config';
 
 /** The site-wide Content-Security-Policy as directive → sources. */
@@ -17,8 +17,9 @@ describe('Content-Security-Policy', () => {
   it('lets every player the site embeds load in a frame', async () => {
     const frameSources = (await contentSecurityPolicy()).get('frame-src');
     const players = [
-      mixEmbed('https://soundcloud.com/stannlumo/mix')?.src,
-      mixEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')?.src,
+      playerEmbed('https://soundcloud.com/stannlumo/mix')?.src,
+      playerEmbed('https://www.youtube.com/watch?v=dQw4w9WgXcQ')?.src,
+      playerEmbed('https://ameniiarecords.bandcamp.com/album/frame-dragging')?.src,
       // ArchiveDetailPageClient embeds archive videos from the standard YouTube host.
       'https://www.youtube.com/embed/dQw4w9WgXcQ',
     ];

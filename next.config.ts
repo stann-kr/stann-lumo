@@ -16,8 +16,8 @@ const contentSecurityPolicy = [
   // Archive video thumbnails come straight from YouTube's image hosts; uploads are served from this origin.
   "img-src 'self' data: blob: https:",
   "media-src 'self'",
-  // Click-to-load mix players (mixEmbed.ts) and archive videos (ArchiveDetailPageClient.tsx).
-  'frame-src https://w.soundcloud.com https://www.youtube-nocookie.com https://www.youtube.com',
+  // Click-to-load music players (playerEmbed.ts) and archive videos (ArchiveDetailPageClient.tsx).
+  'frame-src https://w.soundcloud.com https://www.youtube-nocookie.com https://www.youtube.com https://bandcamp.com',
   "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",

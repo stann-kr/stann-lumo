@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getSitemapArchiveIds, getSitemapEventIds } from '@/capabilities/content/publicContent.server';
+import { getSitemapArchiveIds, getSitemapEventIds, getSitemapTrackIds } from '@/capabilities/content/publicContent.server';
 import { SITE_URL } from '@/capabilities/site/publicMetadata';
 
 export const dynamic = 'force-dynamic';
@@ -20,9 +20,10 @@ function detailUrls(base: string, ids: string[]): MetadataRoute.Sitemap {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [eventIds, archiveIds] = await Promise.all([idsOrNone(getSitemapEventIds), idsOrNone(getSitemapArchiveIds)]);
+  const [trackIds, eventIds, archiveIds] = await Promise.all([idsOrNone(getSitemapTrackIds), idsOrNone(getSitemapEventIds), idsOrNone(getSitemapArchiveIds)]);
   return [
     ...PUBLIC_PAGES.map((path) => ({ url: new URL(path, SITE_URL).toString() })),
+    ...detailUrls('/music', trackIds),
     ...detailUrls('/events', eventIds),
     ...detailUrls('/archive', archiveIds),
   ];

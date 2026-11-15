@@ -400,6 +400,12 @@ export async function getSitemapEventIds(): Promise<string[]> {
   return records.map(({ id }) => id);
 }
 
+/** Every track has its own public page at /music/[id]; a track has one row per language under the same id. */
+export async function getSitemapTrackIds(): Promise<string[]> {
+  const records = await rows<{ id: string }>(getPublicDB(), 'SELECT id FROM tracks GROUP BY id ORDER BY MIN(sort_order), id');
+  return records.map(({ id }) => id);
+}
+
 /** Every archive item has its own public page at /archive/[id]; listed in the archive's own order. */
 export async function getSitemapArchiveIds(): Promise<string[]> {
   const records = await rows<{ id: string }>(getPublicDB(),
@@ -431,6 +437,15 @@ export const getArchiveDetail = cache(async (id: string): Promise<{ photo: Galle
   };
   assertPublicPayloadSafe(projection);
   return projection;
+});
+
+/** A track in the music page's order, with its neighbours for the detail page's previous/next keys. */
+export const getTrackDetail = cache(async (id: string, locale: PublicLocale): Promise<{ track: Track; previous: Track | null; next: Track | null } | null> => {
+  const { tracks } = await getMusicProjection(locale);
+  const index = tracks.findIndex((track) => track.id === id);
+  if (index === -1) return null;
+  // The tracks already passed assertPublicPayloadSafe in getMusicProjection.
+  return { track: tracks[index], previous: tracks[index - 1] ?? null, next: tracks[index + 1] ?? null };
 });
 
 /** The outbound link of a public track, used only to look up its platform artwork. */

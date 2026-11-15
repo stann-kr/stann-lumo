@@ -6,21 +6,26 @@
   display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, auto) 150px; grid-template-areas: 'cover body facts key' 'cover list list list';
   align-items: center; column-gap: 20px; padding: 0 0 0 0;
 }
-.cover { grid-area: cover; align-self: start; width: 112px; }
+.coverLink { grid-area: cover; align-self: start; display: block; }
+.cover { width: 112px; }
 .body { grid-area: body; min-width: 0; padding-block: 18px; }
+.title a:hover { color: var(--v5-link); }
 .title { font-weight: 900; font-size: clamp(1.25rem, 2vw, 1.75rem); line-height: 1; letter-spacing: -.035em; text-transform: uppercase; overflow-wrap: anywhere; }
 .meta { margin-top: 8px; font-size: 12px; color: var(--v5-muted); overflow-wrap: anywhere; }
 .facts { grid-area: facts; display: flex; gap: 2px; }
 .facts > div { padding: 8px 14px; background: var(--v5-inset); }
 .facts dt { color: var(--v5-muted); }
 .facts dd { font-size: .9375rem; white-space: nowrap; }
-/* The platform keys fill the key column top to bottom; a release on Beatport and Spotify too stacks one key per store. */
+/* The key column stacks play (red signal key) over details; a link without a player shows its platform key instead. */
 .listen { grid-area: key; align-self: stretch; display: flex; flex-direction: column; gap: 2px; min-height: 112px; }
 /* The canvas key has no side padding, so "SOUNDCLOUD ↗" stays on one line in the 150px column; keep only a thin inset. */
-.listen > a { flex: 1; min-height: 36px; padding-inline: 8px; background: var(--v5-plate-2); font-size: 14px; }
+.listen > :is(a, button) { flex: 1; min-height: 36px; padding-inline: 8px; font-size: 14px; }
+.listen > a { background: var(--v5-plate-2); }
 /* Canvas Music board: the platform key sits one tone above its row. */
 .rows > li:nth-child(even) .listen > a { background: var(--v5-band); }
 .rows > li .listen > a:hover { background: #333; }
+.play[data-playing='true'] { background: var(--color-primary); color: #000; }
+.listen > :is(a, button):focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
 .tracklist { grid-area: list; margin: 0 20px 16px 0; background: var(--v5-inset); }
 .tracklist summary { display: flex; align-items: center; min-height: 44px; padding: 0 16px; color: var(--v5-muted-2); cursor: pointer; list-style: none; }
 .tracklist summary::-webkit-details-marker { display: none; }
@@ -54,6 +59,6 @@
   .facts > div { flex: 1; padding-inline: 16px; }
   .listen { flex-direction: row; min-height: 44px; }
   /* Three store keys share a 390px row; size each to its name so none of them wraps. */
-  .listen > a { flex: 1 1 auto; min-height: 44px; padding-inline: 6px; font-size: 13px; letter-spacing: .04em; white-space: nowrap; }
+  .listen > :is(a, button) { flex: 1 1 0; min-height: 44px; padding-inline: 6px; font-size: 13px; letter-spacing: .04em; white-space: nowrap; }
   .licensing { padding: 0 16px; }
 }

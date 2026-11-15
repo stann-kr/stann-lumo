@@ -1,0 +1,31 @@
+/* v5 dock: one plate fixed to the viewport bottom — a bar (cover, red lamp, title, square keys) over the host's player.
+   Desktop floats it at the right edge; phones span the width. Only the box size changes when it collapses. */
+.dock {
+  position: fixed; z-index: 40; right: var(--shell-pad); bottom: calc(var(--shell-pad) + env(safe-area-inset-bottom));
+  width: min(420px, calc(100vw - 2 * var(--shell-pad))); display: flex; flex-direction: column;
+  background: var(--v5-plate); box-shadow: 0 0 0 var(--shell-pad) var(--v5-field);
+}
+.bar { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 12px; background: var(--v5-band); }
+.cover { width: 48px; }
+.now { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.label { display: flex; align-items: center; gap: 8px; font-family: var(--os-font-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--v5-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lamp { flex: none; width: 8px; height: 8px; background: var(--v5-red); }
+.title { min-width: 0; font-weight: 900; font-size: .9375rem; line-height: 1.15; letter-spacing: -.02em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.title:hover { color: var(--v5-link); }
+.title:focus-visible, .key:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.keys { display: flex; align-self: stretch; gap: 2px; }
+.key { display: flex; align-items: center; justify-content: center; width: 44px; min-height: 48px; background: var(--v5-plate-2); color: var(--color-primary); font-weight: 700; }
+.key:hover { background: #333; }
+.host { color: var(--v5-link); font-size: 1rem; }
+.screen { position: relative; overflow: hidden; background: #000; aspect-ratio: 16 / 9; }
+.dock[data-shape='strip'] .screen { aspect-ratio: auto; height: 120px; }
+.dock[data-collapsed='true'] .screen { aspect-ratio: auto; height: 0; }
+.screen iframe { display: block; width: 100%; height: 100%; border: 0; background: #000; }
+
+@media (max-width: 640px) {
+  .dock { left: var(--shell-pad); right: var(--shell-pad); width: auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dock { animation: dock-in 240ms cubic-bezier(.23, 1, .32, 1); }
+}
+@keyframes dock-in { from { transform: translateY(16px); opacity: 0; } }
