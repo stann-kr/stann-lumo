@@ -22,6 +22,7 @@ import { PUBLIC_BATCH_SIZE, type PublicPage } from './publicPagination';
 import type { TerminalInfo } from '@/capabilities/terminal/terminalConfig';
 import { SITE_ARTIST_INFO, SITE_BOOKING_INFO, SITE_CONTACT_INFO, SITE_CONTACT_META, SITE_LINK_META, SITE_LINK_PLATFORMS, SITE_TERMINAL_INFO } from './siteContent';
 import { SITE_NAME } from '@/constants/site';
+import { isMixType } from './content';
 import { trackMediaFields, tracklistLines, TRACK_MEDIA_COLUMNS, TRACK_MEDIA_JOIN, type TrackMediaColumns } from './trackMedia';
 
 export type PublicLocale = 'en' | 'ko';
@@ -241,13 +242,27 @@ export interface HomeProjection {
   artistInfo: ArtistInfoItem[];
 }
 
+/** Rows read for the home page: enough that the newest mixes are found among releases listed above them. */
+const HOME_TRACK_SCAN = 40;
+/** The home page shows the newest tracks as cards and the newest mixes in the Latest mix deck. */
+const HOME_TRACK_CARDS = 8;
+const HOME_MIX_DECK = 8;
+
+function homeTracks<T extends { type: string }>(rows: T[]): T[] {
+  let mixes = 0;
+  return rows.filter((row, index) => {
+    const mix = isMixType(row.type) && mixes++ < HOME_MIX_DECK;
+    return index < HOME_TRACK_CARDS || mix;
+  });
+}
+
 export const getHomeProjection = cache(async (locale: PublicLocale): Promise<HomeProjection> => {
   const db = getPublicDB();
 
   const today = performanceToday();
   const [trackRows, eventRows, pastRows, photoRows] = await Promise.all([
     localizedRows<TrackRow>(db, `SELECT t.id, t.title, t.type, t.year, t.platform, t.link, t.duration, ${TRACK_MEDIA_COLUMNS}
-      FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order LIMIT 8`, locale),
+      FROM tracks t ${TRACK_MEDIA_JOIN} WHERE t.lang = ? ORDER BY t.sort_order LIMIT ${HOME_TRACK_SCAN}`, locale),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE status != 'Cancelled' AND SUBSTR(REPLACE(date, '.', '-'), 1, 10) >= ? ORDER BY REPLACE(date, '.', '-') ASC, sort_order LIMIT 3`, today),
     rows<HomePerformanceRow>(db, `SELECT ${HOME_EVENT_COLUMNS} FROM performances WHERE SUBSTR(REPLACE(date, '.', '-'), 1, 10) < ? ORDER BY REPLACE(date, '.', '-') DESC, sort_order LIMIT 3`, today),
     rows<GalleryPhotoRow>(db, "SELECT id, caption, alt_text FROM gallery_photos WHERE media_type = 'image' ORDER BY sort_order ASC, created_at DESC LIMIT 4"),
@@ -255,7 +270,7 @@ export const getHomeProjection = cache(async (locale: PublicLocale): Promise<Hom
   const projection = {
     artistInfo: SITE_ARTIST_INFO,
     previews: {
-      tracks: trackRows.map(({ id, title, type, year, platform, link, duration, tracklist, recorded_on, cover_image_id }) => {
+      tracks: homeTracks(trackRows).map(({ id, title, type, year, platform, link, duration, tracklist, recorded_on, cover_image_id }) => {
         const [firstTrack] = tracklistLines(tracklist ?? undefined);
         return { id, title, type, year, platform, link, duration: duration ?? '', ...trackMediaFields({ recorded_on, cover_image_id }), ...(firstTrack && { firstTrack }) };
       }),
