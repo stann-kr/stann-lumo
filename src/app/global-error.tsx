@@ -11,8 +11,8 @@ const css = `
 body { margin: 0; min-height: 100svh; padding: 10px; box-sizing: border-box; background: #000; color: #fff;
   font-family: Inter, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, sans-serif; }
 .fallback { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; min-height: 60svh; padding: 28px 24px; background: #141414; }
-.code { display: flex; align-items: center; gap: 8px; margin: 0; font: 11px/1.4 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .14em; color: #ff4d6a; }
-.code::before { content: ''; width: 8px; height: 8px; background: #ff0033; }
+.code { display: flex; align-items: center; gap: 8px; margin: 0; font: 11px/1.4 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .14em; color: #ee6a60; }
+.code::before { content: ''; width: 8px; height: 8px; background: #e03c31; }
 .fallback h1 { margin: 0; max-width: 16ch; font-weight: 900; font-size: clamp(2.5rem, 7vw, 6rem); line-height: .9; letter-spacing: -.045em; text-transform: uppercase; overflow-wrap: anywhere; }
 .fallback p { margin: 0; max-width: 60ch; line-height: 1.5; color: #c4c4c4; }
 .actions { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 8px; }
