@@ -105,6 +105,11 @@ export interface Track {
 }
 
 /** Imported tracks carry a zero placeholder until a real length is entered. */
+/** A DJ mix or live set, as opposed to a release. "Remix" is a release, so "mix" must be a whole word. */
+export function isMixType(type?: string): boolean {
+  return !!type && /\b(mix|set)\b/i.test(type);
+}
+
 export function hasKnownDuration(duration?: string): boolean {
   return !!duration && !/^0{1,2}:00(:00)?$/.test(duration.trim());
 }
