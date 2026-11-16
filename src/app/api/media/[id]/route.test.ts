@@ -95,6 +95,12 @@ describe('GET /api/media/[id] with a width', () => {
     expect(await response.text()).toBe('webp');
   });
 
+  it('offers the 400px grid thumbnail width', async () => {
+    vi.mocked(getImages).mockReturnValue(images());
+    await fetchPhoto('&w=400');
+    expect(transform).toHaveBeenCalledWith({ width: 400, fit: 'scale-down' });
+  });
+
   it('serves the original when the width is not offered, the binding is missing, or the transformation fails', async () => {
     vi.mocked(getImages).mockReturnValue(images());
     expect(await (await fetchPhoto('&w=123')).text()).toBe('0123456789');
