@@ -1,6 +1,6 @@
 'use client';
 
-import { captionIncludesDate, getPublicImageUrl } from '@/capabilities/media/media';
+import { captionIncludesDate, getPublicImageUrl, getPublicThumbSrcSet } from '@/capabilities/media/media';
 
 import Link from '../feature/PublicLink';
 import { useCallback, useRef } from 'react';
@@ -15,6 +15,9 @@ import v5 from '@/styles/v5.module.css';
 import styles from './ArchivePageClient.module.css';
 import type { GalleryPhoto } from '@/capabilities/media/media';
 import { ARCHIVE_PAGE_SIZE, archiveBrowseState, archiveHref, archiveItemAnchor, archiveReturnHref, type ArchiveBrowseState } from '@/capabilities/media/archiveBrowsing';
+
+/** Column widths of `.grid` (ArchivePageClient.module.css): 1 / 2 / 3 / 4 columns. */
+const ARCHIVE_GRID_SIZES = '(max-width: 359px) 100vw, (max-width: 767px) 50vw, (max-width: 1199px) 33vw, 25vw';
 
 const RETURN_POSITION_KEY = 'lumo:archive:return-position';
 
@@ -31,7 +34,7 @@ function GridItem({ photo, browse, eager }: { photo: GalleryPhoto; browse: Archi
         <div className={styles.media} data-video={photo.mediaType !== 'image'}>
           {photo.mediaType === 'video_youtube' ? <LoadingImage src={photo.videoThumbnailUrl || undefined} alt={photo.altText || photo.filename} quiet loading={eager ? 'eager' : 'lazy'} />
             : photo.mediaType === 'video_file' ? <video src={`/api/media/${photo.id}`} preload="none" muted playsInline aria-hidden="true" />
-            : <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.filename} quiet loading={eager ? 'eager' : 'lazy'} />}
+            : <LoadingImage src={getPublicImageUrl(photo.id, 640)} srcSet={getPublicThumbSrcSet(photo.id)} sizes={ARCHIVE_GRID_SIZES} alt={photo.altText || photo.filename} quiet loading={eager ? 'eager' : 'lazy'} />}
         </div>
         {photo.caption && <p className={styles.caption}>{photo.caption}</p>}
       </Link>

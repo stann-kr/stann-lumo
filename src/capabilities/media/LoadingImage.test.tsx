@@ -13,12 +13,15 @@ describe('image readiness', () => {
       observe = vi.fn(); disconnect = vi.fn();
       constructor(callback: IntersectionObserverCallback) { intersect = () => callback([{ isIntersecting: true } as IntersectionObserverEntry], this as unknown as IntersectionObserver); }
     });
-    render(<LoadingImage src="/poster.jpg" alt="Poster" />);
+    render(<LoadingImage src="/poster.jpg" srcSet="/poster-400.jpg 400w, /poster.jpg 640w" sizes="50vw" alt="Poster" />);
     const img = screen.getByRole('img') as HTMLImageElement;
+    // Candidates stay off the element too, or the browser would fetch one before the image is near the viewport.
     expect(img).not.toHaveAttribute('src');
+    expect(img).not.toHaveAttribute('srcset');
     expect(img.parentElement).toHaveAttribute('data-load-state', 'loading');
     act(() => intersect());
     expect(img).toHaveAttribute('src', '/poster.jpg');
+    expect(img).toHaveAttribute('srcset', '/poster-400.jpg 400w, /poster.jpg 640w');
     let decode!: () => void;
     Object.defineProperty(img, 'naturalWidth', { value: 800 });
     img.decode = vi.fn(() => new Promise<void>(resolve => { decode = resolve; }));
