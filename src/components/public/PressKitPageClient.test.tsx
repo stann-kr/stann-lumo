@@ -40,7 +40,7 @@ describe('PressKitPageClient', () => {
     expect(video.getByRole('link', { name: 'Download HÖR, Berlin clip 04 (33.8MB)' })).toHaveAttribute('href', '/press/video/stann-lumo-hor-berlin-4.mp4');
     expect(screen.getAllByRole('link', { name: 'KO PDF' })[0]).toHaveAttribute('href', '/press/download/stann-lumo-press-kit-ko.pdf');
     const contact = within(screen.getByRole('region', { name: 'Booking · Press' }));
-    expect(contact.getByRole('link', { name: 'Email booking →' })).toHaveAttribute('href', expect.stringMatching(/^mailto:contact@stann\.kr\?subject=/));
+    expect(contact.getByRole('link', { name: 'Email booking →' })).toHaveAttribute('href', expect.stringMatching(/^mailto:stannlumo@stann\.kr\?subject=/));
   });
 
   it('previews a clip only after it is asked to play', async () => {

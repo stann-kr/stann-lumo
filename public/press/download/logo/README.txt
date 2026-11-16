@@ -21,4 +21,4 @@ Please do not stretch, recolor, outline, or add effects to the wordmark or the m
 Keep clear space of at least the letter height around the wordmark,
 and at least a quarter of the mark's height around the mark.
 
-Contact: contact@stann.kr
+Contact: stannlumo@stann.kr

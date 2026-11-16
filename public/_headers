@@ -1,0 +1,4 @@
+# Workers static assets: build output under /_next/static/ is content-hashed, so a browser can keep it for a year
+# instead of revalidating every script and stylesheet on each visit (the default is max-age=0, must-revalidate).
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

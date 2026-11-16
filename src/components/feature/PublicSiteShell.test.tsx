@@ -379,7 +379,7 @@ describe('Home v5', () => {
     const inquiry = within(booking).getByRole('link', { name: /^Send inquiry →/ });
     expect(inquiry).toHaveAttribute('href', '/contact');
     expect(inquiry).toHaveTextContent('Inquiry →');
-    for (const mail of within(booking).getAllByRole('link', { name: 'contact@stann.kr' })) expect(mail).toHaveAttribute('href', 'mailto:contact@stann.kr');
+    for (const mail of within(booking).getAllByRole('link', { name: 'stannlumo@stann.kr' })) expect(mail).toHaveAttribute('href', 'mailto:stannlumo@stann.kr');
     expect(within(mix).queryByText(/Tracklist/)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Real poster' })).toHaveAttribute('href', '/archive/poster');
     expect(screen.getByRole('img', { name: 'Poster' })).toHaveAttribute('src', '/api/media/poster?v=2&w=640');
