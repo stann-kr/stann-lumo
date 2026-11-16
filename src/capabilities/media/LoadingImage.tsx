@@ -17,7 +17,7 @@ export default function LoadingImage(props: LoadingImageProps) {
   return <ImageFrame key={props.src} {...props} />;
 }
 
-function ImageFrame({ src, alt = '', className, natural = false, quiet = false, loading = 'lazy', ...props }: LoadingImageProps) {
+function ImageFrame({ src, srcSet, alt = '', className, natural = false, quiet = false, loading = 'lazy', ...props }: LoadingImageProps) {
   const { t } = useTranslation();
   const frameRef = useRef<HTMLSpanElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
@@ -66,7 +66,7 @@ function ImageFrame({ src, alt = '', className, natural = false, quiet = false, 
   }, [requested, src]);
 
   return <span ref={frameRef} className={`${styles.frame} ${natural ? styles.natural : ''} ${className || ''}`} data-load-state={state} aria-busy={state === 'loading'}>
-    <img {...props} ref={imageRef} src={requested ? src : undefined} alt={alt} loading="eager" decoding="async" />
+    <img {...props} ref={imageRef} src={requested ? src : undefined} srcSet={requested ? srcSet : undefined} alt={alt} loading="eager" decoding="async" />
     {state !== 'ready' && <span className={styles.placeholder} aria-hidden={state === 'loading' || !alt ? true : undefined}>
       {state === 'error' && !quiet && <span>{t('image_load_error')}</span>}
     </span>}

@@ -6,7 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { CONTACT_EMAIL, INSTAGRAM_URL, SITE_NAME, SOUNDCLOUD_URL } from "@/constants/site";
 import { hasKnownDuration, isMixType, type ArtistInfoItem, type HomeEventPreview, type HomePreviews } from "@/capabilities/content/content";
 import { performanceDate, performanceLocation, performanceToday } from "@/capabilities/events/events";
-import { getPublicImageUrl } from "@/capabilities/media/media";
+import { getPublicImageUrl, getPublicThumbSrcSet } from "@/capabilities/media/media";
 import styles from "./HomePageClient.module.css";
 import MixPlayer from "./MixPlayer";
 import TrackCover from "./TrackCover";
@@ -247,7 +247,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
           <div className={styles.strip}>
             {photos.map((photo) => (
               <Link key={photo.id} href={`/archive/${photo.id}`} aria-label={photo.caption || photo.altText || copy.viewImage}>
-                <LoadingImage src={getPublicImageUrl(photo.id, 640)} alt={photo.altText || photo.caption} quiet />
+                <LoadingImage src={getPublicImageUrl(photo.id, 640)} srcSet={getPublicThumbSrcSet(photo.id)} sizes="(max-width: 640px) 50vw, 25vw" alt={photo.altText || photo.caption} quiet />
               </Link>
             ))}
           </div>
