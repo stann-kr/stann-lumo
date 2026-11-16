@@ -113,7 +113,10 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
       <div className={styles.heroRow}>
         <section className={styles.hero} aria-labelledby="home-title">
           {/* A real image (not a CSS background) so the reveal gate can wait for it and the browser fetches it first. */}
-          <img className={styles.heroImage} src="/press/front.jpg" alt="" width={1024} height={1400} fetchPriority="high" decoding="async" />
+          {/* WebP in two widths (118KB / 339KB) instead of the 667KB JPEG: the hero is the home page's largest paint.
+              The plate is the full width on phones and about two thirds of the row from 1000px. */}
+          <img className={styles.heroImage} src="/press/front-1024.webp" srcSet="/press/front-828.webp 828w, /press/front-1024.webp 1024w"
+            sizes="(max-width: 999px) 100vw, 68vw" alt="" width={1024} height={1400} fetchPriority="high" decoding="async" />
           <span className={`${styles.label} ${styles.badge}`}>Resident · Faust Seoul</span>
           <div>
             <p className={`${styles.label} ${styles.heroKicker}`}>DJ · Producer — Seoul</p>

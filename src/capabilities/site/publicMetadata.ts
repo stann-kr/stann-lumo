@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 
 export const SITE_URL = new URL('https://lumo.stann.kr');
 const SITE_NAME = 'STANN LUMO';
+/** 1200×630 card (photo, wordmark, Resident · Faust Seoul) for routes without their own image, so shared links never
+    arrive as a bare text preview. */
+export const DEFAULT_SHARE_IMAGE = { url: '/og.jpg', width: 1200, height: 630, alt: 'STANN LUMO — DJ · Producer, Seoul' };
 
 export interface PublicMetadataInput {
   title: string;
@@ -15,7 +18,7 @@ export interface PublicMetadataInput {
 export function createPublicMetadata({ title, description, path, image }: PublicMetadataInput): Metadata {
   const url = new URL(path, SITE_URL).toString();
   const shareTitle = title === SITE_NAME ? SITE_NAME : `${title} | ${SITE_NAME}`;
-  const images = image ? [{ url: image.url, ...(image.alt && { alt: image.alt }) }] : undefined;
+  const images = image ? [{ url: image.url, ...(image.alt && { alt: image.alt }) }] : [DEFAULT_SHARE_IMAGE];
 
   return {
     metadataBase: SITE_URL,
@@ -29,13 +32,13 @@ export function createPublicMetadata({ title, description, path, image }: Public
       title: shareTitle,
       description,
       url,
-      ...(images && { images }),
+      images,
     },
     twitter: {
-      card: images ? 'summary_large_image' : 'summary',
+      card: 'summary_large_image',
       title: shareTitle,
       description,
-      ...(images && { images }),
+      images,
     },
   };
 }

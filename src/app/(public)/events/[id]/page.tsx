@@ -4,6 +4,8 @@ import EventDetailPageClient from '@/components/public/EventDetailPageClient';
 import { createPublicMetadata } from '@/capabilities/site/publicMetadata';
 import { getEventDetail } from '@/capabilities/content/publicContent.server';
 import { getPublicImageUrl } from '@/capabilities/media/media';
+import { eventJsonLd } from '@/capabilities/site/structuredData';
+import JsonLd from '@/components/public/JsonLd';
 
 interface EventDetailPageProps { params: Promise<{ id: string }> }
 
@@ -22,5 +24,11 @@ export async function generateMetadata({ params }: EventDetailPageProps): Promis
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const detail = await getEventDetail((await params).id);
   if (!detail) notFound();
-  return <EventDetailPageClient event={detail.event} posterPhoto={detail.posterPhoto} nearby={detail.nearby} />;
+  const posterUrl = detail.posterPhoto && getPublicImageUrl(detail.posterPhoto.id);
+  return (
+    <>
+      <JsonLd data={eventJsonLd(detail.event, posterUrl)} />
+      <EventDetailPageClient event={detail.event} posterPhoto={detail.posterPhoto} nearby={detail.nearby} />
+    </>
+  );
 }

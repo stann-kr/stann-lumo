@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import Providers from "./Providers";
@@ -13,7 +13,18 @@ export const metadata: Metadata = {
       { url: "/favicon.ico", sizes: "any" },
       { url: "/icon.png", type: "image/png" },
     ],
+    // Listing `icon` here replaces the file-based icon tags, so the iOS home-screen icon must be named too.
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
+};
+
+// One viewport tag: a hand-written <meta name="viewport"> would sit beside Next's default one.
+// themeColor keeps the iOS status bar and safe areas black (globals.css :root --color-bg).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#000000",
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
@@ -21,12 +32,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={initialLanguage} suppressHydrationWarning>
       <head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, viewport-fit=cover"
-        />
-        {/* iOS 상태바 / 안전영역 배경색 — globals.css :root --color-bg 와 동기화 */}
-        <meta name="theme-color" content="#000000" />
         {/* Marks a running script before the bundle arrives, so the reveal gate's CSS failsafe can wait for hydration
             instead of showing image placeholders on slow connections (PublicSiteShell.module.css). */}
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.dataset.js=''" }} />
