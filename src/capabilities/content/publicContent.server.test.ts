@@ -134,7 +134,7 @@ describe('public server content projections', () => {
     vi.mocked(getDB).mockReturnValue(null);
     const contact = await getContactProjection('en');
     const link = await getLinkProjection('ko');
-    expect(contact.contactInfo).toEqual([{ label: 'Email', value: 'contact@stann.kr', icon: 'ri-mail-line' }]);
+    expect(contact.contactInfo).toEqual([{ label: 'Email', value: 'stannlumo@stann.kr', icon: 'ri-mail-line' }]);
     expect(contact.eventsInfo.setDurations).toHaveLength(2);
     expect(link.linkPlatforms.map((item) => item.platform)).toEqual(['Instagram', 'SoundCloud']);
     expect(link.terminalInfo.url).toBe('https://terminal.stann.kr');

@@ -4,6 +4,7 @@
 
 ## 2026-11-16
 
+- 섭외·문의 이메일을 `contact@stann.kr`에서 `stannlumo@stann.kr`로 바꿨다. 홈·연락처·프레스킷·메뉴와 프레스킷 PDF(KO/EN)·소개 글 TXT·로고 README·전체 ZIP에 모두 반영했다.
 - 링크를 공유하면 자체 이미지가 없는 페이지(홈·목록·프레스킷 등)도 1200×630 기본 카드(`public/og.jpg`)가 큰 미리보기로 나온다. 포스터·커버가 있는 상세는 그 이미지를 쓴다.
 - 홈과 공연 상세에 schema.org 구조화 데이터를 넣었다. 홈은 아티스트(MusicGroup, Instagram·SoundCloud), 공연 상세는 MusicEvent(날짜·장소·포스터·RA 티켓 링크, 취소 상태)다.
 - 홈 첫 사진을 667KB JPEG 대신 WebP 두 크기(828px 118KB, 1024px 339KB)로 보낸다.
