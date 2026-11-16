@@ -16,7 +16,14 @@ describe('createPublicMetadata', () => {
       title: 'Night Signal | STANN LUMO',
       url: 'https://lumo.stann.kr/events/night-signal',
     });
-    expect(metadata.twitter).toMatchObject({ card: 'summary', title: 'Night Signal | STANN LUMO' });
+    expect(metadata.twitter).toMatchObject({ card: 'summary_large_image', title: 'Night Signal | STANN LUMO' });
+  });
+
+  it('falls back to the default share card when the route has no image of its own', () => {
+    const metadata = createPublicMetadata({ title: 'Music', description: 'Mixes and releases', path: '/music' });
+
+    expect(metadata.openGraph).toMatchObject({ images: [{ url: '/og.jpg', width: 1200, height: 630 }] });
+    expect(metadata.twitter).toMatchObject({ card: 'summary_large_image', images: [{ url: '/og.jpg' }] });
   });
 
   it('does not repeat the site name for the home page share title', () => {
