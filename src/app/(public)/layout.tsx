@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { SITE_DESCRIPTION } from '@/constants/site';
 import PublicSiteShell from '@/components/feature/PublicSiteShell';
 import { getPublicShellProjection, getRequestLocale, hasUpcomingDate } from '@/capabilities/content/publicContent.server';
 
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
     template: '%s | STANN LUMO',
     default: 'STANN LUMO',
   },
-  description: 'TECHNO / SEOUL — Official website of STANN LUMO',
+  description: SITE_DESCRIPTION,
 };
 
 export default async function PublicLayout({ children }: { children: ReactNode }) {

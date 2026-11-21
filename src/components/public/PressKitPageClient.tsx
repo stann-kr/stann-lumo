@@ -84,7 +84,7 @@ export default function PressKitPageClient() {
     window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setNotice(""), 2400);
   };
-  const external = (label: string) => <>{label}<span className="sr-only">{ui.newTab}</span></>;
+  const external = (label: string) => <>{label}<span className="sr-only" data-nosnippet>{ui.newTab}</span></>;
   const bioText = bio === "short" ? copy.shortBio : copy.fullBio.join("\n\n");
   const [firstName, lastName] = ["Stann", "Lumo"];
 
@@ -255,7 +255,7 @@ export default function PressKitPageClient() {
           {PRESS_CONTACT.map((item) => (
             <li key={item.label}>
               <a className={styles.row} href={item.url} target="_blank" rel="noopener noreferrer">
-                <span className={styles.label}>{item.label}</span><span>{item.value}</span><span aria-hidden="true" className={styles.arrow}>↗</span><span className="sr-only">{ui.newTab}</span>
+                <span className={styles.label}>{item.label}</span><span>{item.value}</span><span aria-hidden="true" className={styles.arrow}>↗</span><span className="sr-only" data-nosnippet>{ui.newTab}</span>
               </a>
             </li>
           ))}
