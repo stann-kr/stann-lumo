@@ -4,6 +4,8 @@
 
 ## 2026-11-21
 
+- sitemap에 페이지별 마지막 수정일(`<lastmod>`)을 넣는다. migration `0004_content_updates.sql`이 공연·음악·음악 미디어·아카이브 행마다 화면에 나오는 내용의 지문과 수정 시각을 기록하고, 트리거가 지문이 바뀔 때만 시각을 바꾼다. 관리자 저장이 목록 전체를 지우고 다시 넣거나 순서만 바꿔도 수정일은 그대로다. 기존 공연·음악은 수정일을 알 수 없어 다음 실제 변경 전까지 `<lastmod>`를 생략하고, 아카이브는 올린 시각으로 시작한다. 목록·홈은 그 아래 항목의 최신 수정일, 연락처·링크·프레스킷은 생략한다. 기록을 읽지 못하면 sitemap은 수정일 없이 전체를 낸다.
+
 - 검색 결과에 사이트 이름이 도메인(stann.kr) 대신 STANN LUMO로 나오도록 홈에 schema.org `WebSite`(이름·별칭)를 넣었다.
 - 홈·기본 설명(meta description)을 "STANN LUMO — techno DJ and producer from Seoul, resident at Faust Seoul. Mixes, releases, upcoming dates and booking."으로 바꿨다.
 - 화면 읽기용 "(opens in a new tab)"·"(새 창)" 안내와 로딩 문구에 `data-nosnippet`을 붙여 검색 설명문에 섞이지 않게 했다. 화면과 보조기기 동작은 같다.

@@ -413,6 +413,15 @@ export async function getSitemapArchiveIds(): Promise<string[]> {
   return records.map(({ id }) => id);
 }
 
+export interface ContentUpdate { kind: string; id: string; updatedAt: string }
+
+/** Known last changes from the content_updates ledger (migration 0004); rows whose change is unknown are left out. */
+export async function getSitemapContentUpdates(): Promise<ContentUpdate[]> {
+  const records = await rows<{ kind: string; id: string; updated_at: string }>(getPublicDB(),
+    'SELECT kind, id, updated_at FROM content_updates WHERE updated_at IS NOT NULL');
+  return records.map(({ kind, id, updated_at }) => ({ kind, id, updatedAt: updated_at }));
+}
+
 const EVENT_LIST_COLUMNS = `id, date, venue, location, time, title, status, poster_image_id, ra_country_name,
   NULL AS lineup, NULL AS ra_event_link, NULL AS ra_event_id`;
 const EVENT_DAY = "SUBSTR(REPLACE(date, '.', '-'), 1, 10)";
