@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Performance } from '@/capabilities/events/events';
-import { artistJsonLd, eventJsonLd, serializeJsonLd } from '@/capabilities/site/structuredData';
+import { artistJsonLd, eventJsonLd, serializeJsonLd, websiteJsonLd } from '@/capabilities/site/structuredData';
 
 const event: Performance = {
   id: 'ra-1', date: '2026.11.28', venue: 'Faust', location: 'Seoul', title: 'TERMINAL [03]', status: 'Announced',
@@ -8,6 +8,13 @@ const event: Performance = {
 };
 
 describe('structured data', () => {
+  it('names the site for search results', () => {
+    expect(websiteJsonLd()).toEqual({
+      '@context': 'https://schema.org', '@type': 'WebSite', name: 'STANN LUMO',
+      alternateName: ['Stann Lumo', 'STANNLUMO'], url: 'https://lumo.stann.kr/',
+    });
+  });
+
   it('describes the artist with its public profiles', () => {
     expect(artistJsonLd()).toMatchObject({
       '@context': 'https://schema.org', '@type': 'MusicGroup', name: 'STANN LUMO', url: 'https://lumo.stann.kr/',

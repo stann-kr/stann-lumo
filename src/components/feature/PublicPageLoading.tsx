@@ -12,12 +12,13 @@ import { usePublicMotionInput } from './publicMotion';
 export default function PublicPageLoading({ overlay = false, gate = false, held = false }: { overlay?: boolean; gate?: boolean; held?: boolean }) {
   const { language } = useLanguage();
   const input = usePublicMotionInput();
+  // Kept out of search snippets: the label is in the HTML but is not what the page says.
   const label = language === 'ko' ? '페이지 불러오는 중' : 'Loading page';
   return (
     <div className={`${styles.loading} ${overlay ? styles.overlay : ''} ${gate ? styles.gate : ''} ${gate && held ? styles.held : ''}`} data-motion={input?.current === 'keyboard' ? 'off' : 'on'} data-route-loading={overlay ? undefined : ''}
       {...(gate ? { 'aria-hidden': true } : { role: 'status', 'aria-live': 'polite' as const, 'aria-atomic': true })}>
       <div className={styles.indicator}>
-        <span className={styles.label}>{label}</span>
+        <span className={styles.label} data-nosnippet>{label}</span>
         <span className={styles.track} aria-hidden="true"><span /></span>
       </div>
     </div>

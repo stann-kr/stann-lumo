@@ -4,6 +4,8 @@
  * - Phase 4에서 D1 site_config 테이블로 대체 예정
  */
 export const SITE_NAME = 'STANN LUMO';
+/** Search and share description for the home page and pages without their own. */
+export const SITE_DESCRIPTION = 'STANN LUMO — techno DJ and producer from Seoul, resident at Faust Seoul. Mixes, releases, upcoming dates and booking.';
 export const SITE_TAGLINE = 'TECHNO / SEOUL';
 export const SITE_VERSION = 'v1.0.0';
 export const TERMINAL_URL = process.env.NEXT_PUBLIC_TERMINAL_URL || 'https://terminal.stann.kr';
