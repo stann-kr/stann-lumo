@@ -18,12 +18,23 @@ function artist(): JsonLd {
   };
 }
 
+/** Names the site for search results; without it Google labels results with the bare domain. */
+export function websiteJsonLd(): JsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    alternateName: ['Stann Lumo', 'STANNLUMO'],
+    url: SITE_URL.toString(),
+  };
+}
+
 export function artistJsonLd(): JsonLd {
   return {
     '@context': 'https://schema.org',
     ...artist(),
     image: absolute('/og.jpg'),
-    description: 'DJ and producer based in Seoul, resident at Faust Seoul.',
+    description: 'Techno DJ and producer based in Seoul, resident at Faust Seoul.',
   };
 }
 

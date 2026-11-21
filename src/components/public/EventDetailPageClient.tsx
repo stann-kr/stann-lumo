@@ -37,7 +37,7 @@ export default function EventDetailPageClient({ event, posterPhoto, nearby = [] 
           </dl>
           {event.raEventLink && (
             <a href={event.raEventLink} target="_blank" rel="noopener noreferrer" className={`${v5.key} ${styles.external} ${hasTickets ? v5.red : ''}`}>
-              {hasTickets ? 'Tickets' : (isKorean ? 'Resident Advisor에서 보기' : 'View on Resident Advisor')} ↗<span className="sr-only">{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span>
+              {hasTickets ? 'Tickets' : (isKorean ? 'Resident Advisor에서 보기' : 'View on Resident Advisor')} ↗<span className="sr-only" data-nosnippet>{isKorean ? ' (새 창)' : ' (opens in a new tab)'}</span>
             </a>
           )}
         </aside>

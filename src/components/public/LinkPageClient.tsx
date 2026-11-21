@@ -42,7 +42,7 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
                 <Destination description={link.description} url={link.url} defaults={['platform description', `${SITE_NAME} ${link.platform}`.toLowerCase(), link.platform.toLowerCase()]} />
               </div>
               <span className={styles.arrow} aria-hidden="true">↗</span>
-              <span className="sr-only">{newTabLabel}</span>
+              <span className="sr-only" data-nosnippet>{newTabLabel}</span>
             </a>
           </li>)}
         </ul>
@@ -55,7 +55,7 @@ export default function LinkPageClient({ linkMeta, linkPlatforms, terminalInfo }
             <Destination description={terminalInfo.description} url={terminalInfo.url} defaults={['terminal platform']} />
           </div>
           <span className={styles.arrow} aria-hidden="true">↗</span>
-          <span className="sr-only">{newTabLabel}</span>
+          <span className="sr-only" data-nosnippet>{newTabLabel}</span>
         </a>
       </section>}
       {/* Canvas Link board: the page ends on a full-width red bar. */}

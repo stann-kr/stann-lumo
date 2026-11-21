@@ -51,7 +51,7 @@ export default function MusicDetailPageClient({ track, previous, next, more = []
                   <div className={styles.outboundKeys}>
                     {outbound.map((store) => (
                       <a key={store.url} href={store.url} target="_blank" rel="noopener noreferrer" className={v5.key}>
-                        {store.platform} ↗<span className="sr-only"> — {track.title}{newTab}</span>
+                        {store.platform} ↗<span className="sr-only" data-nosnippet> — {track.title}{newTab}</span>
                       </a>
                     ))}
                   </div>

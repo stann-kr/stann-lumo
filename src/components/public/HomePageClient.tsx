@@ -77,7 +77,7 @@ export default function HomePageClient({ artistInfo, previews }: HomePageClientP
   /** Type, recording date (or year) and length on one line under the player screen; the bar names the host itself. */
   const mixFacts = (mix: (typeof deck)[number]) => [mix.type, mix.recordedOn ? `Rec ${mix.recordedOn.replaceAll("-", ".")}` : mix.year, hasKnownDuration(mix.duration) ? mix.duration : ""].filter(Boolean).join(" · ");
 
-  const external = (label: string) => <>{label}<span className="sr-only">{copy.newTab}</span></>;
+  const external = (label: string) => <>{label}<span className="sr-only" data-nosnippet>{copy.newTab}</span></>;
   /** Desktop and mobile boards word the same key differently. */
   const responsive = (wide: string, narrow: string) => <><span className={styles.wideOnly}>{wide}</span><span className={styles.narrowOnly}>{narrow}</span></>;
 

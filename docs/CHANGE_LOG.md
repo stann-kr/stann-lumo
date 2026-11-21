@@ -2,6 +2,12 @@
 
 공개 가능한 결과 중심 변경 요약이다. 항목은 일자 단위이며 최신 항목을 위에 둔다.
 
+## 2026-11-21
+
+- 검색 결과에 사이트 이름이 도메인(stann.kr) 대신 STANN LUMO로 나오도록 홈에 schema.org `WebSite`(이름·별칭)를 넣었다.
+- 홈·기본 설명(meta description)을 "STANN LUMO — techno DJ and producer from Seoul, resident at Faust Seoul. Mixes, releases, upcoming dates and booking."으로 바꿨다.
+- 화면 읽기용 "(opens in a new tab)"·"(새 창)" 안내와 로딩 문구에 `data-nosnippet`을 붙여 검색 설명문에 섞이지 않게 했다. 화면과 보조기기 동작은 같다.
+
 ## 2026-11-16
 
 - 아카이브 목록에서 캡션 없는 포스터의 날짜가 사진 아래쪽에 8px 겹치던 것을 고쳤다. 캡션이 있을 때만 날짜를 캡션 쪽으로 붙인다.
