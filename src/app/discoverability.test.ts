@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSitemapArchiveIds, getSitemapEventIds, getSitemapTrackIds } from '@/capabilities/content/publicContent.server';
+import { getSitemapArchiveIds, getSitemapContentUpdates, getSitemapEventIds, getSitemapTrackIds } from '@/capabilities/content/publicContent.server';
 import robots from './robots';
 import sitemap from './sitemap';
 
 const requestHeaders = vi.hoisted(() => ({ host: 'lumo.stann.kr' }));
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ host: requestHeaders.host }) }));
-vi.mock('@/capabilities/content/publicContent.server', () => ({ getSitemapTrackIds: vi.fn(), getSitemapEventIds: vi.fn(), getSitemapArchiveIds: vi.fn() }));
+vi.mock('@/capabilities/content/publicContent.server', () => ({ getSitemapTrackIds: vi.fn(), getSitemapEventIds: vi.fn(), getSitemapArchiveIds: vi.fn(), getSitemapContentUpdates: vi.fn() }));
 
 describe('robots.txt', () => {
   beforeEach(() => { requestHeaders.host = 'lumo.stann.kr'; });
@@ -25,7 +25,10 @@ describe('robots.txt', () => {
 });
 
 describe('sitemap.xml', () => {
-  beforeEach(() => { vi.mocked(getSitemapTrackIds).mockResolvedValue([]); });
+  beforeEach(() => {
+    vi.mocked(getSitemapTrackIds).mockResolvedValue([]);
+    vi.mocked(getSitemapContentUpdates).mockResolvedValue([]);
+  });
 
   it('lists the public pages and every track, event and archive item page', async () => {
     vi.mocked(getSitemapTrackIds).mockResolvedValue(['track-1']);
@@ -42,6 +45,40 @@ describe('sitemap.xml', () => {
       'https://lumo.stann.kr/events/ra%201',
       'https://lumo.stann.kr/archive/photo-1',
     ]);
+  });
+
+  it('dates each page by its last known change and leaves unknown ones undated', async () => {
+    vi.mocked(getSitemapTrackIds).mockResolvedValue(['track-1']);
+    vi.mocked(getSitemapEventIds).mockResolvedValue(['ra 1', 'ra-2']);
+    vi.mocked(getSitemapArchiveIds).mockResolvedValue(['photo-1']);
+    vi.mocked(getSitemapContentUpdates).mockResolvedValue([
+      { kind: 'event', id: 'ra 1', updatedAt: '2026-11-20 10:00:00' },
+      { kind: 'track', id: 'track-1/en', updatedAt: '2026-11-01 00:00:00' },
+      { kind: 'track', id: 'track-1/ko', updatedAt: '2026-11-03 00:00:00' },
+      { kind: 'track_media', id: 'track-1', updatedAt: '2026-11-02 00:00:00' },
+      { kind: 'photo', id: 'photo-1', updatedAt: '2025-01-02 03:04:05' },
+    ]);
+
+    const dates = Object.fromEntries((await sitemap()).map(({ url, lastModified }) => [url.replace('https://lumo.stann.kr', ''), lastModified]));
+
+    expect(dates['/events/ra%201']).toEqual(new Date('2026-11-20T10:00:00Z'));
+    expect(dates['/events/ra-2']).toBeUndefined();
+    expect(dates['/music/track-1']).toEqual(new Date('2026-11-03T00:00:00Z'));
+    expect(dates['/archive/photo-1']).toEqual(new Date('2025-01-02T03:04:05Z'));
+    expect(dates['/events']).toEqual(new Date('2026-11-20T10:00:00Z'));
+    expect(dates['/']).toEqual(new Date('2026-11-20T10:00:00Z'));
+    expect(dates['/contact']).toBeUndefined();
+  });
+
+  it('still lists every page undated when the change ledger cannot be read', async () => {
+    vi.mocked(getSitemapEventIds).mockResolvedValue(['ra-2']);
+    vi.mocked(getSitemapArchiveIds).mockResolvedValue([]);
+    vi.mocked(getSitemapContentUpdates).mockRejectedValue(new Error('no such table: content_updates'));
+
+    const entries = await sitemap();
+
+    expect(entries.map(({ url }) => url)).toContain('https://lumo.stann.kr/events/ra-2');
+    expect(entries.every(({ lastModified }) => lastModified === undefined)).toBe(true);
   });
 
   it('keeps the archive pages when only the event read fails', async () => {
